@@ -32,12 +32,20 @@ def _line(row) -> str:
                                                       s["note"], warn)
 
 
+def _npm_plan(step) -> str:
+    from runtime.render.hyperframes import node_prefix
+
+    after = " и `{} {}` (браузер рендера — в штатной папке пакета, телеметрия выключена)".format(
+        step["package"].rsplit("@", 1)[0], " ".join(step["after"])) if step.get("after") else ""
+    return "npm install --prefix {} {}{} — не глобально".format(node_prefix(), step["package"], after)
+
+
 def plan(row) -> str:
     step = row["install"].get(current_os())
     if not step:
         return "{}: на этой системе не ставится".format(row["id"])
     what = {"command": lambda: " ".join(step["argv"]), "pip": lambda: "pip install " + pip_package(step),
-            "npm": lambda: "npm install " + step["package"],
+            "npm": lambda: _npm_plan(step),
             "download": lambda: "скачать " + step["url"] + " → " + step["save_to"], "manual": lambda: "вручную: " + step["url"] + (" → " + step["save_to"] if step.get("save_to") else "")}
     return "{} {}: {}{}".format(row["id"], row["pin"], what[step["kind"]](),
                                 " ({})".format(row["size"]) if row.get("size") else "")

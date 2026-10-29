@@ -55,7 +55,7 @@ def build_skill(profile_path, dest, replace: bool = False) -> Path:
     stage = Path(tempfile.mkdtemp(prefix=".build-", dir=str(dest)))
     try:
         copy_runtime(stage, need["runtime"])
-        copy_design(stage, profile_path.parent / (profile.get("design") or "design/"))
+        copy_design(stage, profile_path.parent / (profile.get("design") or "design/"), profile["steps"])
         copy_tools(stage)
         profile["design"] = "design/"
         profiles.write(profile, stage / "profile.json")

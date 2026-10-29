@@ -1,15 +1,17 @@
 """Installing one catalog row by its pin. Called only by `doctor --install <id> --yes`."""
 from __future__ import annotations
 
+import os
 import subprocess
 import sys
 
 from .checks import argv_of, current_os
-from .paths import home, venv_dir, venv_python
+from .paths import venv_dir, venv_python
 
 
-def _run(argv) -> str:
-    proc = subprocess.run(argv, capture_output=True, text=True, encoding="utf-8", errors="replace")
+def _run(argv, env=None) -> str:
+    proc = subprocess.run(argv, capture_output=True, text=True, encoding="utf-8", errors="replace",
+                          env=dict(os.environ, **env) if env else None)
     tail = "\n".join(((proc.stdout or "") + (proc.stderr or "")).strip().splitlines()[-5:])
     if proc.returncode != 0:
         return "не получилось (код {}):\n{}".format(proc.returncode, tail)
@@ -52,7 +54,7 @@ def run_install(row: dict) -> str:
             return made
         return _run([str(venv_python()), "-m", "pip", "install", "--disable-pip-version-check", pip_package(step)])
     if kind == "npm":
-        prefix = home() / ".aiediting" / "node"
-        prefix.mkdir(parents=True, exist_ok=True)
-        return _run(argv_of(["npm", "install", "--prefix", str(prefix), "--save-exact", step["package"]]))
+        from .npm import install_npm
+
+        return install_npm(step, _run)
     return "Неизвестный способ установки {!r}".format(kind)

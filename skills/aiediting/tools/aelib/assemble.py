@@ -7,7 +7,7 @@ import shutil
 from pathlib import Path
 
 from .catalog import OPTIONAL_RUNTIME
-from .paths import FORMAT_TEMPLATE, RUNTIME_DIR, SCHEMA_DIR
+from .paths import DESIGN_DIR, FORMAT_TEMPLATE, RUNTIME_DIR, SCHEMA_DIR
 
 SKIP = shutil.ignore_patterns("__pycache__", "*.pyc", ".DS_Store")
 TOOL_FILES = ("run.py", "approvals.py", "issue.py", "notes.py")
@@ -27,11 +27,16 @@ def copy_runtime(stage: Path, packages) -> None:
     shutil.copytree(str(SCHEMA_DIR), str(stage / "schema"), ignore=SKIP)
 
 
-def copy_design(stage: Path, source: Path) -> None:
+def copy_design(stage: Path, source: Path, steps=()) -> None:
+    """The draft's design/; a format with animations and no templates of its own gets the example's
+    (they take colours, fonts and radii from the format's tokens)."""
     if source.is_dir():
         shutil.copytree(str(source), str(stage / "design"), ignore=SKIP)
     else:
         (stage / "design").mkdir()
+    own, example = stage / "design" / "animations", DESIGN_DIR / "chrome-graphite" / "animations"
+    if "animations" in steps and not own.is_dir() and example.is_dir():
+        shutil.copytree(str(example), str(own), ignore=SKIP)
 
 
 def copy_tools(stage: Path) -> None:

@@ -64,6 +64,10 @@ def _file(check: dict) -> dict:
 
 def status(row: dict) -> dict:
     check = row.get("check") or {}
+    if "npm" in check:
+        from .npm import npm_status
+
+        return npm_status(check["npm"], row)
     if "command" in check:
         return _command(check, row)
     if "python" in check:
