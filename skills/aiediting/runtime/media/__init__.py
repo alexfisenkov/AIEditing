@@ -12,3 +12,7 @@ from ..render.overlay import overlay_png  # media's face for the design layer (i
 
 __all__ = ["MediaError", "blur_regions", "codec_chain", "cut_spans", "drift_ms", "loudnorm",
            "overlay_png", "probe", "speech_spans", "write_srt"]
+from .vertical import vertical  # noqa: E402
+from .export import export_platforms  # noqa: E402
+
+__all__ += ["export_platforms", "vertical"]

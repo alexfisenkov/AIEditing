@@ -1,0 +1,64 @@
+"""`отчёт.md` next to the video: what was cut, closed, fixed, how in sync, and notes for refinement."""
+from __future__ import annotations
+
+from pathlib import Path
+from typing import Dict, List
+
+from .timeline import to_out
+
+NAME = "отчёт.md"
+DRIFT_OK = 40.0
+
+
+def stamp(t: float) -> str:
+    t = max(0.0, float(t))
+    return "{:d}:{:02d}:{:04.1f}".format(int(t // 3600), int(t // 60 % 60), t % 60)
+
+
+def _list(rows: List[str]) -> List[str]:
+    return rows or ["- —"]
+
+
+def _body(ctx, r: Dict) -> List[str]:
+    lines = ["# Отчёт монтажа", "", "Исходник: {}".format(ctx.src.name),
+             "Формат: {}; шаги: {}".format(ctx.profile.get("format", ""), ", ".join(ctx.steps)), "",
+             "## Готовое", ""]
+    for o in r["outputs"]:
+        lines.append("- {} — {} с{}".format(Path(o["video"]).name, o["duration"],
+                                             ", субтитры " + Path(o["srt"]).name if o.get("srt") else ""))
+        lines += ["  - {}".format(Path(e).name) for e in o.get("exports", [])]
+    lines += ["", "## Вырезано", ""] + _list(["- {}–{}: {}".format(stamp(c["start"]), stamp(c["end"]), c["why"])
+                                               for c in r["cuts"]])
+    lines += ["", "## Закрыто блюром", ""] + _list(["- {}–{}: {}".format(stamp(b["start"]), stamp(b["end"]),
+                                                                       b.get("what", "область")) for b in r["blurred"]])
+    lines += ["", "## Исправления в субтитрах", ""] + _list(["- №{} ({}): «{}» → «{}»".format(
+        f["index"], stamp(f["start"]), f["from"], f["to"]) for f in r["fixes"]])
+    if r["chapters"]:
+        lines += ["", "## Главы", ""] + ["- {} {}".format(stamp(c["at"]), c["title"]) for c in r["chapters"]]
+    if r["clips"]:
+        lines += ["", "## Отрывки", ""] + ["- {} {}–{}: {}".format(c["id"], stamp(c["start"]), stamp(c["end"]),
+                                                                 c.get("said", "")) for c in r["clips"]]
+    sync = "в норме" if r["drift_ms"] < DRIFT_OK else "БОЛЬШЕ НОРМЫ ({:.0f} мс)".format(DRIFT_OK)
+    lines += ["", "## Синхрон", "", "- рассинхрон звука и картинки: {:.1f} мс — {}".format(r["drift_ms"], sync)]
+    if "words_lost" in r and any(ctx.has(s) for s in ("verify_words",)):
+        lost = ", ".join("«{}» ({})".format(w["text"], stamp(w["at"])) for w in r["words_lost"])
+        lines.append("- повторная расшифровка: {}".format("ни одно слово не потеряно" if not lost else
+                                                         "не слышно: " + lost))
+    lines += ["", "## Замечания для доработки", ""] + _list(["- " + n for n in ctx.notes])
+    return lines
+
+
+def finish(ctx) -> Dict:
+    r = ctx.report
+    r["chapters"] = [{"at": to_out(float(c["start"]), ctx.keep) or 0.0, "title": c["title"]} for c in ctx.chapters]
+    r["clips"] = [{k: p[k] for k in ("id", "start", "end", "said") if k in p} for p in (ctx.pieces or [])]
+    if r["drift_ms"] >= DRIFT_OK:
+        ctx.note("Рассинхрон {:.0f} мс — больше {:.0f} мс; проверьте склейки".format(r["drift_ms"], DRIFT_OK))
+    if r["words_lost"]:
+        ctx.note("Повторная расшифровка не слышит {} слов — проверьте места склеек".format(len(r["words_lost"])))
+    first = r["outputs"][0] if r["outputs"] else {}
+    r.update(output=first.get("video"), srt=first.get("srt"), notes=list(ctx.notes), decisions=ctx.decisions)
+    path = ctx.outdir / NAME
+    path.write_text("\n".join(_body(ctx, r)) + "\n", encoding="utf-8")
+    r["report"] = path
+    return r
