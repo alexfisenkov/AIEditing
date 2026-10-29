@@ -1,17 +1,22 @@
 """Node packages in AIEditing's own npm prefix (HyperFrames): is the pin here, and installing it.
 
-Never global: `npm install --prefix <node_prefix()> --save-exact <name>@<pin>`; Node itself is the
-person's (doctor --install node). Telemetry, update checks and self-installs of the package stay off.
+Never global. A row with `lock` (a folder of catalog/ with package.json + a checked package-lock.json)
+is installed reproducibly: both files into the prefix, then `npm ci --ignore-scripts` — every
+dependency at the locked version and hash, no install scripts run. Node itself is the person's
+(doctor --install node). Telemetry, update checks and self-installs of the package stay off.
 """
 from __future__ import annotations
 
 import json
-import re
 import shutil
-import subprocess
-from typing import Callable, Optional
+from typing import Callable, List, Optional
 
+from runtime.render.hf_ready import node_major
 from runtime.render.hyperframes import NODE_MAJOR, QUIET, node_prefix
+
+from .paths import CATALOG_DIR
+
+NPM_FLAGS = ["--no-fund", "--no-audit", "--ignore-scripts"]
 
 
 def npm_status(package: str, row: dict) -> dict:
@@ -23,18 +28,6 @@ def npm_status(package: str, row: dict) -> dict:
     if row.get("pin_kind") == "exact" and version != row["pin"]:
         return {"ok": False, "version": version, "note": "версия {} вместо пина {}".format(version, row["pin"])}
     return {"ok": True, "version": version, "note": "версия {} в {}".format(version, node_prefix())}
-
-
-def node_major() -> Optional[int]:
-    node = shutil.which("node")
-    if not node:
-        return None
-    try:
-        out = subprocess.run([node, "--version"], capture_output=True, text=True, timeout=20).stdout
-    except (OSError, subprocess.SubprocessError):
-        return None
-    found = re.findall(r"\d+", out or "")
-    return int(found[0]) if found else None
 
 
 def node_hint() -> Optional[str]:
@@ -57,18 +50,25 @@ def _bin(name: str):
     return node_prefix() / "node_modules" / name / entry
 
 
+def _npm_argv(step: dict) -> List[str]:
+    """`npm ci` from the catalog's lockfile (copied into the prefix first), else a pinned `npm install`."""
+    prefix, npm = node_prefix(), shutil.which("npm") or "npm"
+    prefix.mkdir(parents=True, exist_ok=True)
+    if not step.get("lock"):
+        return [npm, "install", "--prefix", str(prefix), "--save-exact"] + NPM_FLAGS + [step["package"]]
+    for name in ("package.json", "package-lock.json"):
+        shutil.copyfile(str(CATALOG_DIR / step["lock"] / name), str(prefix / name))
+    return [npm, "ci", "--prefix", str(prefix)] + NPM_FLAGS
+
+
 def install_npm(step: dict, run: Callable) -> str:
     """run(argv, env) -> «поставлено…» | «не получилось…» (installers._run). `after`: the package's own
     first-run command (HyperFrames: `browser ensure` finds or fetches its Chrome on its standard path)."""
     hint = node_hint()
     if hint:
         return hint
-    prefix = node_prefix()
-    prefix.mkdir(parents=True, exist_ok=True)
-    env = QUIET
-    done = run([shutil.which("npm") or "npm", "install", "--prefix", str(prefix), "--save-exact", "--no-fund",
-                "--no-audit", step["package"]], env)
+    done = run(_npm_argv(step), QUIET)
     if done.startswith("не получилось") or not step.get("after"):
         return done
     name = step["package"].rsplit("@", 1)[0]
-    return done + "\n" + run([shutil.which("node") or "node", str(_bin(name))] + list(step["after"]), env)
+    return done + "\n" + run([shutil.which("node") or "node", str(_bin(name))] + list(step["after"]), QUIET)

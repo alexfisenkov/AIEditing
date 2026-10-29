@@ -35,9 +35,15 @@ def _line(row) -> str:
 def _npm_plan(step) -> str:
     from runtime.render.hyperframes import node_prefix
 
-    after = " и `{} {}` (браузер рендера — в штатной папке пакета, телеметрия выключена)".format(
-        step["package"].rsplit("@", 1)[0], " ".join(step["after"])) if step.get("after") else ""
-    return "npm install --prefix {} {}{} — не глобально".format(node_prefix(), step["package"], after)
+    if step.get("lock"):
+        how = "npm ci --ignore-scripts --prefix {} по проверенному lock-файлу catalog/{} ({})".format(
+            node_prefix(), step["lock"], step["package"])
+    else:
+        how = "npm install --ignore-scripts --prefix {} {}".format(node_prefix(), step["package"])
+    after = (" и `{} {}`: браузер рендера ляжет в ~/.cache/hyperframes/chrome (≈200 МБ) — он общий с другими "
+             "установками HyperFrames и не удаляется вместе с префиксом".format(
+                 step["package"].rsplit("@", 1)[0], " ".join(step["after"])) if step.get("after") else "")
+    return how + " — не глобально" + after
 
 
 def plan(row) -> str:

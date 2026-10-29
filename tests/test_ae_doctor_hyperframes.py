@@ -1,5 +1,6 @@
-"""`doctor` knows HyperFrames: only a format with animations needs it, no Node → a plain hint, the pinned
-version goes into AIEditing's own npm prefix, then its browser on the standard path — installer faked."""
+"""`doctor` knows HyperFrames: only a format with animations needs it, no Node → a plain hint; the pinned
+version comes from the checked lockfile by `npm ci --ignore-scripts` into AIEditing's own prefix, then its
+browser on the standard path — the installer is faked."""
 import json
 import os
 import subprocess
@@ -30,7 +31,7 @@ class HyperFramesDoctor(TempDirCase):
 
     def fake_run(self, argv, env=None):
         self.calls.append((list(argv), dict(env or {})))
-        if "install" in argv:  # what npm leaves behind
+        if "ci" in argv:  # what npm leaves behind
             pkg = self.prefix / "node_modules" / "hyperframes"
             pkg.mkdir(parents=True)
             (pkg / "package.json").write_text(json.dumps({"version": "0.8.201", "bin": {
@@ -61,15 +62,20 @@ class HyperFramesDoctor(TempDirCase):
         self.assertEqual(self.calls, [])
         self.assertIn("старше нужного 22", self.install(20))
 
-    def test_installs_the_pin_into_the_own_prefix_then_its_browser_quietly(self):
+    def test_installs_from_the_lockfile_by_npm_ci_then_its_browser_quietly(self):
         out = self.install(26)
         self.assertTrue(out.startswith("поставлено"), out)
         (npm_argv, npm_env), (ensure_argv, ensure_env) = self.calls
-        self.assertEqual(npm_argv[1:3], ["install", "--prefix"])
+        self.assertEqual(npm_argv[1:3], ["ci", "--prefix"])
         self.assertEqual(Path(npm_argv[3]), self.prefix)
-        self.assertIn("--save-exact", npm_argv)
-        self.assertEqual(npm_argv[-1], "hyperframes@0.8.201")
+        self.assertIn("--ignore-scripts", npm_argv)
         self.assertNotIn("-g", npm_argv)
+        lock = SKILL / "catalog" / ROW["install"]["mac"]["lock"]
+        for name in ("package.json", "package-lock.json"):
+            self.assertEqual((self.prefix / name).read_bytes(), (lock / name).read_bytes(), name)
+        locked = json.loads((lock / "package-lock.json").read_text(encoding="utf-8"))["packages"]
+        self.assertEqual(locked["node_modules/hyperframes"]["version"], "0.8.201")
+        self.assertTrue(all(v.get("integrity") for k, v in locked.items() if k), "every package hashed")
         self.assertEqual(Path(ensure_argv[1]), self.prefix / "node_modules" / "hyperframes" / "bin" / "hyperframes.mjs")
         self.assertEqual(ensure_argv[2:], ["browser", "ensure"])
         for env in (npm_env, ensure_env):
@@ -95,7 +101,9 @@ class HyperFramesDoctor(TempDirCase):
         self.assertRegex(listed.stdout, r"hyperframes\s+нет")
         self.assertIn("node", listed.stdout)
         planned = run("--install", "hyperframes")
-        self.assertIn("npm install --prefix", planned.stdout)
+        self.assertIn("npm ci --ignore-scripts --prefix", planned.stdout)
         self.assertIn("hyperframes@0.8.201", planned.stdout)
+        self.assertIn("~/.cache/hyperframes/chrome", planned.stdout)
+        self.assertIn("не удаляется вместе с префиксом", planned.stdout)
         self.assertIn("нужно «да»", planned.stdout)
         self.assertFalse(self.prefix.exists())

@@ -52,7 +52,9 @@ screen — in the corner opposite your face, instead of a static card, at most o
 «список», «число») and the text before anything is rendered; an empty answer means no animations. The
 price: Node.js 22+ and HyperFrames with its own browser on disk (≈400 MB together) and about 5 seconds of
 rendering per insert. They are installed by `ae.py doctor --install node` and `--install hyperframes` —
-only for a format that chose inserts, after your yes; HyperFrames telemetry is switched off.
+only for a format that chose inserts, after your yes. HyperFrames comes from a checked lockfile
+(`npm ci --ignore-scripts`) into `~/.aiediting/node` (Windows: `%LOCALAPPDATA%\AIEditing\node`), its
+telemetry is off, and its project history is written into the issue's work folder and goes with it.
 
 A format skill puts the result into `<your issues folder>/<date-topic>/`: the video, a `.srt` when the
 format makes one, and a short report. A remark after watching goes into that report, and the skill
@@ -126,6 +128,11 @@ Start a new session after updating. Format skills built by AIEditing are separat
 own copy of the editing runtime: updating or removing AIEditing does not touch them. A refinement
 rebuilds a skill on the current version and keeps the previous one in
 `~/.agents/skills/.aiediting-backups/`; the workshop brings it back on request.
+
+If you installed animated inserts: the Node packages live in `~/.aiediting/node` (Windows:
+`%LOCALAPPDATA%\AIEditing\node`) and the render browser in `~/.cache/hyperframes/chrome` (≈200 MB). The
+browser is shared with other HyperFrames installs and is not removed with the `node` folder: delete that
+folder yourself if nothing else needs it.
 
 ## What's in the repository
 
