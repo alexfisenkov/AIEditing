@@ -1,7 +1,8 @@
-"""Reading an API key by variable name. The value is returned to the caller and never printed.
+"""Reading an API key by variable name. The value is returned to the caller and never printed or stored.
 
-Order: the process environment, then `.env` in the current folder, then the AIEditing config folder
-(`~/.aiediting/.env`; Windows: `%LOCALAPPDATA%\\AIEditing\\.env`).
+Order: the process environment, then `asr.key_file` (a .env the person already keeps the key in) when it
+is set, then `.env` in the current folder, then the AIEditing config folder (`~/.aiediting/.env`;
+Windows: `%LOCALAPPDATA%\\AIEditing\\.env`). The key is read at run time and copied nowhere.
 """
 from __future__ import annotations
 
@@ -22,12 +23,15 @@ def _env_files() -> List[Path]:
     return [Path.cwd() / ".env", config_dir() / ".env"]
 
 
-def _from_file(path: Path, name: str) -> Optional[str]:
+def _lines(path: Path) -> Optional[List[str]]:
     try:
-        lines = path.read_text(encoding="utf-8-sig").splitlines()
-    except OSError:
+        return path.read_text(encoding="utf-8-sig").splitlines()
+    except (OSError, UnicodeDecodeError):
         return None
-    for line in lines:
+
+
+def _from_file(path: Path, name: str) -> Optional[str]:
+    for line in _lines(path) or []:
         line = line.strip()
         if line.startswith("export "):
             line = line[len("export "):].lstrip()
@@ -40,16 +44,29 @@ def _from_file(path: Path, name: str) -> Optional[str]:
     return None
 
 
-def read_key(name: str) -> str:
-    """The key stored under `name`; AsrError naming only the variable if it is absent."""
+def _key_file_problem(path: Path, name: str) -> str:
+    if not path.is_file():
+        return "файла {} нет".format(path)
+    if _lines(path) is None:
+        return "файл {} не читается".format(path)
+    return "в файле {} нет строки {}=…".format(path, name)
+
+
+def read_key(name: str, key_file: Optional[str] = None) -> str:
+    """The key stored under `name`; AsrError naming only the variable and the file if it is absent."""
     value = os.environ.get(name)
-    for path in _env_files():
+    named = Path(key_file).expanduser().absolute() if key_file else None
+    for path in ([named] if named else []) + _env_files():
         if value:
             break
         value = _from_file(path, name)
-    if not value:
+    if value:
+        return value
+    if named:
         raise AsrError(
-            "Не найден ключ: переменная {0} не задана. Впишите строку {0}=… в файл .env "
-            "(в папке, где идёт работа, или в {1}) — в чат ключ не присылайте.".format(name, config_dir())
-        )
-    return value
+            "Не найден ключ {}: {} (это asr.key_file в профиле). Проверьте путь и имя переменной; "
+            "ключ в чат не присылайте.".format(name, _key_file_problem(named, name)))
+    raise AsrError(
+        "Не найден ключ: переменная {0} не задана. Впишите строку {0}=… в файл .env "
+        "(в папке, где идёт работа, или в {1}) — в чат ключ не присылайте.".format(name, config_dir())
+    )

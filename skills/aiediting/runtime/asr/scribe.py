@@ -16,7 +16,7 @@ DEFAULT_KEY_ENV = "ELEVENLABS_API_KEY"
 
 
 def transcribe(media: Path, cfg: dict) -> dict:
-    key = read_key(cfg.get("api_key_env") or DEFAULT_KEY_ENV)
+    key = read_key(cfg.get("api_key_env") or DEFAULT_KEY_ENV, cfg.get("key_file"))
     url = (cfg.get("base_url") or DEFAULT_URL).rstrip("/") + "/v1/speech-to-text"
     fields = [("model_id", cfg.get("model") or DEFAULT_MODEL),
               ("timestamps_granularity", "word"), ("tag_audio_events", "true")]

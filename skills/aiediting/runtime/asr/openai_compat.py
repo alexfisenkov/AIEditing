@@ -1,7 +1,8 @@
 """Any OpenAI-compatible `/audio/transcriptions` endpoint: OpenAI, OpenRouter, a self-hosted server.
 
-Key rules: `api_key_env` names the variable. With no `base_url` the default is OpenAI and its key
-(`OPENAI_API_KEY`) is required; a custom `base_url` without `api_key_env` is called without a key.
+Key rules: `api_key_env` names the variable (also looked up in `key_file`, if set). With no
+`base_url` the default is OpenAI and its key (`OPENAI_API_KEY`) is required;
+a custom `base_url` without `api_key_env` is called without a key.
 """
 from __future__ import annotations
 
@@ -22,7 +23,7 @@ DEFAULT_KEY_ENV = "OPENAI_API_KEY"
 
 def transcribe(media: Path, cfg: dict) -> dict:
     key_env = cfg.get("api_key_env") or (None if cfg.get("base_url") else DEFAULT_KEY_ENV)
-    key = read_key(key_env) if key_env else ""
+    key = read_key(key_env, cfg.get("key_file")) if key_env else ""
     url = (cfg.get("base_url") or DEFAULT_URL).rstrip("/") + "/audio/transcriptions"
     fields = [("model", cfg.get("model") or DEFAULT_MODEL), ("response_format", "verbose_json"),
               ("timestamp_granularities[]", "word"), ("timestamp_granularities[]", "segment")]

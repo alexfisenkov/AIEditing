@@ -99,6 +99,12 @@ script to generation; AIEditing does not include it — only this link.
 Keys live only in your environment or in a `.env` file (see `.env.example`); AIEditing reads them
 by variable name and never prints them. Never paste a key into the chat.
 
+The key already lies in another place — say, the `.env` of another tool? Give that file's path as
+`asr.key_file` in the interview (`~` works). The key is read from it at every run and copied nowhere:
+not into the profile, the format skill, the report or the log. Lookup order: the environment, then
+`key_file`, then `.env` in the working folder, then `~/.aiediting/.env`
+(Windows: `%LOCALAPPDATA%\AIEditing\.env`).
+
 ## Updating and removing
 
 ```bash

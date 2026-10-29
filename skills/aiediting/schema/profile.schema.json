@@ -33,6 +33,11 @@
         "model": {"type": ["string", "null"]},
         "base_url": {"type": ["string", "null"], "pattern": "^https?://"},
         "api_key_env": {"type": ["string", "null"], "pattern": "^[A-Z_][A-Z0-9_]*$"},
+        "key_file": {
+          "type": ["string", "null"],
+          "minLength": 1,
+          "description": "Path to a .env the person already keeps the key in (~ allowed); the key is read from it at run time under api_key_env and never copied."
+        },
         "command": {"type": ["array", "null"], "items": {"type": "string"}}
       },
       "additionalProperties": false

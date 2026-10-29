@@ -35,12 +35,15 @@ Each answer goes into the draft at once: `python "<skillDir>/tools/ae.py" profil
 | Chapters and graphics | timecodes in text; short dark plates at the bottom; cards over a face — by profile; over a screen — none, or small in the corner opposite the face, top or centre | `params.chapters`, `params.cards` (`on_screen`: `corner` · `top` · `center` · `none`), `params.graphics_per_15s` |
 | Sound | target loudness (−16 LUFS; −14 for vertical); noise reduction off (not built: `true` only puts a note in the report); music only from their own library folder | `params.lufs`, `params.denoise`, `params.music` |
 | Vertical | source: shot vertically → the whole recording is cut (pauses and bad takes out), as long as it is, no clip pick and no limit; a long horizontal recording → 5–10 scored clips for approval, each up to 60 s; the mode follows the layout of the source (`auto`) unless they say «целиком» (`native`) or «нарезать» (`clips`); stack or face with inserts; burned-in captions; Reels/Shorts/TikTok | `params.vertical_source`, `params.max_seconds`, `params.clips`, `params.layout`, `params.vertical_layout`, `params.captions`, `steps` (`vertical`, `export_platforms`) |
-| Speech recognition | local whisper (free, private), ElevenLabs Scribe (precise, paid), any OpenAI-compatible address and model (OpenRouter too), their own command — from `runtime.asr.providers_help()` | `asr.provider`, `asr.model`, `asr.base_url`, `asr.api_key_env` |
+| Speech recognition | local whisper (free, private), ElevenLabs Scribe (precise, paid), any OpenAI-compatible address and model (OpenRouter too), their own command — from `runtime.asr.providers_help()`; where the key is: they put it into their environment or `.env`, or it already lies in another `.env` and they give its path | `asr.provider`, `asr.model`, `asr.base_url`, `asr.api_key_env`, `asr.key_file` |
 | Where results go | the issue folder base; the language of the format | `output_dir`, `language` |
 
 The recogniser question names the **variable** the key lives in (`ELEVENLABS_API_KEY`,
-`OPENROUTER_API_KEY`, …): the person puts the value into their environment or `.env` themselves. Never
-ask for the value, never print it.
+`OPENROUTER_API_KEY`, …) and offers two ways, the person picks and does it themselves: put the value
+into their environment or `.env`, or — when the key already lies in another `.env` (say, of another
+tool) — give that file's path for `asr.key_file` (`~` is fine). The key is then read from that file at
+each run and copied nowhere: not into the profile, the format skill, the report or the log. Never ask
+for the value, never open or print the file.
 
 Steps marked `not_built` in `catalog/steps.json` are never offered: the runtime does not do them yet,
 and a profile that names one gets only a note in the report. Nothing is put in «на всякий случай».

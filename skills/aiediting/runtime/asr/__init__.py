@@ -2,7 +2,7 @@
 
 AsrConfig = {"provider": "whispercpp"|"scribe"|"openai_compat"|"command", "language": str,
              "model": str|None, "base_url": str|None, "api_key_env": str|None,
-             "command": list[str]|None}
+             "key_file": str|None, "command": list[str]|None}
 """
 from __future__ import annotations
 
