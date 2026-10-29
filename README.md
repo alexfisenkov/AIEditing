@@ -102,7 +102,8 @@ by variable name and never prints them. Never paste a key into the chat.
 The key already lies in another place — say, the `.env` of another tool? Give that file's path as
 `asr.key_file` in the interview (`~` works). The key is read from it at every run and copied nowhere:
 not into the profile, the format skill, the report or the log. Lookup order: the environment, then
-`key_file`, then `.env` in the working folder, then `~/.aiediting/.env`
+`key_file` if it is set (and only it: no file or no variable in it is an error naming both);
+without `key_file` — `.env` in the working folder, then `~/.aiediting/.env`
 (Windows: `%LOCALAPPDATA%\AIEditing\.env`).
 
 ## Updating and removing

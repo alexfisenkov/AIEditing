@@ -32,6 +32,14 @@ class KeyFileInSchema(unittest.TestCase):
         errors = self.check({"key_file": ""})
         self.assertTrue(any("asr.key_file" in e for e in errors), errors)
 
+    def test_a_key_pasted_as_key_file_is_refused_without_showing_it(self):
+        for value in ("sk_fakeprobe0000", "test-key-123"):
+            errors = self.check({"key_file": value})
+            self.assertTrue(any("asr.key_file" in e for e in errors), (value, errors))
+            self.assertFalse(any(value in e for e in errors), errors)
+        for path in ("~/x/.env", "/x/.env", "./.env", "../keys/.env", "keys/.env", "C:\\keys\\.env", ".env"):
+            self.assertEqual(self.check({"key_file": path}), [], path)
+
     def test_still_no_field_for_the_key_itself(self):
         errors = self.check({"key_file": "/x/.env", "api_key": "whatever"})
         self.assertTrue(any("asr.api_key" in e for e in errors), errors)
@@ -98,6 +106,28 @@ class KeyFileLookup(TempDirCase):
     def test_missing_file_names_the_path_and_the_variable(self):
         missing = self.home / "нет такой папки" / ".env"
         self.assert_refused("~/нет такой папки/.env", missing)
+
+    def test_a_key_pasted_as_key_file_is_refused_without_showing_it(self):
+        from runtime.asr import AsrError, transcribe
+
+        with FakeApi(payload=SCRIBE_REPLY) as api:
+            with self.assertRaises(AsrError) as ctx:
+                transcribe(self.media, {"provider": "scribe", "language": "ru", "base_url": api.url,
+                                        "api_key_env": KEY_NAME, "key_file": "sk_fakeprobe0000"})
+        self.assertNotIn("sk_fakeprobe0000", str(ctx.exception))
+        self.assertIn("asr.key_file", str(ctx.exception))
+        self.assertEqual(api.requests, [])
+
+    def test_missing_file_does_not_fall_back_to_the_folder_dotenv(self):
+        (self.work / ".env").write_text("{}=test-key-cwd\n".format(KEY_NAME), encoding="utf-8")
+        missing = self.home / "нет такой папки" / ".env"
+        message = self.assert_refused(str(missing), missing)
+        self.assertNotIn("test-key-cwd", message)
+
+    def test_file_without_the_variable_does_not_fall_back_either(self):
+        (self.work / ".env").write_text("{}=test-key-cwd\n".format(KEY_NAME), encoding="utf-8")
+        path = self.key_file("OTHER=test-key-other\n")
+        self.assert_refused(str(path), path)
 
     def test_file_without_the_variable_names_both_and_shows_no_value(self):
         path = self.key_file("ELEVENLABS_API_KEY=test-key-other\n")

@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 from typing import List, Optional, Union
 
+from .asr.keyfile import NOT_A_PATH, looks_like_path
 from .jsonschema_lite import validate
 
 SCHEMA_NAME = "profile.schema.json"
@@ -27,8 +28,17 @@ def load_schema(schema: Union[dict, str, Path, None] = None) -> dict:
 
 
 def check_profile(profile: dict, schema: Union[dict, str, Path, None] = None) -> List[str]:
-    """[] when the profile is valid, otherwise one Russian message per problem."""
-    return validate(profile, load_schema(schema))
+    """[] when the profile is valid, otherwise one Russian message per problem.
+
+    `asr.key_file` must look like a path; checked here, not by a schema pattern, so a key pasted there
+    by mistake is never repeated in a message.
+    """
+    errors = validate(profile, load_schema(schema))
+    asr = profile.get("asr") if isinstance(profile, dict) else None
+    key_file = asr.get("key_file") if isinstance(asr, dict) else None
+    if isinstance(key_file, str) and key_file and not looks_like_path(key_file):
+        errors.append(NOT_A_PATH)
+    return errors
 
 
 def load_profile(path: Union[str, Path], schema: Optional[Union[dict, str, Path]] = None) -> dict:
