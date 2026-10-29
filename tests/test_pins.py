@@ -1,0 +1,60 @@
+"""Python packages of the catalog install together on every supported Python: pins chosen by version.
+
+The expected sets were resolved and installed together (pip, then `pip check`) in clean venvs on
+Python 3.9, 3.11, 3.12 and 3.14 on 29.10.2026; CI repeats the install (ci.yml, job «pins»).
+"""
+import json
+import subprocess
+import sys
+import unittest
+
+from _support import ROOT, SKILL
+
+sys.path.insert(0, str(SKILL / "tools"))
+
+CATALOG = json.loads((SKILL / "catalog" / "tools.json").read_text(encoding="utf-8"))
+EXPECTED = {
+    (3, 9): {"Pillow==11.3.0", "numpy==2.0.2", "opencv-python==4.14.0.94"},
+    (3, 11): {"Pillow==12.3.0", "numpy==2.2.6", "opencv-python==4.14.0.94"},
+    (3, 12): {"Pillow==13.0.0", "numpy==2.5.4", "opencv-python==4.14.0.94"},
+    (3, 14): {"Pillow==13.0.0", "numpy==2.5.4", "opencv-python==4.14.0.94"},
+}
+
+
+def pip_rows():
+    return [r for r in CATALOG["tools"] if any(s.get("kind") == "pip" for s in r["install"].values())]
+
+
+class PinsByPython(unittest.TestCase):
+    def test_one_pin_per_package_for_each_python(self):
+        from aelib.installers import pip_package
+
+        for version, expected in EXPECTED.items():
+            for os_key in ("mac", "win"):
+                got = {pip_package(r["install"][os_key], version) for r in pip_rows()}
+                self.assertEqual(got, expected, "Python {}.{} on {}".format(version[0], version[1], os_key))
+
+    def test_doctor_prints_the_set_for_this_python(self):
+        proc = subprocess.run([sys.executable, str(SKILL / "tools" / "ae.py"), "doctor", "--requirements"],
+                              capture_output=True, text=True, encoding="utf-8")
+        self.assertEqual(proc.returncode, 0, proc.stdout + proc.stderr)
+        mine = max(v for v in EXPECTED if v <= sys.version_info[:2])
+        self.assertEqual(set(proc.stdout.split()), EXPECTED[mine])
+
+    def test_ci_installs_the_set_on_oldest_and_newest_python(self):
+        ci = (ROOT / ".github" / "workflows" / "ci.yml").read_text(encoding="utf-8")
+        self.assertIn("doctor --requirements", ci)
+        self.assertIn("pip check", ci)
+        for version in ('"3.9"', '"3.12"'):
+            self.assertIn(version, ci)
+
+    def test_readmes_name_the_python_floor_and_the_pins_by_version(self):
+        for name in ("README.md", "README.ru.md"):
+            text = (ROOT / name).read_text(encoding="utf-8")
+            self.assertIn("3.9", text, name)
+            self.assertIn("numpy 2.0.2", text, name)
+            self.assertIn("numpy 2.5.4", text, name)
+
+
+if __name__ == "__main__":
+    unittest.main()

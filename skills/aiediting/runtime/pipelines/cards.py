@@ -19,11 +19,22 @@ def wanted(ctx) -> bool:
     return bool(ctx.p("cards") or ctx.p("graphics_per_15s"))
 
 
-def where(ctx, frame) -> Optional[str]:
-    """The layout rule: over a screen — small in the corner opposite the face (or as the profile says)."""
+def where(ctx, frame, piece_layout: Optional[Dict] = None) -> Optional[str]:
+    """The layout rule: over a screen — small in the corner opposite the face (or as the profile says).
+
+    A 9:16 piece is judged by its own layout, in the finished frame `frame`, not by the source's.
+    """
     from ..render import opposite_corner
 
     rule = (ctx.p("cards") if isinstance(ctx.p("cards"), dict) else {}).get("on_screen", "corner")
+    if piece_layout:
+        from ..media.vertical import shown_size
+        from .placement import face_in_vertical
+
+        if rule == "none" and piece_layout.get("kind") == "stack":
+            return "none"
+        face = face_in_vertical(piece_layout, shown_size(ctx.info), frame)
+        return opposite_corner(face, frame) if face else None
     layout = ctx.layout or {}
     if layout.get("kind") in ("screen_face_window", "screen_only"):
         if rule == "none":

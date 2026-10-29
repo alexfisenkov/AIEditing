@@ -1,5 +1,5 @@
 {
-  "_comment": "Step ids are the names of runtime functions (interfaces.md §2–4) plus two optional heavy layers. 'runtime' lists the runtime packages a format skill needs for the step; 'tools' are ids from tools.json.",
+  "_comment": "Step ids are pipelines.STEPS (a test keeps them equal): runtime functions (interfaces.md §2–4) plus motion and verify_words. 'not_built' steps are not done by the runtime yet: they install nothing and the interview does not offer them. 'runtime' lists the runtime packages a format skill needs for the step; 'tools' are ids from tools.json.",
   "steps": {
     "speech_spans":     {"what": "находит, где говорят, а где пауза", "runtime": ["media"], "tools": ["ffmpeg"]},
     "cut_spans":        {"what": "вырезает паузы с запасом вокруг речи, склейка одним проходом", "runtime": ["media", "asr"], "tools": ["ffmpeg"]},
@@ -14,8 +14,10 @@
     "vertical":         {"what": "собирает 9:16: стек «экран сверху, лицо снизу» или лицо крупно", "runtime": ["media", "look"], "tools": ["ffmpeg", "opencv-python", "numpy", "yunet-model"]},
     "export_platforms": {"what": "выгружает версии под Reels, Shorts и TikTok", "runtime": ["media"], "tools": ["ffmpeg"]},
     "music":            {"what": "подкладывает трек из папки-библиотеки человека на −20 дБ", "runtime": ["media"], "tools": ["ffmpeg"]},
-    "graphics":         {"what": "графика поверх видео на HyperFrames", "runtime": ["render"], "tools": ["node", "hyperframes"], "heavy": true},
-    "behind_head":      {"what": "надписи и эффекты «за головой» при вертикальной съёмке", "runtime": ["look"], "tools": ["node", "remotion", "rvm"], "heavy": true}
+    "motion":           {"what": "укрупнения по раскладке и «камера в бок, экран в бок» в утверждённых местах", "runtime": ["media"], "tools": ["ffmpeg"]},
+    "verify_words":     {"what": "сверяет готовый ролик повторной расшифровкой: ни одного обрезанного слова", "runtime": ["media", "asr"], "tools": ["ffmpeg"]},
+    "graphics":         {"what": "графика поверх видео на HyperFrames — пока нет: шаг только оставляет заметку в отчёте", "runtime": [], "tools": [], "not_built": true},
+    "behind_head":      {"what": "эффекты «за головой» при вертикальной съёмке — пока нет: шаг только оставляет заметку в отчёте", "runtime": [], "tools": [], "not_built": true}
   },
   "asr_tools": {
     "whispercpp": ["whisper-cpp", "whisper-model"],

@@ -6,6 +6,7 @@ from typing import Dict, List
 
 from ..media.ffmpeg import ensure_file, tool
 from ..media.probe import probe
+from ..media.vertical import shown_size
 from .errors import LookError, need
 
 WORK_WIDTH = 480  # frames are compared at this width
@@ -40,9 +41,9 @@ def track_region(src, region: Dict) -> List[Dict]:
     """Path [{"t","x","y","w","h"}] of the area's top-left corner, in source pixels, STEP_FPS a second."""
     np = need("numpy", "блюр движущейся области")
     src = ensure_file(src)
-    info = probe(src)
-    scale = min(1.0, WORK_WIDTH / float(info["width"]))
-    size = (int(info["width"] * scale) // 2 * 2, int(info["height"] * scale) // 2 * 2)
+    width, height = shown_size(probe(src))  # ffmpeg hands over frames as shown, rotation applied
+    scale = min(1.0, WORK_WIDTH / float(width))
+    size = (int(width * scale) // 2 * 2, int(height * scale) // 2 * 2)
     start, end = float(region["start"]), float(region["end"])
     shots = _gray_frames(np, src, start, end, size)
     x, y = int(region["x"] * scale), int(region["y"] * scale)

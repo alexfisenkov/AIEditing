@@ -25,9 +25,8 @@ first, they are the person's own words.
 ```
 
 Each answer becomes a question round of `phases/interview.md` where it opens a theme, a parameter
-(`ae.py profile set`) and a taste line (`ae.py profile taste`). Here — and only here — heavy layers
-(graphics on HyperFrames, effects «за головой») may come in, when the person asks for them: they go into
-`steps`, and `phases/build.md` installs them on «да».
+(`ae.py profile set`) and a taste line (`ae.py profile taste`). A wish the runtime does not do yet (a step
+marked `not_built` in `catalog/steps.json`) is answered «пока нет» and written as a taste line, not as a step.
 
 Design changes → `phases/design.md` for the elements they named. Need a source to show on → ask for one
 (`phases/sources.md`, `ae.py frames`).

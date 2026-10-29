@@ -24,6 +24,8 @@ def run(src, profile: Dict, outdir, approve: Callable[[str, dict], bool], screen
     if ctx.src == ctx.outdir or ctx.src.parent == ctx.work:
         raise PipelineError("Папка выпуска не может быть исходником")
     ctx.outdir.mkdir(parents=True, exist_ok=True)
+    if ctx.p("denoise"):
+        ctx.note("Шумодав в этой версии не делается — звук не очищался")
     for name in STEPS:
         if ctx.has(name) and PLAN[name] is not None:
             PLAN[name](ctx)

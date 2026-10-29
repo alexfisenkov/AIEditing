@@ -39,3 +39,28 @@ jobs:
           ffmpeg -hide_banner -version
       - name: Тесты
         run: python -B -m unittest discover -s tests -v
+
+  pins:
+    # Pillow, numpy and OpenCV by the catalog's pins for this Python: one install together, then pip check.
+    name: Пины · ${{ matrix.os }} · Python ${{ matrix.python }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, windows-latest]
+        python: ["3.9", "3.12", "3.14"]
+        exclude:
+          - os: macos-latest
+            python: "3.9"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Установка по пинам
+        shell: bash
+        run: |
+          python skills/aiediting/tools/ae.py doctor --requirements > pins.txt
+          python -m pip install --disable-pip-version-check -r pins.txt
+          python -m pip check
+          python -c "import PIL, numpy, cv2; print(PIL.__version__, numpy.__version__, cv2.__version__)"

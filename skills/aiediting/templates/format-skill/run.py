@@ -4,6 +4,7 @@
     python tools/run.py check                       profile and copy are intact
     python tools/run.py edit <video> [--topic T]    edit by the profile into <output_dir>/<date>-<topic>/
                        [--out DIR] [--answers F]    exit 3: a decision is needed, see вопросы.json
+                       [--screen FILE]              the screen recording when camera and screen are separate
     python tools/run.py note <issue folder> "text"  a remark for the next refinement, into отчёт.md
 """
 import argparse
@@ -49,10 +50,14 @@ def edit(profile, opt):
     if not src.is_file():
         print("Нет такого файла: {}".format(src))
         return 2
+    screen = Path(opt.screen).expanduser().resolve() if opt.screen else None
+    if screen is not None and not screen.is_file():
+        print("Нет такого файла экрана: {}".format(screen))
+        return 2
     out = Path(opt.out).resolve() if opt.out else issue_folder(profile, src, opt.topic)
     approve = FileApprover(out, Path(opt.answers) if opt.answers else None)
     try:
-        report = pipelines.run(src, profile, out, approve)
+        report = pipelines.run(src, profile, out, approve, **({"screen": screen} if screen else {}))
     except NeedsApproval as e:
         print(str(e))
         print("Папка выпуска: {}".format(out))
@@ -71,6 +76,7 @@ def main(argv):
     e.add_argument("--topic")
     e.add_argument("--out")
     e.add_argument("--answers")
+    e.add_argument("--screen")
     n = sub.add_parser("note")
     n.add_argument("issue")
     n.add_argument("text")

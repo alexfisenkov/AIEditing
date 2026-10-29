@@ -10,7 +10,8 @@ python "<skillDir>/tools/ae.py" trial <skill> "<source>" --start <S> --duration 
 ```
 
 Pick a piece of 1–2 minutes that has what the format does (pauses for a lesson, a secret on screen for
-a stream, a strong phrase for a vertical); a vertical may take the whole source. The result is in
+a stream, a strong phrase for a vertical); a vertical may take the whole source. Camera and screen are
+two files (separate tracks) → add `--screen "<screen file>"`: it is cut to the same piece. The result is in
 `.aiediting-work/<skill>/trials/NN/out/` and on the dashboard.
 
 **Exit code 3 — a decision is needed** (the plan, the cut list, the regions to blur, the clips). Read

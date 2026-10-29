@@ -10,9 +10,9 @@ MAX_WORDS, MAX_CHARS, GAP = 4, 24, 0.6
 def cues(words: List[Dict], glossary: Dict[str, str]) -> List[Dict]:
     out: List[Dict] = []
     for w in words:
-        if w.get("type") == "filler":
+        text = str(w.get("text", "")).strip()
+        if w.get("type", "word") != "word" or not text:  # as the .srt: spacing, hesitations, sounds — out
             continue
-        text = str(w["text"]).strip()
         for wrong, right in glossary.items():
             text = re.sub(r"(?<!\w){}(?!\w)".format(re.escape(wrong)), right, text, flags=re.IGNORECASE)
         cur = out[-1] if out else None

@@ -42,7 +42,7 @@ def parser() -> argparse.ArgumentParser:
     p = _sub(sub, "choose", cmd_design.cmd_choose, "skill", "element")
     p.add_argument("n", type=int)
     _sub(sub, "trial", cmd_media.cmd_trial, "skill", "video", start={"type": float},
-         duration={"type": float}, answers={})
+         duration={"type": float}, answers={}, screen={})
     p = _sub(sub, "verdict", cmd_media.cmd_verdict, "skill", note={})
     p.add_argument("verdict", choices=["yes", "no"])
     _sub(sub, "build-skill", cmd_skills.cmd_build, "profile", "dest", replace={"action": "store_true"})
@@ -51,7 +51,7 @@ def parser() -> argparse.ArgumentParser:
     _sub(sub, "backup-skill", cmd_skills.cmd_backup, "name")
     _sub(sub, "restore-skill", cmd_skills.cmd_restore, "name", backup={}, list={"action": "store_true"})
     _sub(sub, "doctor", doctor.cmd_doctor, steps={}, asr={}, install={}, yes={"action": "store_true"},
-         catalog={})
+         catalog={}, requirements={"action": "store_true"})
     return ap
 
 

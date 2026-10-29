@@ -24,20 +24,27 @@ def _part(rect: Dict, line: str, a: int, b: int) -> Dict:
     return {"x": max(0, x0 - pad), "y": rect["y"], "w": x1 - x0 + 2 * pad, "h": rect["h"]}
 
 
+def _overlap(a: Dict, b: Dict) -> bool:
+    return a["x"] < b["x"] + b["w"] and b["x"] < a["x"] + a["w"] and a["y"] < b["y"] + b["h"] and b["y"] < a["y"] + a["h"]
+
+
 def _from_frames(frames: List[Path], backend: str) -> List[Dict]:
-    found: Dict[tuple, Dict] = {}
-    for frame, lines in zip(frames, read_lines(frames, backend)):
+    """One candidate per stay: the same text in the same place on back-to-back snapshots widens it;
+    in another place, or back after a snapshot without it, it is a new candidate with its own box."""
+    found: List[Dict] = []
+    for i, (frame, lines) in enumerate(zip(frames, read_lines(frames, backend))):
         t = frame_time(frame)
         for line in lines:
             for hit in scan_text(line["text"]):
-                key = (hit["kind"], hit["text"])
-                if key in found:  # same text on a later frame: widen the time, keep the first box
-                    found[key]["end"] = t if t is not None else found[key]["end"]
+                rect = _part(line["rect"], line["text"], hit["start"], hit["end"])
+                same = next((c for c in found if (c["kind"], c["text"]) == (hit["kind"], hit["text"])
+                             and c["_seen"] in (i - 1, i) and _overlap(c["rect"], rect)), None)
+                if same is not None:
+                    same.update(end=t if t is not None else same["end"], _seen=i)
                     continue
-                found[key] = {"kind": hit["kind"], "text": hit["text"], "start": t, "end": t,
-                              "rect": _part(line["rect"], line["text"], hit["start"], hit["end"]),
-                              "frame": frame, "source": "ocr"}
-    return list(found.values())
+                found.append({"kind": hit["kind"], "text": hit["text"], "start": t, "end": t, "rect": rect,
+                              "frame": frame, "source": "ocr", "_seen": i})
+    return [{k: v for k, v in c.items() if k != "_seen"} for c in found]
 
 
 def find_secrets(frames, transcript, ocr="auto") -> List[Dict]:

@@ -5,7 +5,7 @@ from pathlib import Path
 
 from . import catalog
 from .checks import current_os, status
-from .installers import run_install
+from .installers import pip_package, run_install
 from .session import CliError
 
 
@@ -27,7 +27,8 @@ def _line(row) -> str:
     mark = {True: "есть", False: "нет", None: "проверьте сами"}[s["ok"]]
     heavy = ", тяжёлое" + (" " + row["size"] if row.get("size") else "") if row.get("heavy") else ""
     warn = "\n    ! " + row["warning"] if row.get("warning") else ""
-    return "{:<14} {:<15} пин {} ({}){} — {}{}".format(row["id"], mark, row["pin"], row["license"], heavy,
+    pin = row["pin"] + (" [{}]".format(row["pin_note"]) if row.get("pin_note") else "")
+    return "{:<14} {:<15} пин {} ({}){} — {}{}".format(row["id"], mark, pin, row["license"], heavy,
                                                       s["note"], warn)
 
 
@@ -35,14 +36,22 @@ def plan(row) -> str:
     step = row["install"].get(current_os())
     if not step:
         return "{}: на этой системе не ставится".format(row["id"])
-    what = {"command": lambda: " ".join(step["argv"]), "pip": lambda: "pip install " + step["package"],
+    what = {"command": lambda: " ".join(step["argv"]), "pip": lambda: "pip install " + pip_package(step),
             "npm": lambda: "npm install " + step["package"], "manual": lambda: "вручную: " + step["url"] + (" → " + step["save_to"] if step.get("save_to") else "")}
     return "{} {}: {}{}".format(row["id"], row["pin"], what[step["kind"]](),
                                 " ({})".format(row["size"]) if row.get("size") else "")
 
 
+def requirements(rows) -> str:
+    """Pinned pip requirements of the rows for this Python and system, one per line (CI installs them)."""
+    steps = [r["install"].get(current_os()) for r in rows]
+    return "\n".join(pip_package(s) for s in steps if s and s.get("kind") == "pip")
+
+
 def cmd_doctor(opt) -> str:
     rows = _rows(opt)
+    if getattr(opt, "requirements", False):
+        return requirements(rows)
     if not opt.install:
         return "\n".join(_line(r) for r in rows) or "Для выбранных шагов ничего не нужно"
     row = next((r for r in catalog.tools(Path(opt.catalog) if opt.catalog else None).values()

@@ -58,5 +58,6 @@ def write_srt(transcript: dict, out, glossary: Dict[str, str] = None) -> List[di
         blocks.append("{}\n{} --> {}\n{}\n".format(i, _stamp(cue["start"]), _stamp(cue["end"]), text))
     out = Path(out)
     out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text("\n".join(blocks), encoding="utf-8", newline="\n")
+    with open(str(out), "w", encoding="utf-8", newline="\n") as f:  # Path.write_text(newline=) needs 3.10
+        f.write("\n".join(blocks))
     return fixes

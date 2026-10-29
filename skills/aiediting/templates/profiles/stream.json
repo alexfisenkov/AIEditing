@@ -1,5 +1,5 @@
 {
   "steps": ["find_secrets", "blur_regions", "loudnorm", "write_srt"],
-  "params": {"cut": false, "lufs": -16, "denoise": false, "blur": "soft", "glossary": {}},
+  "params": {"lufs": -16, "denoise": false, "glossary": {}},
   "approval": "plan"
 }

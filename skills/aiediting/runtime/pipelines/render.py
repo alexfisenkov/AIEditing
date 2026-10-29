@@ -61,8 +61,9 @@ def render_piece(ctx, piece: Dict) -> Dict:
         cur = media.vertical(cur, piece["layout"], tmp / "4-вертикаль.mp4")
     items = specs(ctx, piece) if (ctx.has("plate") or ctx.has("overlay_png")) else []
     if items:
-        info = media.probe(cur)
-        pngs = draw(ctx, piece, items, (info["width"], info["height"]), tmp / "плашки")
+        from ..media.vertical import shown_size
+
+        pngs = draw(ctx, piece, items, shown_size(media.probe(cur)), tmp / "плашки")
         cur = media.overlay_png(cur, pngs, tmp / "5-плашки.mp4") if pngs else cur
     lufs = float(ctx.p("lufs", -16))
     if ctx.has("music") and ctx.music and media.probe(cur)["has_audio"]:

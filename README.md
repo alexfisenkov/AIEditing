@@ -80,12 +80,16 @@ installed by AIEditing's own scripts, only when chosen.
 | whisper.cpp + model | local speech recognition | MIT | the model is ≈3 GB (large-v3) |
 | Pillow, numpy, OpenCV | plates and captions as images, face and layout | MIT-CMU, BSD-3-Clause, Apache-2.0 | light |
 | Tesseract | text on frames when looking for secrets (Apple Vision on macOS) | Apache-2.0 | light |
-| Node.js + HyperFrames | graphics over the video | MIT, Apache-2.0 | hundreds of MB with Chrome |
-| Remotion + RobustVideoMatting | effects "behind the head" in a vertical | Remotion License, GPL-3.0 | heavy |
+| Node.js + HyperFrames | graphics over the video — **not yet**: not offered, not installed | MIT, Apache-2.0 | hundreds of MB with Chrome |
+| Remotion + RobustVideoMatting | effects "behind the head" in a vertical — **not yet**: not offered, not installed | Remotion License, GPL-3.0 | heavy |
+
+Python packages are pinned by Python version; Python 3.9 is the minimum. On 3.12 and newer — Pillow 13.0.0,
+numpy 2.5.4; on 3.10–3.11 — Pillow 12.3.0, numpy 2.2.6; on 3.9 — Pillow 11.3.0, numpy 2.0.2; OpenCV
+4.14.0.94 everywhere. CI installs each set together on Python 3.9, 3.12 and 3.14.
 
 > **Remotion is not open source.** It is free for individuals and companies of up to three people;
 > larger companies need a paid licence. Check the terms at remotion.pro before choosing effects that need it.
-> Nothing is installed by default; it comes in only if you choose those effects.
+> Nothing is installed by default; these effects are not built yet, so the workshop does not offer them.
 
 [OpenMontage](https://github.com/calesthio/OpenMontage) (AGPL-3.0) is a full production pipeline from
 script to generation; AIEditing does not include it — only this link.

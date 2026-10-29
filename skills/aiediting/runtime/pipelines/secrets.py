@@ -21,9 +21,12 @@ def plan_find(ctx) -> None:
 
 
 def _region(c: Dict, step: float, total: float) -> Dict:
+    """Seen on snapshots i..j: closed from the snapshot before (where it was not) to the one after."""
     rect = c["rect"]
     start, end = float(c.get("start") or 0.0), float(c.get("end") or total)
-    if end - start < step:  # seen on one snapshot: cover the stretch around it
+    if c.get("source") == "ocr":
+        start, end = max(0.0, start - step), min(total, end + step)
+    elif end - start < step:  # a time from speech with a box drawn by the person: the stretch around it
         start, end = max(0.0, start - step / 2), min(total, end + step / 2)
     return {"x": rect["x"], "y": rect["y"], "w": rect["w"], "h": rect["h"], "start": start, "end": end,
             "track": bool(c.get("track")), "what": "{}: {}".format(c.get("kind", ""), c.get("text", ""))}

@@ -64,8 +64,8 @@ Store stub on Windows, use `py -3`.
 2. **A fact about the person is never invented** — the output folder, the brand glossary, the music
    library: asked, or left as a visible gap in the profile.
 3. **Nothing is installed without «да».** `doctor --install <id> --yes` only after the person agreed to that
-   tool, by its pin from `catalog/tools.json`. Only tools the interview chose; heavy ones are offered with
-   their size, Remotion with its licence warning.
+   tool, by its pin from `catalog/tools.json`. Only tools the interview chose; heavy ones (the whisper
+   model) are offered with their size. Steps marked `not_built` in `catalog/steps.json` are not offered.
 4. **Examples are always on the person's own video.** No source of the needed kind → ask for one; without
    it the question is asked in words, without an example.
 5. **Every remark goes into the profile** (`ae.py profile taste`), and only AIEditing changes a profile —

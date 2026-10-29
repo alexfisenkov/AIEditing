@@ -39,20 +39,38 @@ def _at_seam(ctx, design: Dict, layout, frame) -> Dict:
 
 
 def draw(ctx, piece: Dict, items: List[Dict], frame, folder: Path) -> List[Dict]:
-    """PNG for each item: [{png, start, end, fade}] ready for overlay_png."""
+    """PNG for each item: [{png, start, end, fade}] ready for overlay_png; a card never lands on the face."""
     from ..render import plate
     from .cards import where
+    from .offface import off_face
 
-    design = _at_seam(ctx, ctx.design(vertical=bool(piece.get("layout"))), piece.get("layout"), frame)
-    spot = where(ctx, frame)
+    layout = piece.get("layout")
+    base = ctx.design(vertical=bool(layout))
+    seam = _at_seam(ctx, base, layout, frame)  # only captions move to the seam; cards keep the safe zone
+    spot, face = where(ctx, frame, layout), _face(ctx, layout, frame)
     pngs = []
     for k, item in enumerate(items):
-        place = spot if item["kind"] == "card" else None
+        kind = item["kind"]
+        design = seam if kind == "caption" else base
+        place = spot if kind == "card" else None
         if place == "none":
             continue
-        fade = float(design["video"].get(item["kind"], {}).get("fade", 0.15 if item["kind"] == "caption" else 0.3))
-        path = plate(item["text"], design, item["kind"], frame_size=frame, where=place,
-                     out=folder / "{}-{:03d}.png".format(item["kind"], k))
+        fade = float(design["video"].get(kind, {}).get("fade", 0.15 if kind == "caption" else 0.3))
+        out = folder / "{}-{:03d}.png".format(kind, k)
+        path = off_face(lambda d: plate(item["text"], d, kind, frame_size=frame, where=place, out=out),
+                        design, kind, face if kind == "card" else None)
+        if path is None:
+            ctx.note("Карточка «{}» не помещается мимо лица — не показана".format(item["text"].split("\n")[0]))
+            continue
         pngs.append({"png": path, "x": 0, "y": 0, "start": item["start"], "end": item["end"],
-                     "fade": 0.0 if item["kind"] == "caption" else fade})
+                     "fade": 0.0 if kind == "caption" else fade})
     return pngs
+
+
+def _face(ctx, layout, frame):
+    if not layout:
+        return None
+    from ..media.vertical import shown_size
+    from .placement import face_in_vertical
+
+    return face_in_vertical(layout, shown_size(ctx.info), frame)

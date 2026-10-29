@@ -6,8 +6,9 @@ from .paths import FORMAT_TEMPLATE
 APPROVAL = {
     "plan": "«План → готовый ролик»: the pipeline shows the plan (cuts, regions, places) for one approval, "
             "then edits the whole video.",
-    "parts": "«По частям»: the video is edited part by part; each part, with its insert variants, is "
-             "approved before the next, then the parts are joined.",
+    "parts": "«По частям» was chosen, but part-by-part editing is not built yet: the pipeline works as "
+             "«план → готовый ролик» — every question of the plan first, then the whole video. Say so to the "
+             "person before the first run.",
 }
 ASR = {"whispercpp": "none — local whisper.cpp", "scribe": "ElevenLabs Scribe",
        "openai_compat": "the OpenAI-compatible address in profile.json", "command": "whatever your own command does"}

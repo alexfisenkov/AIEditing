@@ -27,14 +27,24 @@ def _folder(root: Path, resume: bool) -> Path:
     return root / "{:02d}".format(len(done) + 1)
 
 
-def _piece(src: Path, folder: Path, start, duration) -> Path:
+def _piece(src: Path, folder: Path, start, duration, name: str = "кусок") -> Path:
     if start is None and duration is None:
         return src
     from runtime import media
 
     a = float(start or 0.0)
     b = a + float(duration) if duration else media.probe(src)["duration"]
-    return media.cut_spans(src, [(a, b)], folder / ("кусок" + (src.suffix or ".mp4")))
+    return media.cut_spans(src, [(a, b)], folder / (name + (src.suffix or ".mp4")))
+
+
+def _screen(opt, folder: Path):
+    """The screen recording of separate tracks, cut to the same piece as the camera."""
+    if not getattr(opt, "screen", None):
+        return None
+    screen = Path(opt.screen).expanduser().resolve()
+    if not screen.is_file():
+        raise CliError("Нет такого файла экрана: {}".format(screen))
+    return _piece(screen, folder, opt.start, opt.duration, "экран")
 
 
 def cmd_trial(opt) -> str:
@@ -51,9 +61,10 @@ def cmd_trial(opt) -> str:
         raise CliError("Нет такого файла: {}".format(src))
     folder = _folder(w / opt.skill / "trials", resume=bool(opt.answers))
     folder.mkdir(parents=True, exist_ok=True)
-    piece = _piece(src, folder, opt.start, opt.duration)
+    piece, screen = _piece(src, folder, opt.start, opt.duration), _screen(opt, folder)
     try:
-        report = pipelines.run(piece, profile, folder / "out", FileApprover(folder, opt.answers))
+        report = pipelines.run(piece, profile, folder / "out", FileApprover(folder, opt.answers),
+                               **({"screen": screen} if screen else {}))
     except NeedsApproval as e:
         session.event(lambda d: st.ask(d, "approve", "пробный монтаж {}: нужно решение".format(opt.skill)))
         raise Waiting("{}\nПапка пробы: {}".format(e, folder))

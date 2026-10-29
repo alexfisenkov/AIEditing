@@ -2,6 +2,7 @@
 
 face_full — a gentle zoom on the face; screen_face_window — nothing (screen zoom is a profile option);
 separate_tracks — the camera and the screen side by side where something is shown.
+Profile: params.zoom_face / params.moves = false turn the face zoom / the side-by-side off.
 """
 from __future__ import annotations
 
@@ -39,10 +40,12 @@ def plan_motion(ctx) -> None:
         if ctx.p("zoom_screen"):
             ctx.note("Укрупнение экрана включено в профиле, но в этой версии не делается: не задано, куда приближать")
         return
-    if kind == "separate_tracks" and ctx.screen is None:
+    if kind == "separate_tracks" and ctx.screen is None and ctx.p("moves") is not False:
         ctx.note("Раздельные дорожки: файл экрана не передан — движения «камера в бок, экран в бок» нет")
         return
     if kind not in ("face_full", "separate_tracks"):
+        return
+    if ctx.p("zoom_face" if kind == "face_full" else "moves") is False:  # the interview said no
         return
     places = _places(ctx)
     if not places:

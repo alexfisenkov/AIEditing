@@ -16,6 +16,15 @@ def _run(argv) -> str:
     return "поставлено" + ("\n" + tail if tail else "")
 
 
+def pip_package(step: dict, version=None) -> str:
+    """The pinned requirement for this Python: the first `older_python` entry it is below, else `package`."""
+    version = tuple(version or sys.version_info[:2])
+    for older in step.get("older_python", []):
+        if version < tuple(int(x) for x in older["below"].split(".")):
+            return older["package"]
+    return step["package"]
+
+
 def _venv() -> str:
     if venv_python().is_file():
         return ""
@@ -37,7 +46,7 @@ def run_install(row: dict) -> str:
         made = _venv()
         if made.startswith("не получилось"):
             return made
-        return _run([str(venv_python()), "-m", "pip", "install", "--disable-pip-version-check", step["package"]])
+        return _run([str(venv_python()), "-m", "pip", "install", "--disable-pip-version-check", pip_package(step)])
     if kind == "npm":
         prefix = home() / ".aiediting" / "node"
         prefix.mkdir(parents=True, exist_ok=True)

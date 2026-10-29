@@ -13,6 +13,7 @@ from .codec import encode
 from .ffmpeg import MediaError, ensure_file
 from .graph import graph_args
 from .probe import probe
+from .vertical import shown_size
 
 
 def _lerp_expr(path: List[Dict], key: str) -> str:
@@ -57,8 +58,8 @@ def blur_regions(src, regions: List[Dict], out) -> Path:
     info = probe(src)
     if not regions:
         raise MediaError("Нет ни одной области для блюра.")
-    graph = ";".join(["[0:v]null[v0]"] + [_step(i, r, src, info["width"], info["height"])
-                                           for i, r in enumerate(regions)])
+    width, height = shown_size(info)  # filters see the picture as shown, rotation already applied
+    graph = ";".join(["[0:v]null[v0]"] + [_step(i, r, src, width, height) for i, r in enumerate(regions)])
     kbps = min(max(info["video_kbps"] or 8000, 2000), 50000)
     out.parent.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(prefix="aiediting-") as tmp:

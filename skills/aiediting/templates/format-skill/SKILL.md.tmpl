@@ -24,7 +24,8 @@ video and names this format. One video per run.
 `<skillDir>` is the folder of this file. Where `python` is the Microsoft Store stub on Windows, use `py -3`.
 
 1. `python "<skillDir>/tools/run.py" check` — the profile and the copy are intact. Red → say it in one line and stop.
-2. `python "<skillDir>/tools/run.py" edit "<video>" --topic "<тема одним-двумя словами>"`.
+2. `python "<skillDir>/tools/run.py" edit "<video>" --topic "<тема одним-двумя словами>"`. Camera and screen
+   recorded as two files → the camera is `<video>`, and add `--screen "<screen file>"`.
 3. **Exit code 3** — a decision is needed. Read `<issue folder>/вопросы.json`, ask the person in plain words
    (show the frames or the list it names), write their answer into `<issue folder>/ответы.json` as
    `{"<key>": true}`, `{"<key>": false}` or `{"<key>": {"ok": true, "payload": {...}}}` with their corrections,
