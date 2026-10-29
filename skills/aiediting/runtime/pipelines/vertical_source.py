@@ -1,0 +1,46 @@
+"""Which stretches of the source become 9:16 videos: the whole recording, or clips picked from a long one."""
+from __future__ import annotations
+
+from typing import Dict, List
+
+from .errors import PipelineError
+from .timeline import length
+from .words import mapped, spoken
+
+MODES = ("auto", "native", "clips")
+
+
+def is_native(ctx) -> bool:
+    """True when the recording is cut whole, as long as it is: shot vertically (auto), or the profile says so."""
+    mode = ctx.p("vertical_source", "auto")
+    if mode not in MODES:
+        raise PipelineError("params.vertical_source: {!r}; допустимо: {}".format(mode, ", ".join(MODES)))
+    if mode != "auto":
+        return mode == "native"
+    from ..media.vertical import shown_size
+
+    w, h = shown_size(ctx.info)
+    forced = ctx.p("layout", "auto")
+    kind = forced.get("kind") if isinstance(forced, dict) else forced
+    return h > w * 1.1 or kind in ("vertical", "native")
+
+
+def _whole(ctx) -> List[Dict]:
+    return [{"id": "v01", "start": ctx.keep[0][0], "end": ctx.keep[-1][1], "said": ""}]
+
+
+def stretches(ctx) -> List[Dict]:
+    limit = float(ctx.p("max_seconds", 60))
+    if is_native(ctx) or length(ctx.keep) <= limit:
+        return _whole(ctx)
+    from .clips import candidates
+
+    lo, hi = (ctx.p("clips") or [5, 10])[:2]
+    items = candidates(mapped(spoken(ctx.transcript()), [(0.0, ctx.info["duration"])]), max_s=limit,
+                       most=int(hi))
+    if len(items) < int(lo):
+        ctx.note("Нашлось {} отрывков вместо {}–{}: запись короткая или речь редкая".format(len(items), lo, hi))
+    ok, data = ctx.ask("clips", "Отрывки по рубрике (баллы из 10): впишите в chosen id тех, что монтировать.",
+                       {"items": items, "chosen": [i["id"] for i in items[:1]]})
+    chosen = set(data.get("chosen") or []) if ok else set()
+    return [i for i in data.get("items", []) if i["id"] in chosen]

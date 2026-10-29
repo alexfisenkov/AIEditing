@@ -40,6 +40,10 @@ def run_install(row: dict) -> str:
     if kind == "manual":
         where = " и сохраните как {}".format(step["save_to"]) if step.get("save_to") else ""
         return "Ставится вручную: скачайте с {}{}; вернитесь, когда готово.".format(step["url"], where)
+    if kind == "download":
+        from .downloads import download
+
+        return download(step)
     if kind == "command":
         return _run(argv_of(step["argv"]))
     if kind == "pip":

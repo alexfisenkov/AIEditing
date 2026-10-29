@@ -37,7 +37,8 @@ def plan(row) -> str:
     if not step:
         return "{}: на этой системе не ставится".format(row["id"])
     what = {"command": lambda: " ".join(step["argv"]), "pip": lambda: "pip install " + pip_package(step),
-            "npm": lambda: "npm install " + step["package"], "manual": lambda: "вручную: " + step["url"] + (" → " + step["save_to"] if step.get("save_to") else "")}
+            "npm": lambda: "npm install " + step["package"],
+            "download": lambda: "скачать " + step["url"] + " → " + step["save_to"], "manual": lambda: "вручную: " + step["url"] + (" → " + step["save_to"] if step.get("save_to") else "")}
     return "{} {}: {}{}".format(row["id"], row["pin"], what[step["kind"]](),
                                 " ({})".format(row["size"]) if row.get("size") else "")
 

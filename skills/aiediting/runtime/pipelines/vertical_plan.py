@@ -6,8 +6,9 @@ from __future__ import annotations
 
 from typing import Dict, List
 
-from .timeline import intersect, length
-from .words import mapped, quote, spoken
+from .timeline import intersect
+from .vertical_source import stretches
+from .words import quote, spoken
 
 FACE_ROOM = 2.8  # a detected face box is just the face: show head and shoulders
 WINDOW_ROOM = 0.8  # inside a round camera window, so its rim does not show in the corners
@@ -45,26 +46,9 @@ def _warning(ctx, layout: Dict):
     return None
 
 
-def _stretches(ctx) -> List[Dict]:
-    limit = float(ctx.p("max_seconds", 60))
-    if length(ctx.keep) <= limit:
-        return [{"id": "v01", "start": ctx.keep[0][0], "end": ctx.keep[-1][1], "said": ""}]
-    from .clips import candidates
-
-    lo, hi = (ctx.p("clips") or [5, 10])[:2]
-    items = candidates(mapped(spoken(ctx.transcript()), [(0.0, ctx.info["duration"])]), max_s=limit,
-                       most=int(hi))
-    if len(items) < int(lo):
-        ctx.note("Нашлось {} отрывков вместо {}–{}: запись короткая или речь редкая".format(len(items), lo, hi))
-    ok, data = ctx.ask("clips", "Отрывки по рубрике (баллы из 10): впишите в chosen id тех, что монтировать.",
-                       {"items": items, "chosen": [i["id"] for i in items[:1]]})
-    chosen = set(data.get("chosen") or []) if ok else set()
-    return [i for i in data.get("items", []) if i["id"] in chosen]
-
-
 def plan_vertical(ctx) -> None:
     pieces = []
-    for st in _stretches(ctx):
+    for st in stretches(ctx):
         keep = intersect(ctx.keep, float(st["start"]), float(st["end"]))
         lay = _layout(ctx, keep[0][0], keep[-1][1], st["id"]) if keep else None
         if not keep:
