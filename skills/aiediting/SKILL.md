@@ -9,6 +9,88 @@ metadata:
 
 # AIEditing
 
-This file is a placeholder written by the foundation task: the orchestrator text, `phases/` and `prompts/`
-arrive in later tasks. Until then only the runtime (`runtime/asr`, `runtime/media`) and the profile schema
-(`schema/profile.schema.json`) are in place.
+AIEditing is a **workshop**. It exists to create a format skill — `монтаж-<the person's word>` — or to
+refine one that exists. It interviews the person, looks at frames of their own footage, builds a design
+system with them, edits **one trial piece** of their source to show, reworks it until they say «да», and
+then builds and installs the format skill globally. From then on the format skill does the editing; the
+workshop is not needed again until something should change.
+
+**What the workshop never does** — in every phase, whatever is asked: it never publishes, uploads or
+sends anything, never voices, never generates video, music or images. Its only edit is the trial piece,
+shown on the dashboard and kept in the workshop folder. The same holds for every format skill it builds:
+«смонтируй <путь>» → a folder with the video, `.srt` and a short report. Nothing else.
+
+## Reading this skill
+
+This file is the order and the rules that never lose. Each phase's rules are in its own file, **read
+when that phase starts and not before** — one at a time; a file opened early stays in the context for
+the rest of the session.
+
+| Stage id | Read | Produces |
+|---|---|---|
+| `start` | `phases/start.md` | the dashboard open; «новый» or «доработка» chosen |
+| `formats` | `phases/formats.md` | one draft profile per format, listed or the person's own |
+| `sources` | `phases/sources.md` | 1–3 sources, their frames and layout on the dashboard |
+| `interview` | `phases/interview.md` + `prompts/question-round.md` | the profile answered, round by round |
+| `design` | `phases/design.md` | `design/` of the skill, chosen variants |
+| `trial` | `phases/trial.md` | a trial clip the person said «да» to; every remark in the profile |
+| `build` | `phases/build.md` | `монтаж-<слово>` built, its tools installed on «да», installed globally |
+| — | `phases/refine.md` — instead of formats and sources, when refining | |
+| — | `phases/resume.md` — instead of start, when `.aiediting-work/state.js` is unfinished | |
+
+After a compaction re-read `.aiediting-work/state.js`, the draft `profile.json` of the format in work,
+and the file of the current phase. Nothing else.
+
+## The words the person sees
+
+Instructions here are English; the person is spoken to **in their language** — Russian unless they write
+in another one. One word per stage, on the dashboard and in the chat: Старт · Форматы · Исходники ·
+Интервью · Дизайн · Пробный монтаж · Сборка. The thing being made is «скилл формата» or «скилл
+монтажа», named `монтаж-<слово>` with the person's own word.
+
+## The tool
+
+Every event is one call: `python "<skillDir>/tools/ae.py" <command>` — `init`, `stage`, `ask`,
+`answered`, `formats`, `profile`, `frames`, `layout`, `design-example`, `samples`, `choose`, `trial`,
+`verdict`, `build-skill`, `install-skill`, `list-skills`, `backup-skill`, `restore-skill`, `doctor`,
+`finish`. The command list with arguments is at the top of `tools/ae.py`. `phases/start.md` says how to
+find `<skillDir>`. You never edit `state.js` or the dashboard by hand. Where `python` is the Microsoft
+Store stub on Windows, use `py -3`.
+
+## Rules that never lose
+
+1. **A key is never asked for, echoed or written.** Which recogniser, whether an account exists — yes.
+   The key itself — never: the person puts it into their environment or `.env` by the variable name.
+2. **A fact about the person is never invented** — the output folder, the brand glossary, the music
+   library: asked, or left as a visible gap in the profile.
+3. **Nothing is installed without «да».** `doctor --install <id> --yes` only after the person agreed to that
+   tool, by its pin from `catalog/tools.json`. Only tools the interview chose; heavy ones are offered with
+   their size, Remotion with its licence warning.
+4. **Examples are always on the person's own video.** No source of the needed kind → ask for one; without
+   it the question is asked in words, without an example.
+5. **Every remark goes into the profile** (`ae.py profile taste`), and only AIEditing changes a profile —
+   a format skill writes remarks into its report and suggests «запусти AIEditing — доработка».
+6. **The previous version is kept.** Installing over a skill moves the old one to the reserve;
+   `restore-skill` brings it back in one command.
+7. **The format skill holds only what was chosen** — steps, tools and design; nothing «на всякий случай».
+
+## Files
+
+```
+.aiediting-work/                 in the folder where the workshop was started
+├── state.js  dashboard.html  index.html  serve.pid  serve.log
+├── sources/s1/frame-01.png …    frames of the person's sources
+└── монтаж-<слово>/
+    ├── profile.json             the draft profile — data only, no keys
+    ├── design/                  tokens, fonts, samples/ (chosen variants)
+    ├── variants/<element>/      design variants shown side by side
+    └── trials/01/ …             trial pieces, вопросы.json / ответы.json, out/
+~/.agents/skills/монтаж-<слово>/ the installed format skill; pointer in ~/.claude/skills/
+~/.agents/skills/.aiediting-backups/  previous versions
+```
+
+## Updating AIEditing
+
+Never mid-session. «Обнови AIEditing» → `npx skills update aiediting -g`, then a new session. Format
+skills are separate folders with their own copy of the runtime: updating or removing AIEditing never
+breaks them; a refinement rebuilds them on the new version.

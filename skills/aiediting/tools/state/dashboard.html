@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AIEditing</title>
+<!--
+  AIEditing workshop dashboard. Adapted from the AISpa dashboard template (MIT): the «Графит» colour tokens
+  and both themes, the state snapshot between STATE markers, polling state.js through a script tag, the
+  «no state» screen. Copyright (c) 2026 Alexander Fisenkov; AISpa is based on Autopilot 2.2.0,
+  Copyright (c) 2026 Nick Vels. Full MIT notices: tools/state/NOTICE.md in the AIEditing skill.
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500..800&family=Onest:wght@400..800&family=JetBrains+Mono:wght@400..700&display=swap" rel="stylesheet">
+<style>
+  /* Colour is a signal: graphite — work goes on, chrome — waiting for the person, blue — now,
+     green — done, amber — a remark to redo. Tokens taken from AISpa «Графит». */
+  :root{
+    --bg:#F4F5F6; --card:#FFFFFF; --inset:#F4F5F6; --line:#E3E4E7;
+    --tx:#181A1C; --tx2:#3A3C40; --mut:#55585E; --quiet:#62666D;
+    --press:#171717; --press-tx:#FFFFFF;
+    --hero:linear-gradient(165deg,#202123 0%,#0E0E10 100%);
+    --chrome:linear-gradient(180deg,#FFFFFF 0%,#E0E2E5 40%,#A9ACB1 62%,#EEF0F2 100%);
+    --done:#18784E; --done-soft:#DCFCE7; --done-tx:#166534;
+    --now:#1D4ED8; --now-soft:#DBEAFE; --now-tx:#1D4ED8;
+    --fix:#854D0E; --fix-soft:#FEF3C7; --fix-tx:#854D0E;
+    --idle:#C7C9CC; --sh:0 20px 60px rgba(20,20,22,.10);
+  }
+  @media (prefers-color-scheme:dark){
+    :root:not([data-theme]){
+      --bg:#121316; --card:#202226; --inset:#121316; --line:#414349;
+      --tx:#F1F2F4; --tx2:#D5D7DB; --mut:#C1C3C8; --quiet:#9FA2A9; --press:#383A40;
+      --done-soft:#123523; --done-tx:#86EFAC; --now-soft:#192E50; --now-tx:#93C5FD;
+      --fix-soft:#3D3217; --fix-tx:#FDE68A; --idle:#5A5D63; --sh:0 20px 60px rgba(0,0,0,.24); color-scheme:dark;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#121316; --card:#202226; --inset:#121316; --line:#414349;
+    --tx:#F1F2F4; --tx2:#D5D7DB; --mut:#C1C3C8; --quiet:#9FA2A9; --press:#383A40;
+    --done-soft:#123523; --done-tx:#86EFAC; --now-soft:#192E50; --now-tx:#93C5FD;
+    --fix-soft:#3D3217; --fix-tx:#FDE68A; --idle:#5A5D63; --sh:0 20px 60px rgba(0,0,0,.24); color-scheme:dark;
+  }
+  *{box-sizing:border-box}
+  [hidden]{display:none!important}
+  html{background:var(--bg);-webkit-text-size-adjust:100%}
+  body{margin:0;min-height:100vh;background:var(--bg);color:var(--tx);
+    font:15px/1.5 'Onest',-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+  :focus-visible{outline:2px solid var(--tx);outline-offset:3px}
+  code,.mono{font-family:'JetBrains Mono',ui-monospace,Menlo,Consolas,monospace}
+  .wrap{max-width:1180px;margin:0 auto;padding:24px 16px 64px;display:flex;flex-direction:column;gap:20px}
+  .card{background:var(--card);border-radius:24px;box-shadow:var(--sh);padding:clamp(18px,2.4vw,28px);min-width:0}
+  .wt{font-family:'Unbounded','Onest',sans-serif;font-size:11px;font-weight:600;letter-spacing:.22em;text-transform:uppercase;
+    color:var(--quiet);margin:0 0 14px;display:flex;align-items:center;gap:10px}
+  .wt::before{content:"";flex:0 0 24px;height:1px;background:var(--quiet);opacity:.5}
+  .top{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+  .brand{margin-right:auto}
+  .brand small{display:block;font-size:12px;color:var(--quiet)}
+  .brand h1{margin:0;font-family:'Unbounded','Onest',sans-serif;font-size:24px;line-height:1.1}
+  .pill{padding:6px 12px;border-radius:999px;background:var(--card);border:1px solid var(--line);font-size:13px;color:var(--mut)}
+  .src{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--mut)}
+  .src i{width:8px;height:8px;border-radius:9px;background:var(--idle)}
+  .src.live i{background:#1F8A5B}
+  .tabs{display:inline-flex;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--card)}
+  .tabs button{appearance:none;border:0;background:transparent;color:var(--mut);font:600 13px 'Onest',sans-serif;height:40px;padding:0 12px;cursor:pointer}
+  .tabs button[aria-pressed="true"]{background:var(--press);color:var(--press-tx)}
+  .hero{background:var(--hero);color:#F1F2F4;border-radius:28px;padding:clamp(20px,3vw,34px);box-shadow:var(--sh)}
+  .hero h2{margin:6px 0 0;font-family:'Unbounded','Onest',sans-serif;font-size:clamp(20px,3vw,28px);line-height:1.2}
+  .hero .sub{color:#C1C3C8;font-size:14px}
+  .hero.ask{background:var(--chrome);color:#181A1C}
+  .hero.ask .sub{color:#3A3C40}
+  .wait{margin-top:14px;padding:12px 16px;border-radius:16px;background:rgba(255,255,255,.65);color:#181A1C;font-weight:600}
+  .stages{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px}
+  .stg{border-radius:14px;padding:10px 12px;background:var(--inset);font-size:13px;color:var(--mut);min-width:0;overflow-wrap:anywhere}
+  .stg b{display:block;height:4px;border-radius:4px;background:var(--idle);margin-bottom:8px}
+  .stg.active{background:var(--now-soft);color:var(--now-tx)} .stg.active b{background:var(--now)}
+  .stg.done{color:var(--done-tx)} .stg.done b{background:var(--done)}
+  .stg.skipped{opacity:.55}
+  .cols{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}
+  .chips{display:flex;flex-wrap:wrap;gap:8px}
+  .chip{padding:6px 12px;border-radius:999px;background:var(--inset);font-size:14px}
+  .chip em{font-style:normal;color:var(--quiet);font-size:12px;margin-left:6px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px}
+  .grid figure{margin:0;border-radius:14px;overflow:hidden;background:var(--inset);position:relative}
+  .grid img,.grid video{display:block;width:100%;height:auto}
+  .grid figcaption{font-size:12px;color:var(--mut);padding:6px 10px}
+  .grid figure.chosen{outline:3px solid var(--done)}
+  .row{padding:12px 0;border-top:1px solid var(--line)} .row:first-of-type{border-top:0;padding-top:0}
+  .row h4{margin:0 0 8px;font-size:15px}
+  .tag{display:inline-block;padding:2px 10px;border-radius:999px;font-size:12px;font-weight:600;margin-left:6px}
+  .tag.yes{background:var(--done-soft);color:var(--done-tx)} .tag.no{background:var(--fix-soft);color:var(--fix-tx)}
+  .tag.wait{background:var(--now-soft);color:var(--now-tx)}
+  .muted{color:var(--quiet);font-size:14px}
+  .feed{list-style:none;margin:0;padding:0;font-size:14px}
+  .feed li{display:flex;gap:12px;padding:6px 0;border-top:1px solid var(--line)} .feed li:first-child{border-top:0}
+  .feed time{color:var(--quiet);font-variant-numeric:tabular-nums;flex:0 0 auto}
+  @media (max-width:860px){.cols{grid-template-columns:minmax(0,1fr)}.stages{grid-template-columns:repeat(4,minmax(0,1fr))}}
+  @media (max-width:440px){.stages{grid-template-columns:repeat(2,minmax(0,1fr))}.grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+<script>/*STATE-BEGIN*/window.STATE=null;/*STATE-END*/</script>
+<script>
+const POLL_MS = 10000;
+const I18N = {
+  ru: {brand:"AI мастерская", modes:{new:"Новый скилл формата", refine:"Доработка скилла"}, now:"Сейчас", waitFor:"Ждём тебя",
+    done:"Готово", stages:"Этапы", formats:"Форматы", own:"свой", sources:"Исходники и раскладка", layout:"раскладка",
+    byPerson:"поправлено", design:"Дизайн-система — варианты рядом", trials:"Пробный монтаж", liked:"нравится",
+    notLiked:"доработать", asking:"ждёт ответа", skills:"Скиллы", built:"собран", installed:"установлен", feed:"Лента",
+    none:"пока пусто", updated:"обновлено", live:"на связи", file:"снимок с диска", snap:"снимок", lost:"нет связи",
+    boot:"Состояния нет", bootWhy:"Ни в странице, ни в файле state.js рядом: мастерская только начинается. Страница оживёт сама.",
+    theme:["Свет","Тьма","Система"], words:{start:"Старт",formats:"Форматы",sources:"Исходники",interview:"Интервью",design:"Дизайн",trial:"Пробный монтаж",build:"Сборка"}},
+  en: {brand:"AI workshop", modes:{new:"New format skill", refine:"Refining a skill"}, now:"Now", waitFor:"Waiting for you",
+    done:"Done", stages:"Stages", formats:"Formats", own:"own", sources:"Sources and layout", layout:"layout",
+    byPerson:"corrected", design:"Design system — variants side by side", trials:"Trial edit", liked:"liked",
+    notLiked:"to rework", asking:"awaiting answer", skills:"Skills", built:"built", installed:"installed", feed:"Feed",
+    none:"nothing yet", updated:"updated", live:"live", file:"snapshot from disk", snap:"snapshot", lost:"connection lost",
+    boot:"No state", bootWhy:"Neither in the page nor in state.js beside it: the workshop is just starting. The page revives by itself.",
+    theme:["Light","Dark","System"], words:{start:"Start",formats:"Formats",sources:"Sources",interview:"Interview",design:"Design",trial:"Trial edit",build:"Build"}}
+};
+let lang = 'ru', misses = 0, pulling = false, lastStamp = '', pollT = null;
+try { lang = localStorage.getItem('ae-lang') || ((navigator.language || 'ru').startsWith('ru') ? 'ru' : 'en'); } catch (e) {}
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const src = p => esc(String(p || '').split('/').map(encodeURIComponent).join('/'));
+const hhmm = t => { try { return new Date(t).toLocaleTimeString(lang, {hour:'2-digit', minute:'2-digit'}); } catch (e) { return ''; } };
+const ago = t => { const m = Math.max(0, Math.round((Date.now() - new Date(t)) / 60000)); return m < 1 ? (lang === 'ru' ? 'только что' : 'just now') : m + (lang === 'ru' ? ' мин назад' : ' min ago'); };
+const SERVED = /^https?:$/.test(location.protocol);
+const kind = () => SERVED ? (misses >= 2 ? 'lost' : 'live') : (location.protocol === 'file:' && misses < 2 ? 'file' : 'snap');
+
+function theme(t){ try { t ? localStorage.setItem('ae-theme', t) : localStorage.removeItem('ae-theme'); } catch (e) {}
+  t ? document.documentElement.setAttribute('data-theme', t) : document.documentElement.removeAttribute('data-theme'); render(); }
+function setLang(l){ lang = l; try { localStorage.setItem('ae-lang', l); } catch (e) {} lastStamp = ''; render(); }
+function curTheme(){ try { return localStorage.getItem('ae-theme') || ''; } catch (e) { return ''; } }
+
+function head(L, S){
+  const t = curTheme();
+  return `<header class="top"><div class="brand"><small>${esc(L.brand)}</small><h1>AIEditing</h1></div>
+    <span class="pill">v${esc(S.version || '')}</span>
+    <span class="src ${kind()}"><i></i>${esc(L[kind()])} · ${esc(L.updated)} <span data-ago="${esc(S.updatedAt)}">${esc(ago(S.updatedAt))}</span></span>
+    <span class="tabs">${['light','dark',''].map((v,i) => `<button aria-pressed="${t === v}" onclick="theme('${v}')">${esc(L.theme[i])}</button>`).join('')}</span>
+    <span class="tabs">${['ru','en'].map(v => `<button aria-pressed="${lang === v}" onclick="setLang('${v}')">${v.toUpperCase()}</button>`).join('')}</span></header>`;
+}
+
+function hero(L, S){
+  const cur = (S.stages || []).find(s => s.status === 'active');
+  const w = S.waiting;
+  const title = S.finishedAt ? (L.done + (S.result ? ': ' + S.result : '')) : (cur ? L.words[cur.id] || cur.word : '');
+  return `<section class="hero${w ? ' ask' : ''}"><div class="sub">${esc(L.modes[S.mode] || '')} · ${esc(S.title || '')}</div>
+    <h2>${S.finishedAt ? '' : esc(L.now) + ': '}${esc(title)}</h2>
+    ${w ? `<div class="wait">${esc(L.waitFor)} — ${esc(w.note)}</div>` : ''}</section>`;
+}
+
+function stages(L, S){
+  return `<section class="card"><h3 class="wt">${esc(L.stages)}</h3><div class="stages">${(S.stages || []).map(s =>
+    `<div class="stg ${esc(s.status)}"><b></b>${esc(L.words[s.id] || s.word)}${s.note ? `<div class="muted">${esc(s.note)}</div>` : ''}</div>`).join('')}</div></section>`;
+}
+
+function card(title, body){ return `<section class="card"><h3 class="wt">${esc(title)}</h3>${body}</section>`; }
+const empty = L => `<p class="muted">${esc(L.none)}</p>`;
+
+function formats(L, S){
+  const f = S.formats || [];
+  return card(L.formats, f.length ? `<div class="chips">${f.map(x => `<span class="chip">${esc(x.skill)}${x.custom ? `<em>${esc(L.own)}</em>` : ''}</span>`).join('')}</div>` : empty(L));
+}
+
+function sources(L, S){
+  const rows = (S.sources || []).map(s => {
+    const lay = s.layout ? `<span class="tag ${s.layout.by === 'person' ? 'yes' : 'wait'}">${esc(L.layout)}: ${esc(s.layout.kind)}${s.layout.by === 'person' ? ' · ' + esc(L.byPerson) : ''}</span>` : '';
+    return `<div class="row"><h4>${esc(s.id)} · ${esc(s.name)}${lay}</h4><div class="grid">${(s.frames || []).map(f =>
+      `<figure><img loading="lazy" alt="" src="${src(f)}"></figure>`).join('')}</div></div>`;
+  });
+  return card(L.sources, rows.join('') || empty(L));
+}
+
+function design(L, S){
+  const d = S.design || {}, chosen = d.chosen || {};
+  const rows = (d.samples || []).map(r => {
+    const pick = chosen[r.skill + '/' + r.element];
+    return `<div class="row"><h4>${esc(r.skill)} · ${esc(r.element)}</h4><div class="grid">${r.files.map((f, i) =>
+      `<figure class="${pick && pick.n === i + 1 ? 'chosen' : ''}"><img loading="lazy" alt="" src="${src(f)}"><figcaption>${i + 1}${pick && pick.n === i + 1 ? ' ✓' : ''}</figcaption></figure>`).join('')}</div></div>`;
+  });
+  return card(L.design, rows.join('') || empty(L));
+}
+
+function trials(L, S){
+  const rows = (S.trials || []).slice().reverse().map(t => {
+    const v = t.verdict === 'yes' ? `<span class="tag yes">${esc(L.liked)}</span>` : t.verdict === 'no' ? `<span class="tag no">${esc(L.notLiked)}</span>` : `<span class="tag wait">${esc(L.asking)}</span>`;
+    return `<div class="row"><h4>${esc(t.skill)} · ${esc(t.n)}${v}</h4><div class="grid"><figure style="grid-column:1/-1"><video controls preload="metadata" src="${src(t.video)}"></video></figure></div></div>`;
+  });
+  return card(L.trials, rows.join('') || empty(L));
+}
+
+function skills(L, S){
+  const rows = (S.skills || []).map(s => `<span class="chip">${esc(s.name)}<em>${esc(s.installed ? L.installed : L.built)}</em></span>`);
+  return card(L.skills, rows.length ? `<div class="chips">${rows.join('')}</div>` : empty(L));
+}
+
+function feed(L, S){
+  const items = (S.log || []).slice(-40).reverse().map(e =>
+    `<li><time>${esc(hhmm(e.t))}</time><span>${esc([e.stage, e.kind, e.skill, e.source, e.status, e.note].filter(Boolean).join(' · ') || e.k)}</span></li>`);
+  return card(L.feed, items.length ? `<ul class="feed">${items.join('')}</ul>` : empty(L));
+}
+
+function render(){
+  const S = window.STATE, app = document.getElementById('app');
+  if (!S || typeof S !== 'object') { return bootFail(); }
+  const L = I18N[lang] || I18N.ru;
+  document.documentElement.lang = lang;
+  app.innerHTML = head(L, S) + hero(L, S) + stages(L, S) + `<div class="cols">${formats(L, S)}${skills(L, S)}</div>`
+    + sources(L, S) + design(L, S) + trials(L, S) + feed(L, S);
+}
+
+function bootFail(){
+  const L = I18N[lang] || I18N.ru;
+  document.getElementById('app').innerHTML = `<section class="card"><h3 class="wt">${esc(L.boot)}</h3><p class="muted">${esc(L.bootWhy)}</p></section>`;
+}
+
+const stampOf = S => (S.rev || '') + '|' + (S.updatedAt || '') + '|' + (S.finishedAt || '');
+function apply(){
+  const S = window.STATE;
+  if (!S || typeof S !== 'object') return;
+  const st = stampOf(S);
+  if (st === lastStamp) return;
+  lastStamp = st;
+  const y = window.scrollY;
+  try { render(); } catch (e) { lastStamp = ''; bootFail(); }
+  window.scrollTo(0, y);
+}
+
+function pull(done){
+  if (pulling) return;
+  pulling = true;
+  const s = document.createElement('script');
+  s.src = 'state.js?t=' + Date.now();
+  const end = ok => { s.remove(); pulling = false; misses = ok ? 0 : misses + 1; if (ok) apply(); if (done) done(ok); };
+  s.onload = () => end(true);
+  s.onerror = () => end(false);
+  document.head.appendChild(s);
+}
+function poll(){ clearTimeout(pollT); if (window.STATE && window.STATE.finishedAt) return; pollT = setTimeout(() => pull(poll), POLL_MS); }
+
+if (curTheme()) document.documentElement.setAttribute('data-theme', curTheme());
+if (window.STATE) { lastStamp = stampOf(window.STATE); render(); } else { bootFail(); }
+pull(poll);
+setInterval(() => document.querySelectorAll('[data-ago]').forEach(el => { el.textContent = ago(el.dataset.ago); }), 30000);
+document.addEventListener('visibilitychange', () => { if (!document.hidden) pull(); });
+</script>
+</body>
+</html>

@@ -1,0 +1,13 @@
+{
+  "_comment": "Formats offered in the first question. Anything else the person names is their own format and starts from the 'custom' preset.",
+  "formats": [
+    {"id": "stream", "word": "эфир", "title": "Эфир", "preset": "stream",
+     "hint": "почти не трогаем: точечный блюр секретного, громкость, .srt рядом"},
+    {"id": "lesson", "word": "урок", "title": "Урок", "preset": "lesson",
+     "hint": "вырезаем паузы и «э-э», главы плашками, .srt рядом"},
+    {"id": "youtube", "word": "youtube", "title": "Выпуск YouTube", "preset": "youtube",
+     "hint": "монтаж по частям с согласованием каждой, главы"},
+    {"id": "vertical", "word": "вертикаль", "title": "Вертикаль (Reels, Shorts, TikTok)", "preset": "vertical",
+     "hint": "9:16 до 60 с, вшитые субтитры, выгрузка под три площадки"}
+  ]
+}

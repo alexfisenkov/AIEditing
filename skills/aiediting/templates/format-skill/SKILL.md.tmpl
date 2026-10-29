@@ -1,0 +1,69 @@
+---
+name: {{name}}
+description: "{{description}}"
+argument-hint: "путь к видео"
+metadata:
+  version: "{{version}}"
+  built-by: "AIEditing {{version}}"
+  format: "{{format}}"
+---
+
+# {{name}}
+
+A format skill built by AIEditing for the format «{{format}}». It does **one thing**: edits a video the
+way this format's profile says and puts the result into the issue folder. Nothing else. Talk to the
+person in `{{language}}` (the profile language); this file stays in English.
+
+## When
+
+The person says «смонтируй <путь>», «смонтируй как {{format}}», «{{name}} <путь>» — or gives a path to a
+video and names this format. One video per run.
+
+## How
+
+`<skillDir>` is the folder of this file. Where `python` is the Microsoft Store stub on Windows, use `py -3`.
+
+1. `python "<skillDir>/tools/run.py" check` — the profile and the copy are intact. Red → say it in one line and stop.
+2. `python "<skillDir>/tools/run.py" edit "<video>" --topic "<тема одним-двумя словами>"`.
+3. **Exit code 3** — a decision is needed. Read `<issue folder>/вопросы.json`, ask the person in plain words
+   (show the frames or the list it names), write their answer into `<issue folder>/ответы.json` as
+   `{"<key>": true}`, `{"<key>": false}` or `{"<key>": {"ok": true, "payload": {...}}}` with their corrections,
+   and run step 2 again with `--out "<issue folder>"`. Repeat until it finishes. Nothing is ever approved
+   on the person's behalf.
+4. Done → one message: where the folder is, what is in it (the video, `.srt` if the format makes one,
+   `отчёт.md`), and the notes from the report in one or two lines.
+5. A remark after watching («паузы длинные», «плашка мелкая») →
+   `python "<skillDir>/tools/run.py" note "<issue folder>" "<remark in their words>"`, then say the line it
+   prints: the remark is in the report, and the format changes for good only through AIEditing —
+   «запусти AIEditing — доработка {{name}}». Never edit `profile.json` yourself.
+
+## The steps of this format
+
+Only these, in this order (from the interview):
+
+{{steps}}
+
+## How the person approves
+
+{{approval}}
+
+## Taste
+
+Remarks the person gave while the format was being tuned; they are already in the profile and the
+pipeline applies them. Read them before telling the person what was done.
+
+{{taste}}
+
+## Never
+
+- Never publishes, uploads, sends, voices, generates video, music or images. The result is files in the issue folder.
+- No network except the chosen speech recogniser: {{asr}}.
+- Never asks for a key or prints one; keys live in the person's environment or `.env` by name only.
+- Never writes outside the issue folder; the source video is never changed.
+- Never changes `profile.json`, `design/` or `runtime/` — that is AIEditing's job («доработка»).
+
+## Needs
+
+{{tools}}
+
+Missing something → say what is missing in one line and suggest «запусти AIEditing — проверка окружения».

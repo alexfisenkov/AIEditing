@@ -1,0 +1,26 @@
+{
+  "_comment": "Step ids are the names of runtime functions (interfaces.md §2–4) plus two optional heavy layers. 'runtime' lists the runtime packages a format skill needs for the step; 'tools' are ids from tools.json.",
+  "steps": {
+    "speech_spans":     {"what": "находит, где говорят, а где пауза", "runtime": ["media"], "tools": ["ffmpeg"]},
+    "cut_spans":        {"what": "вырезает паузы с запасом вокруг речи, склейка одним проходом", "runtime": ["media", "asr"], "tools": ["ffmpeg"]},
+    "drift_ms":         {"what": "проверяет рассинхрон звука и картинки после склейки", "runtime": ["media"], "tools": ["ffmpeg"]},
+    "loudnorm":         {"what": "выравнивает громкость до уровня из профиля", "runtime": ["media"], "tools": ["ffmpeg"]},
+    "write_srt":        {"what": "кладёт рядом файл субтитров .srt и вычитывает бренды по словарю", "runtime": ["media", "asr"], "tools": ["ffmpeg"]},
+    "find_secrets":     {"what": "ищет секретное на кадрах и в расшифровке — на согласование", "runtime": ["look", "asr"], "tools": ["ffmpeg", "tesseract"]},
+    "blur_regions":     {"what": "мягко размывает отмеченные области в их отрезках времени", "runtime": ["media", "look"], "tools": ["ffmpeg"]},
+    "detect_layout":    {"what": "определяет раскладку кадра: лицо, экран с окном, вертикаль", "runtime": ["look"], "tools": ["ffmpeg", "opencv-python", "numpy", "yunet-model"]},
+    "plate":            {"what": "рисует плашки глав, подписи и карточки в стиле дизайн-системы", "runtime": ["render"], "tools": ["pillow"]},
+    "overlay_png":      {"what": "накладывает плашки и субтитры картинками поверх видео", "runtime": ["media", "render"], "tools": ["ffmpeg", "pillow"]},
+    "vertical":         {"what": "собирает 9:16: стек «экран сверху, лицо снизу» или лицо крупно", "runtime": ["media", "look"], "tools": ["ffmpeg", "opencv-python", "numpy", "yunet-model"]},
+    "export_platforms": {"what": "выгружает версии под Reels, Shorts и TikTok", "runtime": ["media"], "tools": ["ffmpeg"]},
+    "music":            {"what": "подкладывает трек из папки-библиотеки человека на −20 дБ", "runtime": ["media"], "tools": ["ffmpeg"]},
+    "graphics":         {"what": "графика поверх видео на HyperFrames", "runtime": ["render"], "tools": ["node", "hyperframes"], "heavy": true},
+    "behind_head":      {"what": "надписи и эффекты «за головой» при вертикальной съёмке", "runtime": ["look"], "tools": ["node", "remotion", "rvm"], "heavy": true}
+  },
+  "asr_tools": {
+    "whispercpp": ["whisper-cpp", "whisper-model"],
+    "scribe": [],
+    "openai_compat": [],
+    "command": []
+  }
+}

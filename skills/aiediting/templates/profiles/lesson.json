@@ -1,0 +1,7 @@
+{
+  "steps": ["speech_spans", "cut_spans", "drift_ms", "loudnorm", "write_srt", "plate", "overlay_png"],
+  "params": {"gap": 0.5, "pad": 0.12, "lufs": -16, "denoise": false,
+             "fillers_cut": ["э-э", "м-м"], "fillers_keep": ["ну", "вот"], "retakes": "last_good",
+             "zoom_screen": false, "chapters": {"plates": true, "timecodes": true}, "glossary": {}},
+  "approval": "plan"
+}

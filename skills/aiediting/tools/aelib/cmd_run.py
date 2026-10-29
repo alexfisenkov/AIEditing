@@ -1,0 +1,71 @@
+"""Workshop bookkeeping: init, stage, ask/answered, finish, and the bare call that re-raises the server."""
+from __future__ import annotations
+
+import subprocess
+import sys
+import time
+
+import state as st
+from state.server import _detached
+
+from . import session
+from .paths import TOOLS_DIR
+from .session import CliError
+
+STOP_DELAY = 12
+
+
+def init(opt) -> str:
+    from runtime import __version__
+
+    w = session.work()
+    old = st.read(w)
+    if old and not old.get("finishedAt") and not opt.fresh:
+        raise CliError("Здесь уже идёт мастерская ({}) — продолжите её (phases/resume.md) "
+                       "или начните заново с --fresh".format(old.get("title")))
+    st.install_page(w)
+    data = st.fresh(opt.mode, opt.title or ("Новый скилл монтажа" if opt.mode == "new" else "Доработка"),
+                    __version__)
+    st.log(data, "init", mode=opt.mode)
+    line = session.commit(data)
+    return "Мастерская: {}\nДашборд: {}".format(w, line)
+
+
+def stage(opt) -> str:
+    return session.event(lambda d: st.set_stage(d, opt.id, opt.status or "active", opt.note))
+
+
+def ask(opt) -> str:
+    return session.event(lambda d: st.ask(d, opt.kind, opt.note))
+
+
+def answered(opt) -> str:
+    return session.event(lambda d: st.close_wait(d, opt.note))
+
+
+def finish(opt) -> str:
+    def change(d):
+        st.close_wait(d)
+        for s in d["stages"]:
+            if s["status"] == "active":
+                s.update(status="done", endedAt=st.now())
+        d["finishedAt"], d["result"] = st.now(), opt.result
+        st.log(d, "finish", note=opt.result)
+
+    session.event(change)
+    if not session.serving():
+        return "мастерская закрыта"
+    subprocess.Popen([sys.executable, str(TOOLS_DIR / "ae.py"), "stop-server", "--delay", str(STOP_DELAY)],
+                     stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                     **_detached())
+    return "мастерская закрыта; сервер погаснет через {} с — страница успеет забрать финал".format(STOP_DELAY)
+
+
+def stop_server(opt) -> str:
+    time.sleep(max(0.0, opt.delay))
+    return st.stop(session.work())
+
+
+def sync(opt) -> str:
+    data = session.load()
+    return session.commit(data)

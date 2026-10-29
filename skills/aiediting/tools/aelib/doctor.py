@@ -1,0 +1,55 @@
+"""`ae.py doctor`: what of the catalog is here, what is missing — and installs one tool by its pin, only on «да»."""
+from __future__ import annotations
+
+from pathlib import Path
+
+from . import catalog
+from .checks import current_os, status
+from .installers import run_install
+from .session import CliError
+
+
+def _rows(opt):
+    base = Path(opt.catalog) if opt.catalog else None
+    rows = catalog.tools(base)
+    if opt.steps:
+        chosen = [s.strip() for s in opt.steps.split(",") if s.strip()]
+        bad = catalog.check_steps(chosen, base)
+        if bad:
+            raise CliError("; ".join(bad))
+        wanted = catalog.needs(chosen, opt.asr, base)["tools"]
+        return [rows[t] for t in wanted]
+    return list(rows.values())
+
+
+def _line(row) -> str:
+    s = status(row)
+    mark = {True: "есть", False: "нет", None: "проверьте сами"}[s["ok"]]
+    heavy = ", тяжёлое" + (" " + row["size"] if row.get("size") else "") if row.get("heavy") else ""
+    warn = "\n    ! " + row["warning"] if row.get("warning") else ""
+    return "{:<14} {:<15} пин {} ({}){} — {}{}".format(row["id"], mark, row["pin"], row["license"], heavy,
+                                                      s["note"], warn)
+
+
+def plan(row) -> str:
+    step = row["install"].get(current_os())
+    if not step:
+        return "{}: на этой системе не ставится".format(row["id"])
+    what = {"command": lambda: " ".join(step["argv"]), "pip": lambda: "pip install " + step["package"],
+            "npm": lambda: "npm install " + step["package"], "manual": lambda: "вручную: " + step["url"] + (" → " + step["save_to"] if step.get("save_to") else "")}
+    return "{} {}: {}{}".format(row["id"], row["pin"], what[step["kind"]](),
+                                " ({})".format(row["size"]) if row.get("size") else "")
+
+
+def cmd_doctor(opt) -> str:
+    rows = _rows(opt)
+    if not opt.install:
+        return "\n".join(_line(r) for r in rows) or "Для выбранных шагов ничего не нужно"
+    row = next((r for r in catalog.tools(Path(opt.catalog) if opt.catalog else None).values()
+                if r["id"] == opt.install), None)
+    if row is None:
+        raise CliError("В каталоге нет {}".format(opt.install))
+    head = "План установки — " + plan(row) + ("\n! " + row["warning"] if row.get("warning") else "")
+    if not opt.yes:
+        return head + "\nНичего не поставлено: нужно «да» человека, затем тот же вызов с --yes."
+    return head + "\n" + run_install(row)
