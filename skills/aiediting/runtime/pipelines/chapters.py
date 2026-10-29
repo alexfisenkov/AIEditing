@@ -6,6 +6,7 @@ from typing import Dict, List
 from .words import phrases, quote, spoken
 
 EVERY = 180.0  # seconds between proposed chapter starts
+SPARE = 0.5    # a chapter plate keeps the screen to itself this much longer than it is shown
 
 
 def _settings(ctx) -> Dict:
@@ -42,3 +43,9 @@ def plan_chapters(ctx) -> None:
         secs = float(s.get("seconds", ctx.design()["video"]["chapter"].get("seconds", 3.0)))
         ctx.overlays += [{"kind": "chapter", "text": c["title"], "start": float(c["start"]),
                           "end": float(c["start"]) + secs} for c in chosen if str(c.get("title", "")).strip()]
+
+
+def plate_windows(ctx) -> List[Dict]:
+    """Where a chapter plate is on screen (source time, with a little spare): [{start, end, title}]."""
+    return [{"start": o["start"], "end": o["end"] + SPARE, "title": o["text"]}
+            for o in ctx.overlays if o.get("kind") == "chapter"]

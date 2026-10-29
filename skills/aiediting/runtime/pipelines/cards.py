@@ -3,7 +3,9 @@ from __future__ import annotations
 
 from typing import Dict, List, Optional
 
-from .words import phrases, quote, spoken
+from .chapters import plate_windows
+from .report import stamp
+from .words import norm, phrases, quote, spoken
 
 WINDOW = 15.0
 
@@ -45,13 +47,45 @@ def where(ctx, frame, piece_layout: Optional[Dict] = None) -> Optional[str]:
     return None  # the design's own place
 
 
+def _plate_over(start: float, end: float, plates: List[Dict]) -> Optional[Dict]:
+    return next((w for w in plates if start < w["end"] and end > w["start"]), None)
+
+
+def _title(text: str) -> str:
+    """First line of a card, compared without case and punctuation."""
+    return norm(str(text).strip().split("\n")[0]).replace("-", "")
+
+
+def _same_as_chapter(card: Dict, plates: List[Dict]) -> Optional[Dict]:
+    """The chapter plate this card repeats: on screen at the same time, or titled like it."""
+    own = _title(card["text"])
+    return _plate_over(card["start"], card["end"], plates) or next(
+        (w for w in plates if own and own == _title(w["title"])), None)
+
+
+def drop_chapter_cards(ctx, cards: List[Dict]) -> List[Dict]:
+    """A chapter title is shown by the chapter plate only: a card repeating it is taken off, with a note."""
+    plates, kept = plate_windows(ctx), []
+    for c in cards:
+        plate = _same_as_chapter(c, plates) if plates else None
+        if plate is None:
+            kept.append(c)
+            continue
+        ctx.note("Карточка «{}» ({}) снята: совпала с главой «{}» — заголовок главы показывает только плашка"
+                 .format(c["text"].strip().split("\n")[0], stamp(c["start"]), plate["title"]))
+    return kept
+
+
 def plan_cards(ctx) -> None:
     if not wanted(ctx):
         return
     slots: List[Dict] = []
+    plates = plate_windows(ctx)  # no slots while a chapter plate is on screen
     for p in phrases(spoken(ctx.transcript())):
         same = [s for s in slots if p["start"] - s["start"] < WINDOW]
         if len(same) < _density(ctx) and (not slots or p["start"] - slots[-1]["start"] >= WINDOW / 2):
+            if _plate_over(p["start"], p["start"] + 4.0, plates):
+                continue
             slots.append({"start": round(p["start"], 3), "end": round(p["start"] + 4.0, 3), "text": "",
                           "said": quote(p["words"])})
     if not slots:
@@ -59,5 +93,6 @@ def plan_cards(ctx) -> None:
     ok, data = ctx.ask("cards", "Графика: впишите text («Заголовок\\nпояснение») в нужные слоты, "
                        "пустые не показываются. Не больше {} на 15 с.".format(_density(ctx)), {"items": slots})
     if ok:
-        ctx.overlays += [{"kind": "card", "text": s["text"], "start": float(s["start"]), "end": float(s["end"])}
-                         for s in data.get("items", []) if str(s.get("text", "")).strip()]
+        cards = [{"kind": "card", "text": s["text"], "start": float(s["start"]), "end": float(s["end"])}
+                 for s in data.get("items", []) if str(s.get("text", "")).strip()]
+        ctx.overlays += drop_chapter_cards(ctx, cards)
