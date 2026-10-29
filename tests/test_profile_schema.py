@@ -57,6 +57,13 @@ class ProfileSchema(unittest.TestCase):
             self.assertTrue(errors, where)
             self.assertTrue(any(where in e for e in errors), (where, errors))
 
+    def test_skill_name_cannot_escape_or_hide_the_skill_folder(self):
+        for name in (".", "..", ".скрытый", "../монтаж", "a/b", "a\\b"):
+            errors = self.broken(lambda p: p.update(skill_name=name))
+            self.assertTrue(any("skill_name" in e for e in errors), (name, errors))
+        for name in ("монтаж-урок", "montage.v2", "монтаж_эфир"):
+            self.assertEqual(self.broken(lambda p: p.update(skill_name=name)), [], name)
+
     def test_a_key_value_cannot_hide_in_the_profile(self):
         errors = self.broken(lambda p: p["asr"].update(api_key_env="sk-or-v1-abc"))
         self.assertTrue(any("asr.api_key_env" in e for e in errors), errors)

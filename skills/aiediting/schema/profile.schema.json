@@ -7,7 +7,12 @@
   "required": ["format", "skill_name", "language", "asr", "steps", "output_dir"],
   "properties": {
     "format": {"type": "string", "minLength": 1},
-    "skill_name": {"type": "string", "minLength": 1, "pattern": "^[^/\\\\:*?\"<>|\\s]+$"},
+    "skill_name": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Folder name under ~/.agents/skills/: no separators, no leading or trailing dot (rules out '.', '..', hidden names).",
+      "pattern": "^[^./\\\\:*?\"<>|\\s]([^/\\\\:*?\"<>|\\s]*[^./\\\\:*?\"<>|\\s])?$"
+    },
     "language": {"type": "string", "minLength": 2},
     "asr": {"$ref": "#/definitions/asr"},
     "steps": {"type": "array", "items": {"type": "string", "minLength": 1}},
