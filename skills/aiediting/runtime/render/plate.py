@@ -15,8 +15,8 @@ from .errors import RenderError
 KINDS = ("chapter", "caption", "card")
 
 
-def _rows(d: Dict, s: Dict, kind: str, text: str, height: int, max_px: int) -> Tuple[List, List[str], int]:
-    size = int(s["size"] * height)
+def _rows(d: Dict, s: Dict, kind: str, text: str, unit: int, max_px: int) -> Tuple[List, List[str], int]:
+    size = int(s["size"] * unit)
     main = font(d, s["font"], s["weight"], size)
     if kind != "card":
         lines = wrap(main, text, max_px, int(s.get("max_lines", 1)))
@@ -25,7 +25,7 @@ def _rows(d: Dict, s: Dict, kind: str, text: str, height: int, max_px: int) -> T
     rows = [(main, line) for line in wrap(main, title, max_px, 2)]
     colors = [s["fg"]] * len(rows)
     if body.strip():
-        small = font(d, s["body_font"], s["body_weight"], int(s["body_size"] * height))
+        small = font(d, s["body_font"], s["body_weight"], int(s["body_size"] * unit))
         lines = wrap(small, body, max_px, int(s.get("max_lines", 3)))
         rows += [(small, line) for line in lines]
         colors += [s.get("body_fg", s["fg"])] * len(lines)
@@ -35,6 +35,9 @@ def _rows(d: Dict, s: Dict, kind: str, text: str, height: int, max_px: int) -> T
 def plate(text: str, design, kind: str, frame_size=(1920, 1080), where: Optional[str] = None,
           out=None, variant=None) -> Path:
     """Chapter plate, caption or card ("Title\\nbody") as a PNG of frame_size; position is baked in.
+
+    A card's sizes are shares of the frame's short side and its width a share of the long side (as the
+    animated inserts): on 9:16 it is the same readable card as on 16:9, not a narrow strip of big type.
 
     where: bottom | top | center | top-left | top-right | bottom-left | bottom-right.
     """
@@ -46,13 +49,14 @@ def plate(text: str, design, kind: str, frame_size=(1920, 1080), where: Optional
     if spot not in SPOTS:
         raise RenderError("Неизвестное место «{}»: {}".format(spot, ", ".join(SPOTS)))
     width, height = (int(v) for v in frame_size)
-    size = int(s["size"] * height)
+    unit, wide = (min(width, height), max(width, height)) if kind == "card" else (height, width)
+    size = int(s["size"] * unit)
     pad = (int(s["pad_x"] * size), int(s["pad_y"] * size))
-    rows, colors, gap = _rows(d, s, kind, " ".join(text.split(" ")).strip(), height,
-                              int(s.get("max_width", 0.8) * width) - 2 * pad[0])
+    room = int(min(s.get("max_width", 0.8) * wide, 0.9 * width if kind == "card" else width))
+    rows, colors, gap = _rows(d, s, kind, " ".join(text.split(" ")).strip(), unit, room - 2 * pad[0])
     text_w, text_h = block_size(rows, gap)
     box_w, box_h = text_w + 2 * pad[0], text_h + 2 * pad[1]
-    radius = box_h // 2 if s.get("radius") == "pill" else int(float(s.get("radius", 0)) * height)
+    radius = box_h // 2 if s.get("radius") == "pill" else int(float(s.get("radius", 0)) * unit)
     x, y = place(d, (width, height), (box_w, box_h), spot, s["margin"])
     layer = draw(d, s, (width, height), (x, y, box_w, box_h), pad, rows, colors, gap, radius)
     if out is None:

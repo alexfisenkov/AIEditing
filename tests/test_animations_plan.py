@@ -24,6 +24,7 @@ class FakeCtx:
     def __init__(self, words, **params):
         self.words, self.params = words, dict(params)
         self.overlays, self.chapters, self.notes, self.asked, self.answers = [], [], [], {}, {}
+        self.keep = [(0.0, 1e9)]  # nothing cut
 
     def p(self, name, default=None):
         value = self.params.get(name)

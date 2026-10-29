@@ -6,6 +6,7 @@ import json
 import re
 from typing import Dict, List, Sequence
 
+from .kept import alive
 from .timeline import Span, to_out
 
 PHRASE_PAUSE = 0.7  # a pause this long ends a phrase even without a full stop
@@ -44,13 +45,13 @@ def quote(words: Sequence[Dict], n: int = 12) -> str:
 
 
 def mapped(words: Sequence[Dict], keep: Sequence[Span]) -> List[Dict]:
-    """Words whose middle survived the cut, with output times."""
+    """Words whose middle survived the cut (see `kept.alive`), with output times."""
     out = []
     for w in words:
-        mid = to_out((w["start"] + w["end"]) / 2.0, keep)
-        a, b = to_out(w["start"], keep), to_out(w["end"], keep)
-        if mid is None:
+        t = (w["start"] + w["end"]) / 2.0
+        if not alive(t, keep):
             continue
+        mid, a, b = to_out(t, keep), to_out(w["start"], keep), to_out(w["end"], keep)
         a = mid if a is None else a
         b = mid if b is None else b
         out.append(dict(w, start=a, end=max(a, b)))

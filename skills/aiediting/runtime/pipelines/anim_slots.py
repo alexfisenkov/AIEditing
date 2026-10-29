@@ -4,8 +4,8 @@ from __future__ import annotations
 from typing import Dict, List, Optional
 
 from .chapters import plate_windows
+from .kept import kept_phrases
 from .moments import RANK, find
-from .words import phrases, spoken
 
 EVERY, LOW, HIGH = 45.0, 30.0, 60.0
 
@@ -43,7 +43,7 @@ def pick(found: List[Dict], gap: float) -> List[Dict]:
 def slots(ctx) -> List[Dict]:
     """[{start, end, template, title, items, said}] to put to the person; none on a chapter plate."""
     plates, found = plate_windows(ctx), []
-    for m in find(phrases(spoken(ctx.transcript()))):
+    for m in find(kept_phrases(ctx)):
         m["end"] = round(m["start"] + length(ctx, m), 3)
         if not over(m["start"], m["end"], plates):
             found.append(m)

@@ -2,19 +2,29 @@
 from __future__ import annotations
 
 import re
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 MAX_WORDS, MAX_CHARS, GAP = 4, 24, 0.6
 
 
-def cues(words: List[Dict], glossary: Dict[str, str]) -> List[Dict]:
+def _glossed(text: str, glossary: Dict[str, str]):
+    """(the text with the glossary applied, [(from, to)] of what it changed)."""
+    changes = []
+    for wrong, right in glossary.items():
+        pattern = re.compile(r"(?<!\w){}(?!\w)".format(re.escape(wrong)), re.IGNORECASE)
+        changes += [(m.group(0), right) for m in pattern.finditer(text) if m.group(0) != right]
+        text = pattern.sub(lambda _m: right, text)
+    return text, changes
+
+
+def cues(words: List[Dict], glossary: Dict[str, str], fixes: Optional[List[Dict]] = None) -> List[Dict]:
+    """Cues of a few words; `fixes`, if given, gets each glossary change as the .srt lists it."""
     out: List[Dict] = []
     for w in words:
         text = str(w.get("text", "")).strip()
         if w.get("type", "word") != "word" or not text:  # as the .srt: spacing, hesitations, sounds — out
             continue
-        for wrong, right in glossary.items():
-            text = re.sub(r"(?<!\w){}(?!\w)".format(re.escape(wrong)), right, text, flags=re.IGNORECASE)
+        text, changes = _glossed(text, glossary)
         cur = out[-1] if out else None
         fresh = (cur is None or cur["n"] >= MAX_WORDS or len(cur["text"]) + 1 + len(text) > MAX_CHARS
                  or w["start"] - cur["end"] > GAP or re.search(r"[.!?…]$", cur["text"]))
@@ -22,8 +32,22 @@ def cues(words: List[Dict], glossary: Dict[str, str]) -> List[Dict]:
             out.append({"text": text, "start": w["start"], "end": w["end"], "n": 1})
         else:
             cur.update(text=cur["text"] + " " + text, end=w["end"], n=cur["n"] + 1)
+        if fixes is not None:
+            fixes += [{"index": len(out), "start": w["start"], "from": was, "to": now} for was, now in changes]
     for a, b in zip(out, out[1:]):  # hold a caption until the next one when the gap is small
         if b["start"] - a["end"] <= GAP:
             a["end"] = b["start"]
     return [{"kind": "caption", "text": c["text"], "start": c["start"], "end": max(c["end"], c["start"] + 0.3)}
             for c in out]
+
+
+def burned(ctx, keep) -> List[Dict]:
+    """Captions of a piece in output time. The glossary's fixes go to the report — unless the .srt step
+    lists its own, or nothing is drawn."""
+    from .words import mapped
+
+    fixes: List[Dict] = []
+    out = cues(mapped(ctx.transcript().get("words", []), keep), ctx.p("glossary", {}) or {}, fixes)
+    if not ctx.has("write_srt") and (ctx.has("plate") or ctx.has("overlay_png")):
+        ctx.report["fixes"] += fixes
+    return out

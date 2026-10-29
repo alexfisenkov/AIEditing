@@ -4,8 +4,9 @@ from __future__ import annotations
 from typing import Dict, List, Optional
 
 from .chapters import plate_windows
+from .kept import kept_phrases
 from .report import stamp
-from .words import norm, phrases, quote, spoken
+from .words import norm, quote
 
 WINDOW = 15.0
 
@@ -81,7 +82,7 @@ def plan_cards(ctx) -> None:
         return
     slots: List[Dict] = []
     plates = plate_windows(ctx)  # no slots while a chapter plate is on screen
-    for p in phrases(spoken(ctx.transcript())):
+    for p in kept_phrases(ctx):  # only speech that stays: not a cut take, not a pause
         same = [s for s in slots if p["start"] - s["start"] < WINDOW]
         if len(same) < _density(ctx) and (not slots or p["start"] - slots[-1]["start"] >= WINDOW / 2):
             if _plate_over(p["start"], p["start"] + 4.0, plates):

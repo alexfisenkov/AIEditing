@@ -18,10 +18,9 @@ def specs(ctx, piece: Dict) -> List[Dict]:
         if span and span[1] - span[0] > 0.2:
             out.append(dict(o, start=span[0], end=span[1]))
     if ctx.p("captions") == "burned":
-        from .captions import cues
-        from .words import mapped
+        from .captions import burned
 
-        out += cues(mapped(ctx.transcript().get("words", []), piece["keep"]), ctx.p("glossary", {}) or {})
+        out += burned(ctx, piece["keep"])
     return out
 
 

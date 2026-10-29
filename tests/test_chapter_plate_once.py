@@ -16,7 +16,7 @@ class FakeCtx:
     def __init__(self, cards=None):
         self.params = {"chapters": {"plates": True, "seconds": 3.5}, "cards": True}
         self.overlays, self.chapters, self.notes, self.asked = [], [], [], {}
-        self.cards = cards or {}
+        self.cards, self.keep = cards or {}, [(0.0, 1e9)]
 
     def p(self, name, default=None):
         value = self.params.get(name)

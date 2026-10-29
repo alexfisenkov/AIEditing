@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from typing import Dict, List
 
+from .kept import alive, kept_words
 from .timeline import Span, length, merge, removed, subtract
 from .words import norm, spoken
 
@@ -37,6 +38,12 @@ def _why(piece: Span, fillers: List[Dict], takes: List[Dict]) -> str:
     return "пауза"
 
 
+def _anchors(words: List[Dict], fillers: List[Dict], takes: List[Dict]) -> List[float]:
+    """Middles of the words that stay: not a cut hesitation, not a word of a dropped take."""
+    live = kept_words([w for w in words if w not in fillers], subtract([(0.0, 1e9)], [tuple(t["drop"]) for t in takes]))
+    return [(w["start"] + w["end"]) / 2.0 for w in live]
+
+
 def plan_cut(ctx) -> None:
     from .retakes import plan_retakes
 
@@ -46,8 +53,8 @@ def plan_cut(ctx) -> None:
     takes = plan_retakes(ctx, words) if ctx.p("retakes") in ("last_good", True) else []
     cuts = [(w["start"], w["end"]) for w in fillers] + [tuple(t["drop"]) for t in takes]
     keep = subtract(ctx.keep, cuts)
-    mids = [(w["start"] + w["end"]) / 2.0 for w in words if w not in fillers]
-    keep = [(a, b) for a, b in keep if b - a >= SLIVER or any(a <= m <= b for m in mids)]
+    mids = _anchors(words, fillers, takes)
+    keep = [(a, b) for a, b in keep if b - a >= SLIVER or any(alive(m, [(a, b)]) for m in mids)]
     ctx.keep = merge(keep) or ctx.keep
     total = ctx.info["duration"]
     ctx.report["cuts"] = [{"start": round(a, 3), "end": round(b, 3), "why": _why((a, b), fillers, takes)}
