@@ -48,7 +48,7 @@ class FakeCtx:
 
 
 def ready():
-    return mock.patch("runtime.render.hyperframes.missing", return_value=None)
+    return mock.patch("runtime.render.hf_ready.problem", return_value=None)
 
 
 class Moments(unittest.TestCase):
@@ -61,6 +61,36 @@ class Moments(unittest.TestCase):
         self.assertEqual(detect({"start": 0, "words": said(0, STEPS)})["template"], "шаги")
         self.assertEqual(detect({"start": 0, "words": said(0, "это экономит 40 процентов времени.")})["title"], "40%")
         self.assertIsNone(detect({"start": 0, "words": said(0, "просто фраза без перечислений.")}))
+
+
+# Phrases of the trial lesson (29.10): two were offered as «список» before the repair, the files never.
+TALK = "Как челове-- как я, например, да, там, что-то в блокнотик записать, что-то важное, чтобы не забыть."
+MEMORY = "которое откладывается в памяти, естественно, это все подгружается в эту новую сессию."
+SPOKEN_FILES = "Для этого нам помогать будут специальные файлы, такие как agents MD, memory MD, spec, plan, intent."
+
+
+class TrialLesson(unittest.TestCase):
+    def test_talk_is_not_a_list_and_files_said_apart_are_found(self):
+        self.assertIsNone(detect({"start": 0, "words": said(0, TALK)}))
+        self.assertIsNone(detect({"start": 0, "words": said(0, MEMORY)}))
+        found = detect({"start": 0, "words": said(0, SPOKEN_FILES)})
+        self.assertEqual(found["template"], "файлы")
+        self.assertEqual(found["items"], ["agents.md", "memory.md", "spec", "plan", "intent"])
+
+    def test_the_files_win_their_window_over_earlier_weaker_moments(self):
+        words = said(12.6, TALK) + said(59.8, MEMORY) + said(70.0, "важны контекст, память, инструменты.") + \
+            said(82.0, SPOKEN_FILES)
+        ctx = FakeCtx(words, animations={"every": 45})
+        with ready():
+            plan_animations(ctx)
+        items = ctx.asked["animations"]["items"]
+        self.assertEqual([(i["template"], i["start"]) for i in items], [("файлы", 82.0)])
+
+    def test_every_file_name_is_kept_and_bare_numbers_are_not_moments(self):
+        found = detect({"start": 0, "words": said(0, "кладём CLAUDE.md и README.md, а потом agents.md и spec.md рядом.")})
+        self.assertEqual(found["items"], ["CLAUDE.md", "README.md", "agents.md", "spec.md"])
+        self.assertIsNone(detect({"start": 0, "words": said(0, "у нас было 3 попытки, потом 5.")}))
+        self.assertEqual(detect({"start": 0, "words": said(0, "окно на 200 тысяч токенов.")})["title"], "200 тысяч")
 
 
 class Plan(unittest.TestCase):
@@ -116,6 +146,19 @@ class Plan(unittest.TestCase):
         self.assertTrue(any("снята: в этот момент анимация «файлы»" in n for n in ctx.notes))
         self.assertTrue(any(o["kind"] == "card" and o["start"] == 20.0 for o in ctx.overlays), "others stay")
 
+    def test_answer_as_a_line_with_a_clock_start_and_overlaps_taken_off(self):
+        ctx = FakeCtx(said(10.0, FILES + "."))
+        ctx.answers["animations"] = lambda p: p.update(items=[
+            {"template": "файлы", "title": "Файлы", "items": "agents.md, memory.md", "start": "0:00:10"},
+            {"template": "шаги", "title": "Шаги", "items": ["раз", "два"], "start": 12.0},
+            {"template": "список", "items": ["a", "b", "c"], "start": "потом"}])
+        with ready():
+            plan_animations(ctx)
+        inserts = [o for o in ctx.overlays if o["kind"] == "animation"]
+        self.assertEqual([(o["start"], o["items"]) for o in inserts], [(10.0, ["agents.md", "memory.md"])])
+        self.assertTrue(any("пересекается с анимацией" in n for n in ctx.notes), ctx.notes)
+        self.assertTrue(any("не понял start «потом»" in n for n in ctx.notes), ctx.notes)
+
     def test_empty_answer_means_no_animations(self):
         ctx = FakeCtx(said(10.0, FILES + "."))
         ctx.answers["animations"] = lambda p: p.update(items=[])
@@ -125,7 +168,7 @@ class Plan(unittest.TestCase):
 
     def test_without_hyperframes_nothing_is_asked_and_the_report_says_why(self):
         ctx = FakeCtx(said(10.0, FILES + "."))
-        with mock.patch("runtime.render.hyperframes.missing", return_value="нет Node.js 22+ в PATH"):
+        with mock.patch("runtime.render.hf_ready.problem", return_value="нет Node.js 22+ в PATH"):
             plan_animations(ctx)
         self.assertNotIn("animations", ctx.asked)
         self.assertIn("Анимации не делались: нет Node.js 22+ в PATH", ctx.notes)

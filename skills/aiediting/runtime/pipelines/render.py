@@ -59,7 +59,9 @@ def render_piece(ctx, piece: Dict) -> Dict:
         ctx.report["motion"] += moves
     if piece.get("layout"):
         cur = media.vertical(cur, piece["layout"], tmp / "4-вертикаль.mp4")
-    items = specs(ctx, piece) if any(ctx.has(s) for s in ("plate", "overlay_png", "animations")) else []
+    pictures = ctx.has("plate") or ctx.has("overlay_png")  # captions and plates only with their own steps
+    items = [i for i in specs(ctx, piece) if pictures or i["kind"] == "animation"] \
+        if pictures or ctx.has("animations") else []
     if items:
         from ..media.vertical import shown_size
         from .anim_layer import layers

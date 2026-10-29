@@ -6,7 +6,7 @@ from typing import Dict, Tuple
 
 from . import hyperframes
 from .anim_page import page
-from .anim_spec import box, spec, template_file
+from .anim_spec import box, spec, template_file, unit
 from .errors import RenderError
 
 
@@ -25,6 +25,6 @@ def animation(slot: Dict, design, frame_size: Tuple[int, int], folder, seconds: 
     frame = tuple(int(v) for v in frame_size)
     size = box(slot, s, frame)
     folder = Path(folder)
-    project = page(template, slot, design, s, size, frame[1], seconds, folder / "project")
+    project = page(template, slot, design, s, size, unit(frame), seconds, folder / "project")
     clip = hyperframes.render_mov(project, folder / "insert.mov", int(s.get("fps", 30)))
     return {"video": clip, "size": size}

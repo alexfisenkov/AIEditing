@@ -36,13 +36,14 @@ class AnimationOverlay(TempDirCase):
                "-pix_fmt", "yuv420p", "-c:a", "aac", "-shortest", str(self.src))
         self.asr = asr_config(self.tmp, {"words": WORDS})
 
-    def run_lesson(self, approve):
+    def run_lesson(self, approve, **params):
         from runtime import pipelines
 
         profile = {"format": "урок", "skill_name": "монтаж-урок", "language": "ru", "asr": self.asr,
                    "output_dir": str(self.tmp), "steps": ["detect_layout", "animations"],
-                   "params": {"layout": "screen_face_window", "face": FACE, "animations": {"every": 45}}}
-        with mock.patch("runtime.render.hyperframes.missing", return_value=None), \
+                   "params": dict({"layout": "screen_face_window", "face": FACE, "animations": {"every": 45}}, **params)}
+        with mock.patch("runtime.render.hf_ready.problem", return_value=None), \
+                mock.patch("runtime.render.hyperframes.missing", return_value=None), \
                 mock.patch("runtime.render.hyperframes.render_mov", side_effect=fake_render_mov) as render:
             report = pipelines.run(self.src, profile, self.tmp / "выпуск", approve)
         return report, render
@@ -69,3 +70,9 @@ class AnimationOverlay(TempDirCase):
         report, render = self.run_lesson(Approver(answers={"animations": False}))
         self.assertEqual(render.call_count, 0)
         self.assertNotIn("## Анимации", report["report"].read_text(encoding="utf-8"))
+
+    def test_animations_alone_never_switch_burned_captions_on(self):
+        report, render = self.run_lesson(Approver(), captions="burned")
+        self.assertEqual(render.call_count, 1)
+        rows = gray_frame(report["output"], 3.0, (640, 360))
+        self.assertLess(max(max(r[100:540]) for r in rows[250:355]), 60, "no caption: no plate/overlay_png step")

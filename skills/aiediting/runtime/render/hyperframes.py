@@ -1,7 +1,8 @@
 """HyperFrames (Apache-2.0), pinned: where AIEditing keeps it and how one composition becomes a clip.
 
 Installed by `ae.py doctor --install hyperframes --yes` into node_prefix(); run as `node <cli>` (no
-shell, no .cmd shims) with telemetry, update checks and self-installs switched off.
+shell, no .cmd shims) with telemetry, update checks and self-installs switched off, and its project
+history kept inside the run folder of the issue (never ~/.cache/hyperframes/history).
 """
 from __future__ import annotations
 
@@ -18,7 +19,7 @@ NODE_MAJOR = 22  # HyperFrames 0.8.201: "engines": {"node": ">=22"}
 QUIET = {"HYPERFRAMES_NO_TELEMETRY": "1", "DO_NOT_TRACK": "1", "HYPERFRAMES_NO_UPDATE_CHECK": "1",
          "HYPERFRAMES_NO_AUTO_INSTALL": "1", "HYPERFRAMES_NO_OPTIONAL_INSTALL": "1"}
 TIMEOUT = 900
-HINT = "поставьте: `python tools/ae.py doctor --install hyperframes --yes` в AIEditing"
+HINT = "поставьте: `python tools/ae.py doctor --install {} --yes` в AIEditing"
 
 
 def node_prefix() -> Path:
@@ -37,16 +38,23 @@ def cli() -> Path:
 
 
 def missing() -> Optional[str]:
-    """Why HyperFrames cannot run here, in Russian; None when it can."""
+    """Why HyperFrames cannot start here, in Russian; None when it can (cheap: no process is run)."""
     if not shutil.which("node"):
-        return "нет Node.js {}+ в PATH ({})".format(NODE_MAJOR, HINT.replace("hyperframes", "node"))
+        return "нет Node.js {}+ в PATH ({})".format(NODE_MAJOR, HINT.format("node"))
     if not cli().is_file():
-        return "нет HyperFrames {} ({})".format(PIN, HINT)
+        return "нет HyperFrames {} ({})".format(PIN, HINT.format("hyperframes"))
     return None
 
 
-def env() -> dict:
-    return dict(os.environ, **QUIET)
+def env(history: Optional[Path] = None) -> dict:
+    """Quiet settings; the project history into `history`; our ffmpeg/ffprobe when AIEditing has its own."""
+    out = dict(os.environ, **QUIET)
+    if history is not None:
+        out["HYPERFRAMES_HISTORY_ROOT"] = str(history)
+    for ours, theirs in (("AIEDITING_FFMPEG", "HYPERFRAMES_FFMPEG_PATH"), ("AIEDITING_FFPROBE", "HYPERFRAMES_FFPROBE_PATH")):
+        if os.environ.get(ours):
+            out[theirs] = os.environ[ours]
+    return out
 
 
 def command(args: List[str]) -> List[str]:
@@ -54,14 +62,18 @@ def command(args: List[str]) -> List[str]:
 
 
 def render_mov(project: Path, out: Path, fps: int = 30) -> Path:
-    """index.html of `project` → `out`, ProRes 4444 with alpha (MOV keeps rounded corners and see-through)."""
+    """index.html of `project` → `out`, ProRes 4444 with alpha (MOV keeps rounded corners and see-through).
+
+    The history HyperFrames keeps of a project goes next to it (inside the run folder, removed with it).
+    """
     why = missing()
     if why:
         raise RenderError("Анимацию не отрисовать: " + why)
+    project = Path(project)
     argv = command(["render", project, "--format", "mov", "-o", out, "--fps", fps, "--quiet"])
     try:
         proc = subprocess.run(argv, capture_output=True, text=True, encoding="utf-8", errors="replace",
-                              env=env(), timeout=TIMEOUT, cwd=str(project))
+                              env=env(project.parent / "hf-history"), timeout=TIMEOUT, cwd=str(project))
     except (OSError, subprocess.SubprocessError) as exc:
         raise RenderError("HyperFrames не запускается: {}".format(exc))
     if proc.returncode != 0 or not Path(out).is_file():

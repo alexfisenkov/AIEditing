@@ -4,7 +4,7 @@ from __future__ import annotations
 from typing import Dict, List, Optional
 
 from .chapters import plate_windows
-from .moments import find
+from .moments import RANK, find
 from .words import phrases, spoken
 
 EVERY, LOW, HIGH = 45.0, 30.0, 60.0
@@ -31,12 +31,20 @@ def over(a: float, b: float, spans: List[Dict]) -> Optional[Dict]:
     return next((w for w in spans if a < w["end"] and b > w["start"]), None)
 
 
+def pick(found: List[Dict], gap: float) -> List[Dict]:
+    """In any `gap` window the strongest moment wins: higher RANK, then more points, then the earlier."""
+    chosen: List[Dict] = []
+    for m in sorted(found, key=lambda m: (-RANK.get(m["template"], 0), -len(m.get("items", [])), m["start"])):
+        if all(abs(m["start"] - c["start"]) >= gap for c in chosen):
+            chosen.append(m)
+    return sorted(chosen, key=lambda m: m["start"])
+
+
 def slots(ctx) -> List[Dict]:
-    """[{start, end, template, title, items, said}] to put to the person."""
-    plates, out = plate_windows(ctx), []
+    """[{start, end, template, title, items, said}] to put to the person; none on a chapter plate."""
+    plates, found = plate_windows(ctx), []
     for m in find(phrases(spoken(ctx.transcript()))):
         m["end"] = round(m["start"] + length(ctx, m), 3)
-        if over(m["start"], m["end"], plates) or (out and m["start"] - out[-1]["start"] < every(ctx)):
-            continue
-        out.append(m)
-    return out
+        if not over(m["start"], m["end"], plates):
+            found.append(m)
+    return pick(found, every(ctx))

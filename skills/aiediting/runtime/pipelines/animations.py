@@ -1,13 +1,14 @@
 """The `animations` step: inserts at what is said, approved by the person (anim_slots finds the moments).
 
 An insert takes a card's place: a card at the same moment is taken off (one thing on screen at a time);
-an insert never lands on a chapter plate (the chapter title is shown by the plate only).
+an insert never lands on a chapter plate (the chapter title is shown by the plate only), nor on another.
 """
 from __future__ import annotations
 
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 from ..render.anim_spec import template_file, template_id
+from .anim_answer import points, seconds, span
 from .anim_slots import every, length, over, slots
 from .chapters import plate_windows
 from .report import stamp
@@ -15,26 +16,31 @@ from .report import stamp
 TEMPLATES = ["файлы", "шаги", "список", "число"]
 
 
+def _why_not(ctx, s: Dict, start: float, end: float, taken: List[Dict]) -> Optional[str]:
+    plate, other = over(start, end, plate_windows(ctx)), over(start, end, taken)
+    if template_id(s.get("template")) is None:
+        return "нет шаблона «{}»".format(s.get("template"))
+    if plate:
+        return "на этом месте плашка главы «{}»".format(plate["title"])
+    if other:
+        return "пересекается с анимацией {}".format(stamp(other["start"]))
+    return None
+
+
 def _chosen(ctx, answer: List[Dict]) -> List[Dict]:
-    plates, out = plate_windows(ctx), []
-    for s in answer:
-        points = [str(i).strip() for i in s.get("items", []) if str(i).strip()]
-        if not (points or str(s.get("title", "")).strip()):
+    out: List[Dict] = []
+    for s in sorted(answer, key=lambda s: seconds(s.get("start")) or 0.0):
+        said = points(s.get("items"))
+        if not (said or str(s.get("title", "")).strip()):
             continue
-        start = float(s["start"])
-        end = float(s.get("end") or 0)
-        end = end if end > start + 1.0 else start + length(ctx, s)
-        plate, why = over(start, end, plates), None
-        if template_id(s.get("template")) is None:
-            why = "нет шаблона «{}»".format(s.get("template"))
-        elif plate:
-            why = "на этом месте плашка главы «{}»".format(plate["title"])
+        times, why = span(s, length(ctx, {"items": said}))
+        why = why or _why_not(ctx, s, times[0], times[1], out)
         if why:
-            ctx.note("Анимация {} снята: {}".format(stamp(start), why))
+            ctx.note("Анимация «{}» ({}) снята: {}".format(s.get("template"), s.get("start"), why))
             continue
         out.append({"kind": "animation", "template": s.get("template"), "title": str(s.get("title", "")).strip(),
-                    "items": points, "text": ", ".join(points), "start": start, "end": end})
-    return out
+                    "items": said, "text": ", ".join(said), "start": times[0], "end": times[1]})
+    return sorted(out, key=lambda o: o["start"])
 
 
 def _instead_of_cards(ctx, inserts: List[Dict]) -> None:
@@ -50,9 +56,9 @@ def _instead_of_cards(ctx, inserts: List[Dict]) -> None:
 
 
 def plan_animations(ctx) -> None:
-    from ..render import hyperframes
+    from ..render.hf_ready import problem
 
-    why = hyperframes.missing()
+    why = problem()
     if not why and template_file(ctx.design(), TEMPLATES[0]) is None:
         why = "в дизайн-системе формата нет шаблонов (design/animations/)"
     if why:
@@ -61,8 +67,8 @@ def plan_animations(ctx) -> None:
     found = slots(ctx)
     if not found:
         return
-    ok, data = ctx.ask("animations", "Анимации: поправьте template ({}), title и items (пункты), start; лишние "
-                       "уберите. Пустой список — без анимаций.".format(" · ".join(TEMPLATES)),
-                       {"items": found, "templates": TEMPLATES, "every": every(ctx)})
+    ok, data = ctx.ask("animations", "Анимации: поправьте template ({}), title и items (пункты), start "
+                       "(секунды или 0:01:23); лишние уберите. Пустой список — без анимаций.".format(
+                           " · ".join(TEMPLATES)), {"items": found, "templates": TEMPLATES, "every": every(ctx)})
     if ok:
         _instead_of_cards(ctx, _chosen(ctx, data.get("items", [])))
