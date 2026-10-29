@@ -45,6 +45,15 @@ only if your formats need it, and only after you say yes.
 5. The skill `монтаж-<your word>` is built and installed globally. In a new session, anywhere:
    «смонтируй ~/Videos/lesson.mp4» or «смонтируй как урок».
 
+For a lesson (and any format that shows a screen) you can choose **animated inserts**: where you list
+files, steps or points, or name a number, a short animation in your design system plays beside the
+screen — in the corner opposite your face, instead of a static card, at most once every 30–60 s
+(`params.animations.every`, 45 by default). You approve the moments, the template («файлы», «шаги»,
+«список», «число») and the text before anything is rendered; an empty answer means no animations. The
+price: Node.js 22+ and HyperFrames with its own browser on disk (≈400 MB together) and about 5 seconds of
+rendering per insert. They are installed by `ae.py doctor --install node` and `--install hyperframes` —
+only for a format that chose inserts, after your yes; HyperFrames telemetry is switched off.
+
 A format skill puts the result into `<your issues folder>/<date-topic>/`: the video, a `.srt` when the
 format makes one, and a short report. A remark after watching goes into that report, and the skill
 suggests running AIEditing to refine the format.
@@ -80,7 +89,7 @@ installed by AIEditing's own scripts, only when chosen.
 | whisper.cpp + model | local speech recognition | MIT | the model is ≈3 GB (large-v3) |
 | Pillow, numpy, OpenCV | plates and captions as images, face and layout | MIT-CMU, BSD-3-Clause, Apache-2.0 | light |
 | Tesseract | text on frames when looking for secrets (Apple Vision on macOS) | Apache-2.0 | light |
-| Node.js + HyperFrames | graphics over the video — **not yet**: not offered, not installed | MIT, Apache-2.0 | hundreds of MB with Chrome |
+| Node.js 22+ + HyperFrames 0.8.201 | animated inserts in a lesson: files, steps, a list, a number — only when chosen | MIT, Apache-2.0 | Node ≈100 MB; HyperFrames with its own Chrome ≈300 MB |
 | Remotion + RobustVideoMatting | effects "behind the head" in a vertical — **not yet**: not offered, not installed | Remotion License, GPL-3.0 | heavy |
 
 Python packages are pinned by Python version; Python 3.9 is the minimum. On 3.12 and newer — Pillow 13.0.0,

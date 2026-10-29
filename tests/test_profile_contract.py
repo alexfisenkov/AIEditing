@@ -57,14 +57,18 @@ class StepVocabulary(unittest.TestCase):
             self.assertTrue(CATALOG["steps"][step].get("not_built"), step)
         for name in ("interview.md", "refine.md"):
             text = read(SKILL / "phases" / name)
-            for word in ("HyperFrames", "Remotion", "«за головой»") + tuple("`{}`".format(s) for s in NOT_BUILT):
+            for word in ("Remotion", "«за головой»") + tuple("`{}`".format(s) for s in NOT_BUILT):
                 self.assertNotIn(word, text, "{} offers {}".format(name, word))
 
     def test_readmes_say_the_heavy_layers_are_not_there_yet(self):
-        for name, mark in (("README.md", "not yet"), ("README.ru.md", "пока нет")):
+        """Effects behind the head are not built; HyperFrames is, for animated inserts only (F6)."""
+        for name, mark, used in (("README.md", "not yet", "animated inserts"),
+                                 ("README.ru.md", "пока нет", "анимированные вставки")):
             for line in read(ROOT / name).splitlines():
-                if "HyperFrames" in line and line.startswith("|") or "Remotion + " in line:
+                if "Remotion + " in line:
                     self.assertIn(mark, line, "{}: {}".format(name, line))
+                if "HyperFrames" in line and line.startswith("|"):
+                    self.assertIn(used, line, "{}: {}".format(name, line))
 
 
 class ProfileKeys(unittest.TestCase):
