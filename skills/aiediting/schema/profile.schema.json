@@ -1,0 +1,45 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/alexfisenkov/AIEditing/skills/aiediting/schema/profile.schema.json",
+  "title": "AIEditing format profile",
+  "description": "Answers of the interview for one editing format; data only, no secrets.",
+  "type": "object",
+  "required": ["format", "skill_name", "language", "asr", "steps", "output_dir"],
+  "properties": {
+    "format": {"type": "string", "minLength": 1},
+    "skill_name": {"type": "string", "minLength": 1, "pattern": "^[^/\\\\:*?\"<>|\\s]+$"},
+    "language": {"type": "string", "minLength": 2},
+    "asr": {"$ref": "#/definitions/asr"},
+    "steps": {"type": "array", "items": {"type": "string", "minLength": 1}},
+    "params": {"type": "object"},
+    "approval": {"enum": ["plan", "parts"]},
+    "design": {"type": "string"},
+    "taste": {"type": "array", "items": {"$ref": "#/definitions/taste"}},
+    "output_dir": {"type": "string", "minLength": 1}
+  },
+  "additionalProperties": true,
+  "definitions": {
+    "asr": {
+      "type": "object",
+      "required": ["provider"],
+      "properties": {
+        "provider": {"enum": ["whispercpp", "scribe", "openai_compat", "command"]},
+        "language": {"type": "string"},
+        "model": {"type": ["string", "null"]},
+        "base_url": {"type": ["string", "null"], "pattern": "^https?://"},
+        "api_key_env": {"type": ["string", "null"], "pattern": "^[A-Z_][A-Z0-9_]*$"},
+        "command": {"type": ["array", "null"], "items": {"type": "string"}}
+      },
+      "additionalProperties": false
+    },
+    "taste": {
+      "type": "object",
+      "required": ["date", "video", "note"],
+      "properties": {
+        "date": {"type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}"},
+        "video": {"type": "string"},
+        "note": {"type": "string", "minLength": 1}
+      }
+    }
+  }
+}

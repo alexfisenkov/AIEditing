@@ -1,0 +1,64 @@
+name: Ежемесячная проверка установки
+
+# Раз в месяц ставит AIEditing так же, как пользователь (npx skills add … -g), на macOS и Windows,
+# сверяет поставленную копию и гоняет тесты. При сбое открывает задачу в репозитории.
+on:
+  schedule:
+    - cron: "17 5 1 * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  PYTHONUTF8: "1"
+
+jobs:
+  install:
+    name: ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: ffmpeg (macOS)
+        if: runner.os == 'macOS'
+        run: brew install ffmpeg
+      - name: ffmpeg (Windows)
+        if: runner.os == 'Windows'
+        run: choco install ffmpeg -y --no-progress
+      - name: Установка, как у пользователя
+        run: npx --yes skills add ${{ github.repository }} --skill aiediting -a claude-code -g -y
+      - name: Поставленная копия
+        run: python -B .github/scripts/check_install.py
+      - name: Тесты
+        run: python -B -m unittest discover -s tests -v
+
+  report:
+    needs: install
+    if: failure()
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - name: Задача о сбое
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TITLE: "Ежемесячная проверка установки не прошла"
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          open=$(gh issue list --repo "$GITHUB_REPOSITORY" --state open --search "in:title $TITLE" --json number --jq 'length')
+          if [ "$open" = "0" ]; then
+            gh issue create --repo "$GITHUB_REPOSITORY" --title "$TITLE" \
+              --body "Установка через npx skills или тесты упали на macOS или Windows. Прогон: $RUN_URL"
+          else
+            echo "Открытая задача уже есть — новую не создаю."
+          fi
