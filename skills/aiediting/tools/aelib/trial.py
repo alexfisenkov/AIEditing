@@ -47,6 +47,14 @@ def _screen(opt, folder: Path):
     return _piece(screen, folder, opt.start, opt.duration, "экран")
 
 
+def _own_design(profile: dict, draft: Path) -> dict:
+    """A relative `design` is the draft's own folder (`<draft>/design/`), not a place inside AIEditing."""
+    own = profile.get("design")
+    if not own or Path(own).is_absolute():
+        return profile
+    return dict(profile, design=str((draft / own).resolve()))
+
+
 def cmd_trial(opt) -> str:
     from runtime import pipelines
     from runtime.profile import load_profile
@@ -56,6 +64,7 @@ def cmd_trial(opt) -> str:
         profile = load_profile(w / opt.skill / "profile.json")
     except (OSError, ValueError) as e:
         raise CliError(str(e))
+    profile = _own_design(profile, w / opt.skill)
     src = Path(opt.video).expanduser().resolve()
     if not src.is_file():
         raise CliError("Нет такого файла: {}".format(src))

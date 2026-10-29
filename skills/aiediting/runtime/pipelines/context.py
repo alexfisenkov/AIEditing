@@ -65,7 +65,7 @@ class Context:
         root = Path(own) if own else None
         if root is not None and not root.is_absolute():
             root = Path(__file__).resolve().parent.parent.parent / root
-        d = dict(load_design(root if root is not None and root.exists() else default_design()))
+        d = dict(load_design(root if root is not None and (root / "tokens.json").is_file() else default_design()))
         if vertical:
             from ..media.export import safe_zone
 
