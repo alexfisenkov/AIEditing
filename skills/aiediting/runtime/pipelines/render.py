@@ -59,11 +59,15 @@ def render_piece(ctx, piece: Dict) -> Dict:
         ctx.report["motion"] += moves
     if piece.get("layout"):
         cur = media.vertical(cur, piece["layout"], tmp / "4-вертикаль.mp4")
-    items = specs(ctx, piece) if (ctx.has("plate") or ctx.has("overlay_png")) else []
+    items = specs(ctx, piece) if any(ctx.has(s) for s in ("plate", "overlay_png", "animations")) else []
     if items:
         from ..media.vertical import shown_size
+        from .anim_layer import layers
 
-        pngs = draw(ctx, piece, items, shown_size(media.probe(cur)), tmp / "плашки")
+        frame, moving = shown_size(media.probe(cur)), [i for i in items if i["kind"] == "animation"]
+        still = [i for i in items if i["kind"] != "animation"]
+        pngs = draw(ctx, piece, still, frame, tmp / "плашки") if still else []
+        pngs += layers(ctx, piece, moving, frame, tmp / "анимации") if moving else []
         cur = media.overlay_png(cur, pngs, tmp / "5-плашки.mp4") if pngs else cur
     lufs = float(ctx.p("lufs", -16))
     if ctx.has("music") and ctx.music and media.probe(cur)["has_audio"]:

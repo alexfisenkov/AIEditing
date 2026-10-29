@@ -45,10 +45,10 @@ class ChromeGraphite(unittest.TestCase):
         private = re.compile(r"/Users/|C:\\\\Users|@[A-Za-z0-9-]+\.[a-z]{2,}|sk-[A-Za-z0-9]{8}|gh[pousr]_|"
                              r"\.env\b", re.IGNORECASE)
         for path in DESIGN.rglob("*"):
-            if path.suffix in (".json", ".md"):
+            if path.suffix in (".json", ".md", ".html"):
                 text = path.read_text(encoding="utf-8")
                 self.assertIsNone(private.search(text), (path.name, private.search(text)))
-            self.assertIn(path.suffix, (".json", ".md", ".ttf", ".otf", ".txt", ""), path.name)
+            self.assertIn(path.suffix, (".json", ".md", ".html", ".ttf", ".otf", ".txt", ""), path.name)
 
 
 def _basename(rel):

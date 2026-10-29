@@ -35,6 +35,10 @@ def _body(ctx, r: Dict) -> List[str]:
         f["index"], stamp(f["start"]), f["from"], f["to"]) for f in r["fixes"]])
     if r["chapters"]:
         lines += ["", "## Главы", ""] + ["- {} {}".format(stamp(c["at"]), c["title"]) for c in r["chapters"]]
+    if r.get("animations"):
+        lines += ["", "## Анимации", ""] + ["- {}–{} «{}»: {}".format(
+            stamp(a["at"]), stamp(a["end"]), a["template"], " · ".join(x for x in (a["title"], a["text"]) if x))
+            for a in r["animations"]]
     if r["clips"]:
         lines += ["", "## Отрывки", ""] + ["- {} {}–{}: {}".format(c["id"], stamp(c["start"]), stamp(c["end"]),
                                                                  c.get("said", "")) for c in r["clips"]]

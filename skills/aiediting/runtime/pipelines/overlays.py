@@ -1,4 +1,7 @@
-"""Chapters, cards and captions as pictures from the design layer, laid over the piece in its own time."""
+"""Chapters, cards and captions as pictures from the design layer, laid over the piece in its own time.
+
+Animated inserts travel in the same list (kind "animation") but are made by anim_layer, not drawn here.
+"""
 from __future__ import annotations
 
 from pathlib import Path

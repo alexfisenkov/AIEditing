@@ -16,7 +16,10 @@
     "language": {"type": "string", "minLength": 2},
     "asr": {"$ref": "#/definitions/asr"},
     "steps": {"type": "array", "items": {"type": "string", "minLength": 1}},
-    "params": {"type": "object"},
+    "params": {
+      "type": "object",
+      "properties": {"animations": {"$ref": "#/definitions/animations"}}
+    },
     "approval": {"enum": ["plan", "parts"]},
     "design": {"type": "string"},
     "taste": {"type": "array", "items": {"$ref": "#/definitions/taste"}},
@@ -41,6 +44,14 @@
         "command": {"type": ["array", "null"], "items": {"type": "string"}}
       },
       "additionalProperties": false
+    },
+    "animations": {
+      "type": "object",
+      "description": "Animated inserts (step `animations`, HyperFrames): at most one per `every` seconds; `seconds` fixes their length (else 4–8 s by the number of points).",
+      "properties": {
+        "every": {"type": "number", "minimum": 30, "maximum": 60},
+        "seconds": {"type": "number", "minimum": 2, "maximum": 15}
+      }
     },
     "taste": {
       "type": "object",

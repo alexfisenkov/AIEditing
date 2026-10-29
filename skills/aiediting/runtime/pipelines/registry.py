@@ -31,6 +31,7 @@ PLAN: Dict[str, Optional[Callable]] = {
     "motion": _lazy("motion", "plan_motion"),
     "vertical": _lazy("vertical_plan", "plan_vertical"),
     "plate": _lazy("plates", "plan_plates"),
+    "animations": _lazy("animations", "plan_animations"),  # after plate: an insert replaces a card
     "overlay_png": None,
     "music": _lazy("music", "plan_music"),
     "write_srt": _lazy("subtitles", "plan_srt"),

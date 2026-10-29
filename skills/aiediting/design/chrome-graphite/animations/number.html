@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="ru">
+<!-- «Число»: one large figure (the heading slot) and a short caption under a thin line that draws itself.
+     Filled by runtime/render/anim_page.py (placeholders in double braces: style, w, h, seconds, title;
+     the marked row repeats per caption line with n, text, delay). No sound, no network, no script. -->
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width={{w}}, height={{h}}" />
+<style>
+{{style}}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { width: {{w}}px; height: {{h}}px; overflow: hidden; background: transparent; }
+#root, #ins { position: absolute; inset: 0; }
+#panel { position: absolute; inset: 0; padding: var(--pad); border-radius: var(--radius); background: var(--bg);
+  border: 1.5px solid var(--line); overflow: hidden; display: flex; flex-direction: column; justify-content: center;
+  animation: ae-in var(--enter) var(--ease) 0s 1 both, ae-out var(--exit) ease-in var(--out-at) 1 forwards; }
+#title { font-family: "ae-display"; font-weight: var(--title-weight); font-size: var(--number-size);
+  line-height: 1.05; color: var(--fg); white-space: nowrap; overflow: hidden; letter-spacing: -0.02em;
+  animation: ae-grow var(--enter) var(--ease) 0.1s 1 both; transform-origin: left center; }
+#rule { height: 1.5px; background: var(--line); margin: calc(var(--body-size) * 0.35) 0;
+  transform-origin: left center; animation: ae-draw calc(var(--enter) * 1.4) var(--ease) 0.25s 1 both; }
+.say { font-family: "ae-text"; font-weight: var(--body-weight); font-size: var(--body-size); line-height: 1.4;
+  color: var(--body-fg); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  animation: ae-rise var(--enter) var(--ease) 0s 1 both; }
+@keyframes ae-in { from { opacity: 0; transform: scale(0.96); filter: blur(8px); }
+  to { opacity: 1; transform: none; filter: blur(0); } }
+@keyframes ae-out { from { opacity: 1; filter: blur(0); } to { opacity: 0; filter: blur(6px); } }
+@keyframes ae-grow { from { opacity: 0; transform: scale(0.82); filter: blur(6px); }
+  to { opacity: 1; transform: none; filter: blur(0); } }
+@keyframes ae-draw { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@keyframes ae-rise { from { opacity: 0; transform: translateY(0.4em); filter: blur(4px); }
+  to { opacity: 1; transform: none; filter: blur(0); } }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-no-timeline data-start="0" data-duration="{{seconds}}"
+     data-width="{{w}}" data-height="{{h}}">
+  <div id="ins" class="clip" data-start="0" data-duration="{{seconds}}">
+    <div id="panel">
+      <div id="title">{{title}}</div>
+      <div id="rule"></div>
+      <!--item--><div class="say" style="animation-delay:{{delay}}">{{text}}</div><!--/item-->
+    </div>
+  </div>
+</div>
+</body>
+</html>
