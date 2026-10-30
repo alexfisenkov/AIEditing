@@ -11,11 +11,13 @@ SLIVER = 0.3  # a kept bit this short with no word in it is just leftover silenc
 
 
 def plan_speech(ctx) -> None:
+    """Speech by loudness; a format with `word_gap` (the vertical) keeps only where words are said."""
     from ..media import speech_spans
+    from .wordcut import plan_words
 
     spans = speech_spans(ctx.src, gap=float(ctx.p("gap", 0.5)), pad=float(ctx.p("pad", 0.12)),
                          db=float(ctx.p("db", -30)))
-    ctx.keep = spans or ctx.keep
+    ctx.keep = plan_words(ctx, spans) or ctx.keep
 
 
 def _fillers(ctx, words) -> List[Dict]:
