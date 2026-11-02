@@ -70,7 +70,7 @@ def _voiced(keep: List[Span], words: List[Dict], fillers: List[Dict], takes: Lis
 def plan_cut(ctx) -> None:
     from .editing import plan_editing
     from .retakes import plan_retakes
-    from .seams import tidy, widened
+    from .seams import tidy, widened, wordless_inside
 
     needs_words = ctx.p("fillers_cut") or ctx.p("wordless") == "cut" or ctx.p("editor") or \
         ctx.p("retakes") in ("last_good", True)
@@ -87,6 +87,12 @@ def plan_cut(ctx) -> None:
     unvoiced: List[Span] = []
     if ctx.p("wordless") == "cut" and words:
         keep, unvoiced = _voiced(keep, words, fillers, takes)
+        drops = [tuple(t["drop"]) for t in takes]
+        said = [w for w in words if w not in fillers and not any(a <= (w["start"] + w["end"]) / 2.0 < b for a, b in drops)]
+        lost = [w for w in said if not alive((w["start"] + w["end"]) / 2.0, keep)]
+        inner = [s for s in wordless_inside(keep, said, float(ctx.p("gap", 0.5)), LONGEST_NOISE)
+                 if not any(s[0] - NEAR_LOST < w["start"] < s[1] + NEAR_LOST for w in lost)]
+        keep, unvoiced = subtract(keep, inner), unvoiced + inner
     ctx.keep = merge(keep) or ctx.keep
     total = ctx.info["duration"]
     ctx.report["cuts"] = [{"start": round(a, 3), "end": round(b, 3), "why": _why((a, b), fillers, takes, unvoiced)}

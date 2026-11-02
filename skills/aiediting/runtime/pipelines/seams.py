@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from typing import Dict, List, Optional, Sequence
 
+from .wordcut import TAIL
 from .words import norm
 
 LEAD = 0.1   # seconds before the recognised start that may belong to the cut word
@@ -34,6 +35,24 @@ def widened(words: Sequence[Dict], takes: Sequence[Dict]) -> List[Dict]:
         prev = _before(words, a)
         start = max(prev["end"] + AIR, a - LEAD) if prev else a - LEAD
         out.append(dict(t, drop=[round(min(a, max(0.0, start)), 3), b]))
+    return out
+
+
+def wordless_inside(keep: Sequence, words: Sequence[Dict], gap: float, longest: float) -> List:
+    """Stretches of kept speech with no word for `gap` s: a grunt, a breath, sound above the loudness threshold.
+
+    Each word keeps its margins (LEAD before, TAIL after); a stretch over `longest` s may be a demo and stays."""
+    out = []
+    for a, b in keep:
+        at, first = a, True
+        for w in [w for w in words if w["start"] < b and a < w["end"]] + [None]:
+            until = w["start"] if w else b
+            if until - at >= gap and until - at <= longest:
+                x, y = at + (0.0 if first else TAIL), until - (LEAD if w else 0.0)
+                if y > x:
+                    out.append((round(x, 3), round(y, 3)))
+            if w:
+                at, first = max(at, w["end"]), False
     return out
 
 

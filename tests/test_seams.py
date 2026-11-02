@@ -28,6 +28,28 @@ class Widened(unittest.TestCase):
         self.assertEqual(widened([{"text": "Ну,", "start": 0.05, "end": 0.2}], [{"drop": [0.05, 0.2]}])[0]["drop"], [0.0, 0.2])
 
 
+class WordlessInside(unittest.TestCase):
+    def inner(self, keep, spans, gap=0.3):
+        from runtime.pipelines.seams import wordless_inside
+
+        return wordless_inside(keep, [{"start": a, "end": b, "text": "слово"} for a, b in spans], gap, 3.0)
+
+    def test_a_grunt_between_two_words_goes_and_their_margins_stay(self):
+        self.assertEqual(self.inner([(0.0, 5.0)], [(0.0, 1.0), (2.0, 3.0)]), [(1.12, 1.9), (3.12, 5.0)])
+
+    def test_a_breath_before_the_first_word_goes(self):
+        self.assertEqual(self.inner([(10.0, 12.0)], [(10.8, 12.0)]), [(10.0, 10.7)])
+
+    def test_words_close_together_are_left_alone(self):
+        self.assertEqual(self.inner([(0.0, 2.1)], [(0.0, 1.0), (1.2, 2.0)]), [])
+
+    def test_a_long_stretch_may_be_a_demo(self):
+        self.assertEqual(self.inner([(0.0, 10.0)], [(0.0, 1.0), (9.0, 10.0)]), [])
+
+    def test_a_pause_shorter_than_the_margins_cuts_nothing(self):
+        self.assertEqual(self.inner([(0.0, 2.3)], [(0.0, 1.0), (1.2, 2.3)], gap=0.2), [])
+
+
 class Tidy(unittest.TestCase):
     def text(self, line, *cut):
         from runtime.pipelines.kept import kept_words
