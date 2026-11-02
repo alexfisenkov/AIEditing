@@ -29,9 +29,9 @@ def cues(words: List[Dict], glossary: Dict[str, str], fixes: Optional[List[Dict]
         text = str(w.get("text", "")).strip()
         if w.get("type", "word") != "word" or not text:  # as the .srt: spacing, hesitations, sounds — out
             continue
-        text, changes = _glossed(text, glossary)
         if last and capital_after(last, text):  # the first word may be the middle of a sentence: a clip starts anywhere
             text = text[:1].upper() + text[1:]
+        text, changes = _glossed(text, glossary)
         last = text
         cur = out[-1] if out else None
         fresh = (cur is None or cur["n"] >= MAX_WORDS or len(cur["text"]) + 1 + len(text) > MAX_CHARS

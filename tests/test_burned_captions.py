@@ -43,6 +43,14 @@ class Captions(unittest.TestCase):
         words = scribe_words(["в", "этом", "суть.", "ну", "и", "ладно…", "пойдём", "дальше.", "iCloud", "тут."])
         self.assertEqual(" ".join(c["text"] for c in cues(words, {})), "в этом суть. Ну и ладно… пойдём дальше. iCloud тут.")
 
+    def test_a_glossary_term_keeps_its_case_after_a_sentence_as_in_the_srt(self):
+        from runtime.pipelines.captions import cues
+
+        fixes = []
+        got = cues(scribe_words(["Готово.", "нпм", "ставим."]), {"нпм": "npm"}, fixes)
+        self.assertEqual(" ".join(c["text"] for c in got), "Готово. npm ставим.")
+        self.assertEqual(fixes[0]["to"], "npm")
+
 
 if __name__ == "__main__":
     unittest.main()
