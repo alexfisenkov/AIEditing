@@ -21,6 +21,7 @@ def cues(words: List[Dict], glossary: Dict[str, str], fixes: Optional[List[Dict]
     """Cues of a few words; `fixes`, if given, gets each glossary change as the .srt lists it.
 
     As in the .srt a sentence starts with a capital letter: a cut leaves «все.» right before «в этом»."""
+    from ..media.srt import _PUNCT
     from ..media.srt_words import capital_after
 
     out: List[Dict] = []
@@ -28,6 +29,11 @@ def cues(words: List[Dict], glossary: Dict[str, str], fixes: Optional[List[Dict]
     for w in words:
         text = str(w.get("text", "")).strip()
         if w.get("type", "word") != "word" or not text:  # as the .srt: spacing, hesitations, sounds — out
+            continue
+        if _PUNCT.match(text):  # as the .srt: a mark on its own belongs to the word before it
+            if out:
+                out[-1].update(text=out[-1]["text"] + text, end=max(out[-1]["end"], w["end"]))
+                last = out[-1]["text"]
             continue
         if last and capital_after(last, text):  # the first word may be the middle of a sentence: a clip starts anywhere
             text = text[:1].upper() + text[1:]

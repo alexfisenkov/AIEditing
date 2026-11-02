@@ -43,6 +43,15 @@ class Captions(unittest.TestCase):
         words = scribe_words(["в", "этом", "суть.", "ну", "и", "ладно…", "пойдём", "дальше.", "iCloud", "тут."])
         self.assertEqual(" ".join(c["text"] for c in cues(words, {})), "в этом суть. Ну и ладно… пойдём дальше. iCloud тут.")
 
+    def test_a_mark_on_its_own_joins_the_word_before_it_as_in_the_srt(self):
+        """From the lesson: Scribe gives «.» as a word of no length, 6.6 s after «промпт»."""
+        from runtime.pipelines.captions import cues
+
+        words = [{"text": "промпт", "start": 1.0, "end": 1.4, "type": "word"}, {"text": ".", "start": 8.0, "end": 8.0, "type": "word"},
+                 {"text": "отправляю", "start": 8.04, "end": 8.5, "type": "word"}]
+        self.assertEqual([c["text"] for c in cues(words, {})], ["промпт.", "Отправляю"])
+        self.assertEqual(cues(words[1:2], {}), [])
+
     def test_a_glossary_term_keeps_its_case_after_a_sentence_as_in_the_srt(self):
         from runtime.pipelines.captions import cues
 
