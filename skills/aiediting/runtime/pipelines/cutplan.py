@@ -70,6 +70,7 @@ def _voiced(keep: List[Span], words: List[Dict], fillers: List[Dict], takes: Lis
 def plan_cut(ctx) -> None:
     from .editing import plan_editing
     from .retakes import plan_retakes
+    from .seams import tidy, widened
 
     needs_words = ctx.p("fillers_cut") or ctx.p("wordless") == "cut" or ctx.p("editor") or \
         ctx.p("retakes") in ("last_good", True)
@@ -77,6 +78,8 @@ def plan_cut(ctx) -> None:
     fillers = _fillers(ctx, words)
     takes = plan_retakes(ctx, words) if ctx.p("retakes") in ("last_good", True) else []
     takes += plan_editing(ctx, words, takes)
+    takes = widened(words, takes)
+    tidy(words, takes)
     cuts =[(w["start"], w["end"]) for w in fillers] + [tuple(t["drop"]) for t in takes]
     keep = subtract(ctx.keep, cuts)
     mids = _anchors(words, fillers, takes)
