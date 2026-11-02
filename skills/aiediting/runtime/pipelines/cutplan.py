@@ -68,13 +68,16 @@ def _voiced(keep: List[Span], words: List[Dict], fillers: List[Dict], takes: Lis
 
 
 def plan_cut(ctx) -> None:
+    from .editing import plan_editing
     from .retakes import plan_retakes
 
-    needs_words = ctx.p("fillers_cut") or ctx.p("wordless") == "cut" or ctx.p("retakes") in ("last_good", True)
+    needs_words = ctx.p("fillers_cut") or ctx.p("wordless") == "cut" or ctx.p("editor") or \
+        ctx.p("retakes") in ("last_good", True)
     words = spoken(ctx.transcript()) if needs_words else []
     fillers = _fillers(ctx, words)
     takes = plan_retakes(ctx, words) if ctx.p("retakes") in ("last_good", True) else []
-    cuts = [(w["start"], w["end"]) for w in fillers] + [tuple(t["drop"]) for t in takes]
+    takes += plan_editing(ctx, words, takes)
+    cuts =[(w["start"], w["end"]) for w in fillers] + [tuple(t["drop"]) for t in takes]
     keep = subtract(ctx.keep, cuts)
     mids = _anchors(words, fillers, takes)
     keep = [(a, b) for a, b in keep if b - a >= SLIVER or any(alive(m, [(a, b)]) for m in mids)]

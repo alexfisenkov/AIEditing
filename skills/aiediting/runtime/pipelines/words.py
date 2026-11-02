@@ -10,6 +10,7 @@ from .kept import alive
 from .timeline import Span, to_out
 
 PHRASE_PAUSE = 0.7  # a pause this long ends a phrase even without a full stop
+KEPT = ".расшифровка"  # inside the issue folder, stays after the run folder is removed
 _END = re.compile(r"[.!?…]$")
 _SPACE = re.compile(r"\s+")
 
@@ -73,10 +74,11 @@ def recognise(ctx, media=None) -> Dict:
     cfg.setdefault("language", ctx.profile.get("language") or "")
     if not ctx.info["has_audio"]:
         return {"words": [], "language": cfg["language"], "provider": cfg.get("provider", "")}
-    path = ctx.work / "words-{}.json".format(cache_key(media, cfg))
+    folder = ctx.outdir / KEPT if media == ctx.src else ctx.work  # the source's speech outlives the run: it is paid for
+    path = folder / "words-{}.json".format(cache_key(media, cfg))
     if path.is_file():
         return json.loads(path.read_text(encoding="utf-8"))
     result = asr.transcribe(media, cfg)
-    ctx.work.mkdir(parents=True, exist_ok=True)
+    folder.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(result, ensure_ascii=False), encoding="utf-8")
     return result
