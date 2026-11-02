@@ -4,6 +4,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Dict, List
 
+from .speed import rate_of, scale_rows
 from .timeline import to_out
 
 NAME = "отчёт.md"
@@ -54,7 +55,15 @@ def _body(ctx, r: Dict) -> List[str]:
 
 def finish(ctx) -> Dict:
     r = ctx.report
-    r["chapters"] = [{"at": to_out(float(c["start"]), ctx.keep) or 0.0, "title": c["title"]} for c in ctx.chapters]
+    rate = rate_of(ctx.p("speed", 1.0))
+    r["chapters"] = [{"at": (to_out(float(c["start"]), ctx.keep) or 0.0) / rate, "title": c["title"]}
+                     for c in ctx.chapters]
+    r["blurred"] = scale_rows(r["blurred"], rate, "start", "end")
+    if r.get("animations"):
+        r["animations"] = scale_rows(r["animations"], rate, "at", "end")
+    if rate != 1.0:
+        ctx.note("Готовое видео ускорено в {:g} раза: таймкоды глав и субтитров — уже с ускорением, "
+                 "вырезанное указано по времени исходника".format(rate))
     r["clips"] = [{k: p[k] for k in ("id", "start", "end", "said") if k in p} for p in (ctx.pieces or [])]
     if r["drift_ms"] >= DRIFT_OK:
         ctx.note("Рассинхрон {:.0f} мс — больше {:.0f} мс; проверьте склейки".format(r["drift_ms"], DRIFT_OK))

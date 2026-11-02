@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from typing import Dict
 
+from .speed import rate_of, scaled_words
 from .words import mapped, spoken
 
 QUESTION = ("Вычитайте субтитры (draft): ослышки, произношение, бренды, перевод. Исправления — в replace "
@@ -24,6 +25,6 @@ def plan_srt(ctx) -> None:
 def write_piece_srt(ctx, keep, out) -> Dict:
     from ..media import write_srt
 
-    words = mapped(ctx.transcript().get("words", []), keep)
+    words = scaled_words(mapped(ctx.transcript().get("words", []), keep), rate_of(ctx.p("speed", 1.0)))
     fixes = write_srt({"words": words}, out, ctx.srt_glossary)
     return {"path": out, "fixes": fixes, "words": len(spoken({"words": words}))}

@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Dict
 
 from .aftercare import after, fit_audio
+from .speed import rate_of
 from .timeline import map_range, to_out
 
 
@@ -71,11 +72,14 @@ def render_piece(ctx, piece: Dict) -> Dict:
         pngs = draw(ctx, piece, still, frame, tmp / "плашки") if still else []
         pngs += layers(ctx, piece, moving, frame, tmp / "анимации") if moving else []
         cur = media.overlay_png(cur, pngs, tmp / "5-плашки.mp4") if pngs else cur
+    rate = rate_of(ctx.p("speed", 1.0))
+    if rate != 1.0:  # after the pictures, so they speed up with the voice; before the music, which stays as it is
+        cur = media.speed_up(cur, rate, tmp / "5-скорость.mp4")
     lufs = float(ctx.p("lufs", -16))
     if ctx.has("music") and ctx.music and media.probe(cur)["has_audio"]:
         from .music import mix
 
-        accents = [i["start"] for i in items if i["kind"] in ("card", "chapter")]
+        accents = [i["start"] / rate for i in items if i["kind"] in ("card", "chapter")]
         cur = mix(cur, ctx.music, accents, lufs, tmp / "6-музыка.mp4")
     if ctx.has("loudnorm") and media.probe(cur)["has_audio"]:
         cur = fit_audio(media.loudnorm(cur, tmp / "7-громкость.mp4", lufs=lufs), tmp / "8-ровно.mp4")
