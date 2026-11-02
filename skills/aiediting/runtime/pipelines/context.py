@@ -63,7 +63,8 @@ class Context:
 
         self._timed = True
         self._words, moved = repaired(self._words, self.loud, float(self.p("pad", 0.12)),
-                                      lambda w: w.get("type") == "filler" or bool(_fillers(self, [w])))
+                                      lambda w: w.get("type") == "filler" or bool(_fillers(self, [w])),
+                                      whole=self.p("word_gap") is not None)
         if moved:
             self.note("Время слов поправлено по звуку, распознавание поставило их мимо речи ({}): {}".format(
                 len(moved), "; ".join(moved[:10]) + (" …" if len(moved) > 10 else "")))

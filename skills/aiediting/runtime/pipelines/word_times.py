@@ -1,9 +1,10 @@
-"""Recognised word times checked against the sound, for formats cut by loudness.
+"""Recognised word times checked against the sound.
 
 A word lives by its middle (`kept.alive`). A recogniser sometimes stretches a word across the pause next to it,
-or places a phrase tail inside a later silence: the sound of such a word stays in the video, the word falls out
-of the subtitles. Only what can belong nowhere else moves; a hesitation never does, because its times are what
-gets cut. The times in the cached transcript stay as recognised.
+or places a phrase tail inside a later silence: in a format cut by loudness the sound of such a word stays in the
+video and the word falls out of the subtitles, in a format cut by words the silence under it stays. Only what can
+belong nowhere else moves; a hesitation never does, because its times are what gets cut. The times in the cached
+transcript stay as recognised.
 """
 from __future__ import annotations
 
@@ -37,14 +38,14 @@ def _unstretched(w: Dict, parts: List[Span], loud: Sequence[Span]) -> Optional[S
     return (a, min(b, a + LONGEST)) if b < w["end"] else None
 
 
-def _fitted(w: Dict, loud: Sequence[Span]) -> Optional[Span]:
+def _fitted(w: Dict, loud: Sequence[Span], whole: bool = False) -> Optional[Span]:
     """New times of a word that touches sound but does not sit in it; None when it needs no change."""
     parts = _overlaps(w["start"], w["end"], loud)
     if not parts:
         return None
     if w["end"] - w["start"] > LONGEST:
         return _unstretched(w, parts, loud)
-    if alive((w["start"] + w["end"]) / 2.0, loud):
+    if whole or alive((w["start"] + w["end"]) / 2.0, loud):
         return None
     return max(parts, key=lambda p: p[1] - p[0])
 
@@ -104,17 +105,18 @@ def _orphan_runs(words: List[Dict], loud: Sequence[Span], fixed: Callable[[Dict]
 
 
 def repaired(transcript: Dict, loud: Sequence[Span], pad: float = 0.12,
-             fixed: Callable[[Dict], bool] = lambda w: False) -> Tuple[Dict, List[str]]:
+             fixed: Callable[[Dict], bool] = lambda w: False, whole: bool = False) -> Tuple[Dict, List[str]]:
     """(a copy of the transcript with corrected times, what moved and from where) by the loud stretches.
 
-    `pad` is the margin `speech_spans` added around the sound; a word `fixed` says about keeps its times."""
+    `pad` is the margin `speech_spans` added around the sound; a word `fixed` says about keeps its times. With `whole`
+    the times decide what stays: a word of normal length is not narrowed to its sound, its quiet part would go."""
     all_words = [dict(w) for w in (transcript or {}).get("words", [])]
     words = [w for w in all_words if w.get("type") != "spacing" and str(w.get("text", "")).strip()]
     sound = [s for s in loud if s[1] - s[0] >= 2 * pad + CLICK]
     moved: List[str] = []
     stretched = []
     for w in words:
-        fitted = None if fixed(w) else _fitted(w, sound)
+        fitted = None if fixed(w) else _fitted(w, sound, whole)
         if fitted:
             moved.append("{} {}–{} → {}".format(quote([w]), stamp(w["start"]), stamp(w["end"]), stamp(fitted[0])))
             if w["end"] - w["start"] > LONGEST:

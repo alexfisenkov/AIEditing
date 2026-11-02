@@ -3,13 +3,15 @@
 Loudness alone keeps breaths, clicks and room noise that rise above the threshold, and the stretch between
 a dropped take and the next one. Here a stretch with no word longer than `word_gap` s is cut whatever its
 loudness. Each word is widened by `word_lead` / `word_tail` s for its first and last sounds; the widening
-is trimmed to where there is sound (the loudness spans), and a word itself is never cut into.
+is trimmed to where there is sound (the loudness spans), and a word itself is never cut into: only a word too long
+to be said (`word_times.LONGEST`) keeps no more than its sound, whatever the time check could not place.
 """
 from __future__ import annotations
 
 from typing import Dict, List, Sequence
 
 from .timeline import Span, intersect, merge
+from .word_times import LONGEST
 
 LEAD, TAIL = 0.08, 0.12  # s: room for a word's first and last sounds that the recogniser's timing misses
 
@@ -34,7 +36,8 @@ def by_words(loud: Sequence[Span], words: Sequence[Dict], join: float, total: fl
     if not words:
         return list(loud)
     heard = [s for a, b in word_runs(words, lead, tail, join) for s in intersect(loud, a, b)]
-    whole = [(max(0.0, float(w["start"])), min(total, float(w["end"]))) for w in words]
+    whole = [(max(0.0, float(w["start"])), min(total, float(w["end"]))) for w in words
+             if float(w["end"]) - float(w["start"]) <= LONGEST]
     return [(round(a, 3), round(min(b, total), 3)) for a, b in merge(heard + whole) if min(b, total) > a]
 
 

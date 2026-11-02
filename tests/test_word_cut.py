@@ -51,6 +51,14 @@ class ByWords(unittest.TestCase):
 
         self.assertEqual(by_words([(0.5, 3.0)], [], join=0.25, total=10.0), [(0.5, 3.0)])
 
+    def test_a_word_too_long_to_be_said_does_not_hold_its_silence(self):
+        """Nothing is heard under it, so nothing tells where it really is: only the sound stays, not a minute of quiet."""
+        from runtime.pipelines.wordcut import by_words
+
+        words = [{"text": "слово", "start": 10.0, "end": 70.0, "type": "word"}]
+        self.assertEqual(by_words([(0.0, 5.0), (80.0, 85.0)], words, join=0.25, total=100.0), [])
+        self.assertEqual(by_words([(9.5, 11.0)], words, join=0.25, total=100.0), [(9.92, 11.0)])
+
 
 class Presets(unittest.TestCase):
     def test_only_the_vertical_asks_for_continuous_speech(self):

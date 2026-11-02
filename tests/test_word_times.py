@@ -143,6 +143,25 @@ class Repaired(unittest.TestCase):
         self.assertEqual(repaired(None, [(0.0, 1.0)])[0]["words"], [])
 
 
+class WholeWords(unittest.TestCase):
+    """`whole`: the cut goes by the words, so a word of normal length never falls out and stays as recognised."""
+
+    def fixed(self, words, loud):
+        from runtime.pipelines.word_times import repaired
+
+        return repaired({"words": words}, loud, whole=True)
+
+    def test_a_word_whose_end_is_quiet_stays_whole(self):
+        words = [word("тихое", 1.0, 1.8)]
+        out, moved = self.fixed(words, [(0.9, 1.3)])
+        self.assertEqual((out["words"], moved), (words, []))
+
+    def test_a_stretched_word_is_cut_back_all_the_same(self):
+        out, moved = self.fixed([word("даже", 20.0, 80.0)], [(19.9, 21.5)])
+        self.assertEqual((out["words"][0]["start"], out["words"][0]["end"]), (20.0, 21.5))
+        self.assertEqual(len(moved), 1)
+
+
 class InTheRun(unittest.TestCase):
     """Through Context and plan_speech, as a run goes."""
 
@@ -179,12 +198,32 @@ class InTheRun(unittest.TestCase):
         self.speech(ctx, [(9.0, 11.0), (19.9, 21.0)])
         self.assertEqual(ctx.transcript()["words"], words)
 
-    def test_a_format_cut_by_words_keeps_recognised_times(self):
-        words = [word("тихое", 1.0, 1.5), word("слово", 5.0, 5.4)]
+    def test_a_format_cut_by_words_keeps_the_times_of_a_word_of_normal_length(self):
+        """Its quiet end is what the cut would lose: the times decide what stays, so they do not follow the sound."""
+        words = [word("тихое", 1.0, 1.8), word("слово", 5.0, 5.4)]
         ctx = self.context({"word_gap": 0.25}, words)
-        self.speech(ctx, [(0.9, 1.2), (5.0, 5.4)])
-        self.assertIsNone(ctx.loud)
+        self.speech(ctx, [(0.9, 1.3), (5.0, 5.4)])
         self.assertEqual(ctx.transcript()["words"], words)
+        self.assertTrue(any(a <= 1.0 and 1.8 <= b for a, b in ctx.keep), ctx.keep)
+
+    def test_a_format_cut_by_words_does_not_keep_the_silence_inside_a_stretched_word(self):
+        words = [word("системе.", 10.0, 92.0), word("Дальше", 92.1, 92.5), word("идём.", 92.6, 93.0)]
+        ctx = self.context({"word_gap": 0.25, "word_lead": 0.08, "word_tail": 0.12}, words)
+        self.speech(ctx, [(9.9, 11.0), (92.0, 93.1)])
+        self.assertEqual(ctx.transcript()["words"][0]["end"], 11.0)
+        self.assertEqual(ctx.keep, [(9.92, 11.0), (92.02, 93.1)])
+        self.assertEqual(len(ctx.notes), 1)
+
+    def test_a_format_cut_by_words_gets_the_tail_of_a_sentence_back_from_the_silence(self):
+        """From a lesson: «даже» 63 s long took the sound of «даже через Telegram.», the other two stood in silence."""
+        from runtime.pipelines.kept import kept_words
+
+        words = [word("даже", 20.0, 80.0), word("через", 80.3, 80.6), word("Telegram.", 80.8, 83.8), word("Дальше", 90.0, 90.4)]
+        ctx = self.context({"word_gap": 0.25}, words)
+        self.speech(ctx, [(19.9, 21.5), (89.9, 90.5)])
+        self.assertEqual(ctx.keep, [(19.92, 21.5), (89.92, 90.5)])
+        self.assertEqual([w["text"] for w in kept_words(ctx.transcript()["words"], ctx.keep)],
+                         ["даже", "через", "Telegram.", "Дальше"])
 
     def test_the_times_are_checked_once_and_the_cache_stays_raw(self):
         words = [word("слово.", 2.1, 50.0)]

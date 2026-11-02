@@ -17,11 +17,9 @@ def plan_speech(ctx) -> None:
     from ..media import speech_spans
     from .wordcut import plan_words
 
-    spans = speech_spans(ctx.src, gap=float(ctx.p("gap", 0.5)), pad=float(ctx.p("pad", 0.12)),
-                         db=float(ctx.p("db", -30)))
-    if ctx.p("word_gap") is None:  # cut by words, a word cannot fall out: its times decide what stays
-        ctx.loud = spans
-    ctx.keep = plan_words(ctx, spans) or ctx.keep
+    ctx.loud = speech_spans(ctx.src, gap=float(ctx.p("gap", 0.5)), pad=float(ctx.p("pad", 0.12)),
+                            db=float(ctx.p("db", -30)))
+    ctx.keep = plan_words(ctx, ctx.loud) or ctx.keep
 
 
 def _fillers(ctx, words) -> List[Dict]:
