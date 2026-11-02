@@ -83,6 +83,8 @@ def render_piece(ctx, piece: Dict) -> Dict:
         cur = mix(cur, ctx.music, accents, lufs, tmp / "6-музыка.mp4")
     if ctx.has("loudnorm") and media.probe(cur)["has_audio"]:
         cur = fit_audio(media.loudnorm(cur, tmp / "7-громкость.mp4", lufs=lufs), tmp / "8-ровно.mp4")
+    if ctx.p("delivery"):
+        cur = media.deliver(cur, tmp / "9-выпуск.mp4", ctx.p("delivery"))
     final = name_of(ctx, piece)
     if Path(cur) == ctx.src:
         shutil.copyfile(str(cur), str(final))  # nothing changed the picture: a copy, never the source

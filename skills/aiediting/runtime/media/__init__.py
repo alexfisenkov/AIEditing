@@ -15,5 +15,6 @@ __all__ = ["MediaError", "blur_regions", "codec_chain", "cut_spans", "drift_ms",
 from .vertical import vertical  # noqa: E402
 from .export import export_platforms  # noqa: E402
 from .speed import speed_up  # noqa: E402
+from .delivery import deliver  # noqa: E402
 
-__all__ += ["export_platforms", "speed_up", "vertical"]
+__all__ += ["deliver", "export_platforms", "speed_up", "vertical"]
