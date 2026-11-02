@@ -52,6 +52,24 @@ class Breaks(unittest.TestCase):
             for c in cues[:-1]:
                 self.assertNotIn(bare(c.split()[-1]), CLINGS, cues)
 
+    def test_no_cue_ends_on_a_possessive_before_its_noun(self):
+        for text in ("мы сможем с вами создать свою собственную дизайн-систему.",
+                     "потому что именно в этом приложении мы сможем тогда с вами создать свою собственную "
+                     "дизайн-систему.",
+                     "Теперь мы с вами аккуратно открываем наше новое приложение на телефоне."):
+            cues = texts(self.cut(text))
+            self.assertEqual(" ".join(cues), text)
+            for c in cues[:-1]:
+                self.assertNotIn(c.split()[-1], ("свою", "наше"), cues)
+
+    def test_a_possessive_without_a_noun_breaks_as_usual(self):
+        cues = texts(self.cut("Сегодня этот большой новый проект полностью ваш и никто другой его не тронет."))
+        self.assertIn("проект полностью ваш", cues)
+
+    def test_a_possessive_still_breaks_when_nothing_else_fits(self):
+        first, last = "а" * 30, "б" * 38  # «нашу» fits on neither side but the first
+        self.assertEqual(texts(self.cut(f"{first} нашу {last}")), [f"{first} нашу", last])
+
     def test_a_compound_conjunction_stays_whole(self):
         for text, pair in (("Это нужно потому что иначе ничего не заработает.", "потому что"),
                            ("Мы сделали это для того чтобы ученики не путались в папках.", "для того чтобы")):

@@ -1,7 +1,8 @@
 """Words a subtitle line may not end on, and pairs of words a line may not split (Russian speech).
 
-A line never ends on a preposition or a conjunction that opens what follows; a compound conjunction
-(«потому что», «для того чтобы»), a glossary phrase and a name («Claude Code», «Opus 4.5») stay whole.
+A line never ends on a preposition or a conjunction that opens what follows, and rarely on a possessive
+before its noun; a compound conjunction («потому что», «для того чтобы»), a glossary phrase and a name
+(«Claude Code», «Opus 4.5») stay whole.
 """
 from __future__ import annotations
 
@@ -18,6 +19,11 @@ CLINGS = {
     # conjunctions and particles that open what follows
     "а", "и", "но", "да", "или", "либо", "ни", "не", "что", "чтобы", "как", "если", "когда", "пока", "хотя",
     "чем", "будто", "словно", "ли", "ведь", "зато", "однако", "тоже", "также",
+}
+_CASES = ("его", "ей", "ему", "им", "ем", "их", "ими")
+POSSESSIVES = {  # forms as bare() gives them: «своё» is «свое»
+    *(stem + end for stem in ("мо", "тво", "сво") for end in ("й", "я", "е", "ю", "и") + _CASES),
+    *(stem + end for stem in ("наш", "ваш") for end in ("", "а", "е", "у", "и") + _CASES),
 }
 OPENS = {"и", "а", "но", "или", "что", "чтобы", "потому", "поэтому", "который", "которая", "которое",
          "которые", "если", "когда", "где", "куда", "пока", "хотя", "тогда", "то", "так", "для", "после"}

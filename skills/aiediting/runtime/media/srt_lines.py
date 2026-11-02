@@ -2,8 +2,9 @@
 
 A run of words between hard breaks (a sentence end, a pause) is split by dynamic programming: every cue
 fits MAX_CHARS (counted after the glossary's replacements) and MAX_SECONDS; a break after a comma costs
-nothing, before «и/что/потому…» a little, inside a phrase more, after a preposition much more, and
-inside a name, a glossary phrase or a compound conjunction (srt_words) only when nothing else fits.
+nothing, before «и/что/потому…» a little, inside a phrase more, after a possessive before its noun and
+after a preposition much more, and inside a name, a glossary phrase or a compound conjunction (srt_words)
+only when nothing else fits.
 Line lengths are kept even, and a lone word on screen is avoided.
 """
 from __future__ import annotations
@@ -11,7 +12,7 @@ from __future__ import annotations
 import re
 from typing import Callable, Dict, Iterable, List, Set
 
-from .srt_words import CLINGS, OPENS, bare, glued, sentence_end
+from .srt_words import CLINGS, OPENS, POSSESSIVES, bare, glued, sentence_end
 
 MAX_CHARS = 42      # one comfortable subtitle line
 MAX_SECONDS = 5.0
@@ -41,7 +42,9 @@ def _break_cost(run: List[dict], i: int, keep: Set[int]) -> float:
         return 0.0
     if bare(here) in CLINGS:
         return 8.0
-    return 1.0 if after in OPENS else 3.0
+    if after in OPENS:
+        return 1.0
+    return 6.0 if bare(here) in POSSESSIVES and after not in CLINGS else 3.0
 
 
 def _text(tokens: Iterable[dict]) -> str:
