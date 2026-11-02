@@ -1,0 +1,41 @@
+{
+  "name": "Chrome & Graphite",
+  "C": {
+    "white": "#FFFFFF",
+    "muted": "#C7C9CC",
+    "faint": "#8A8D92",
+    "graphite": "#171717",
+    "graphiteSoft": "#202123",
+    "deep": "#0E0E10",
+    "card": "#1B1C1F",
+    "silver": "#C7C9CC",
+    "silverLight": "#ECEDEF",
+    "paper": "#F4F5F6",
+    "ink": "#181A1C",
+    "line": "rgba(255,255,255,.14)",
+    "ok": "#1F8A5B"
+  },
+  "CHROME": "linear-gradient(180deg,#FFFFFF 0%,#E0E2E5 40%,#A9ACB1 62%,#EEF0F2 100%)",
+  "BG": "linear-gradient(165deg,#202123 0%,#0E0E10 100%)",
+  "GLASS": "linear-gradient(165deg,rgba(32,33,35,.92),rgba(14,14,16,.94))",
+  "HAIR": "linear-gradient(90deg,transparent,rgba(199,201,204,.55),transparent)",
+  "FONT": {
+    "display": "'Unbounded',system-ui,sans-serif",
+    "text": "'Onest',-apple-system,sans-serif",
+    "mono": "'JetBrains Mono',ui-monospace,monospace"
+  },
+  "R": { "block": 26, "card": 22, "inner": 15, "pill": 999 },
+  "RIM": "0 0 0 1px rgba(199,201,204,.2), inset 0 1px 0 rgba(255,255,255,.08)",
+  "SHADOW": "0 40px 90px rgba(0,0,0,.55)",
+  "SHINE": "linear-gradient(100deg,#9A9DA2 0%,#E0E2E5 30%,#FFFFFF 42%,#E0E2E5 54%,#9A9DA2 100%)",
+  "families": { "display": "Unbounded", "text": "Onest", "mono": "JetBrains Mono" },
+  "fonts": [
+    { "family": "Unbounded", "src": "fonts/unbounded-cyrillic-wght-normal.woff2", "format": "woff2", "weight": "200 900", "range": "U+0400-04FF,U+2116" },
+    { "family": "Unbounded", "src": "fonts/unbounded-latin-wght-normal.woff2", "format": "woff2", "weight": "200 900", "range": "U+0000-03FF,U+2000-206F,U+20AC" },
+    { "family": "Onest", "src": "fonts/onest-cyrillic-wght-normal.woff2", "format": "woff2", "weight": "100 900", "range": "U+0400-04FF,U+2116" },
+    { "family": "Onest", "src": "fonts/onest-latin-wght-normal.woff2", "format": "woff2", "weight": "100 900", "range": "U+0000-03FF,U+2000-206F,U+20AC" },
+    { "family": "JetBrains Mono", "src": "fonts/jetbrains-mono-cyrillic-wght-normal.woff2", "format": "woff2", "weight": "100 800", "range": "U+0400-04FF" },
+    { "family": "JetBrains Mono", "src": "fonts/jetbrains-mono-latin-wght-normal.woff2", "format": "woff2", "weight": "100 800", "range": "U+0000-03FF,U+2000-206F" }
+  ],
+  "logo": null
+}

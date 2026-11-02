@@ -16,13 +16,12 @@ def _lazy(module: str, name: str) -> Callable:
 
 
 def _heavy(ctx) -> None:
-    for step in ("graphics", "behind_head"):
-        if ctx.has(step):
-            ctx.note("Шаг «{}» в этой версии не делается (тяжёлый слой HyperFrames/Remotion) — пропущен".format(step))
+    ctx.note("Шаг «behind_head» в этой версии не делается (тяжёлый слой Remotion) — пропущен")
 
 
 # name -> planning function or None (a step that only renders, see render.py)
 PLAN: Dict[str, Optional[Callable]] = {
+    "graphics": _lazy("graphics", "plan_graphics"),  # first: it completes the words the other steps rely on
     "detect_layout": _lazy("layout", "plan_layout"),
     "find_secrets": _lazy("secrets", "plan_find"),
     "blur_regions": _lazy("secrets", "plan_blur"),
@@ -39,7 +38,6 @@ PLAN: Dict[str, Optional[Callable]] = {
     "drift_ms": None,
     "verify_words": None,
     "export_platforms": None,
-    "graphics": _heavy,
     "behind_head": _heavy,
 }
 

@@ -1,6 +1,6 @@
 ---
 name: aiediting
-description: Workshop that builds your own video-editing skills. Interviews you about a format (stream, lesson, vertical or your own), looks at frames of your footage, assembles a design system with you, edits a trial clip until you say yes, and installs a self-contained format skill that edits every next video the same way. Also refines a format skill you already have. Starts only on /aiediting.
+description: Workshop that builds your own video-editing skills. Interviews you about a format (stream, lesson, vertical or your own), looks at frames of your footage, assembles a design system with you, edits a trial clip until you say yes, and installs a self-contained format skill that edits every next video the same way. Or, if you say «без вопросов», takes one message and a recording and returns the finished video and the installed skill. Also refines a format skill you already have. Starts only on /aiediting.
 disable-model-invocation: true
 argument-hint: "[new|refine] format name or path to a source video"
 metadata:
@@ -13,11 +13,13 @@ AIEditing is a **workshop**. It exists to create a format skill — `монта�
 refine one that exists. It interviews the person, looks at frames of their own footage, builds a design
 system with them, edits **one trial piece** of their source to show, reworks it until they say «да», and
 then builds and installs the format skill globally. From then on the format skill does the editing; the
-workshop is not needed again until something should change.
+workshop is not needed again until something should change. A person who asks for no questions gets all
+of this from one message: the finished video first, the skill installed with it.
 
 **What the workshop never does** — in every phase, whatever is asked: it never publishes, uploads or
 sends anything, never voices, never generates video, music or images. Its only edit is the trial piece,
-shown on the dashboard and kept in the workshop folder. The same holds for every format skill it builds:
+shown on the dashboard and kept in the workshop folder; without questions, the built skill edits the whole
+recording into its issue folder instead. The same holds for every format skill it builds:
 «смонтируй <путь>» → a folder with the video, `.srt` and a short report. Nothing else.
 
 ## Reading this skill
@@ -37,9 +39,16 @@ the rest of the session.
 | `build` | `phases/build.md` | `монтаж-<слово>` built, its tools installed on «да», installed globally |
 | — | `phases/refine.md` — instead of formats and sources, when refining | |
 | — | `phases/resume.md` — instead of start, when `.aiediting-work/state.js` is unfinished | |
+| — | `phases/no-questions.md` — instead of all of them, when the person asked not to be asked | a finished video and the skill installed |
+
+**Their words choose the path.** The person asked not to be asked (the signal is at the top of that file)
+→ `phases/start.md`, §1, then `phases/no-questions.md`, in place of every phase but the ones it names.
+Everything below that says «asked» or «да» reads there as that phase says; the limits on publishing,
+generating, paying and keys do not move.
 
 After a compaction re-read `.aiediting-work/state.js`, the draft `profile.json` of the format in work,
-and the file of the current phase. Nothing else.
+and the file of the current phase. Nothing else. With `noQuestions` in `state.js` that is
+`phases/no-questions.md`, its `решения.md`, and the method of the step you are in.
 
 ## The words the person sees
 
@@ -50,7 +59,7 @@ in another one. One word per stage, on the dashboard and in the chat: Старт
 
 ## The tool
 
-Every event is one call: `python "<skillDir>/tools/ae.py" <command>` — `init`, `stage`, `ask`,
+Every event is one call: `python "<skillDir>/tools/ae.py" <command>` — `init`, `no-questions`, `stage`, `ask`,
 `answered`, `formats`, `profile`, `frames`, `layout`, `design-example`, `samples`, `choose`, `trial`,
 `verdict`, `build-skill`, `install-skill`, `list-skills`, `backup-skill`, `restore-skill`, `doctor`,
 `finish`. The command list with arguments is at the top of `tools/ae.py`. `phases/start.md` says how to
@@ -66,9 +75,10 @@ Store stub on Windows, use `py -3`.
 3. **Nothing is installed without «да».** `doctor --install <id> --yes` only after the person agreed to that
    tool, by its pin from `catalog/tools.json`. Only tools the interview chose; heavy ones (the whisper
    model) are offered with their size. Steps marked `not_built` in `catalog/steps.json` are not offered.
+   Asking for no questions is that «да» for the chosen steps' tools, and each is named at the end.
 4. **Examples are always on the person's own video.** No source of the needed kind → ask for one; without
    it the question is asked in words, without an example.
-5. **Every remark goes into the profile** (`ae.py profile taste`), and only AIEditing changes a profile —
+5. **Every remark on the format goes into the profile** (`ae.py profile taste`), and only AIEditing changes a profile —
    a format skill writes remarks into its report and suggests «запусти AIEditing — доработка».
 6. **The previous version is kept.** Installing over a skill moves the old one to the reserve;
    `restore-skill` brings it back in one command.
@@ -85,6 +95,7 @@ Store stub on Windows, use `py -3`.
     ├── design/                  tokens, fonts, samples/ (chosen variants)
     ├── variants/<element>/      design variants shown side by side
     └── trials/01/ …             trial pieces, вопросы.json / ответы.json, out/
+overlay-kit/                     in this skill: the method and tools of the `graphics` step, copied into formats that use it
 ~/.agents/skills/монтаж-<слово>/ the installed format skill; pointer in ~/.claude/skills/
 ~/.agents/skills/.aiediting-backups/  previous versions
 ```

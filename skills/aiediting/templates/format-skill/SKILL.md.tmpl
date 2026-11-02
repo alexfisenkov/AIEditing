@@ -25,12 +25,13 @@ video and names this format. One video per run.
 
 1. `python "<skillDir>/tools/run.py" check` — the profile and the copy are intact. Red → say it in one line and stop.
 2. `python "<skillDir>/tools/run.py" edit "<video>" --topic "<тема одним-двумя словами>"`. Camera and screen
-   recorded as two files → the camera is `<video>`, and add `--screen "<screen file>"`.
+   recorded as two files → the camera is `<video>`, and add `--screen "<screen file>"`. A format with «Graphics»
+   goes on by that section; step 4 comes after it.
 3. **Exit code 3** — a decision is needed. Read `<issue folder>/вопросы.json`, ask the person in plain words
    (show the frames or the list it names), write their answer into `<issue folder>/ответы.json` as
    `{"<key>": true}`, `{"<key>": false}` or `{"<key>": {"ok": true, "payload": {...}}}` with their corrections,
    and run step 2 again with `--out "<issue folder>"`. Repeat until it finishes. Nothing is ever approved
-   on the person's behalf.
+   on the person's behalf, unless they asked for no questions: see «Without questions».
 4. Done → one message: where the folder is, what is in it (the video, `.srt` if the format makes one,
    `отчёт.md`), and the notes from the report in one or two lines.
 5. A remark after watching («паузы длинные», «плашка мелкая») →
@@ -38,24 +39,7 @@ video and names this format. One video per run.
    prints: the remark is in the report, and the format changes for good only through AIEditing —
    «запусти AIEditing — доработка {{name}}». Never edit `profile.json` yourself.
 
-## The editor's pass
-
-When the question is `editing`, work as a film editor on a dense lesson, for a viewer who loses nothing and hears
-nothing twice. Read the file `text` from the first line to the last, then go through the speech once for each:
-
-- **Said twice.** The same thought again, in the same or other words, near or far. One stays, the clearer one.
-- **A slip and its correction.** A wrong statement and «то есть», «точнее» after it: the wrong part goes with it.
-- **An abandoned attempt.** An aside in the retakes («нет, без этого», «перепишу весь абзац») ends an attempt: find where
-  it starts, even a minute earlier, and propose all of it.
-- **Empty words.** A sentence announcing what the next one says, a thought that goes nowhere.
-- **Filler words.** `items` already holds those with a safe seam. Drop from them what carries meaning in its place.
-
-Each item is `{"drop": [a, b], "said": "…", "why": "…"}`, with times from the file `words`. Read the sentence across
-every seam: it must stay correct Russian and lose no step of an instruction, no term said only once, no explanation of
-what happens on screen. In doubt, it is a question to the person and not a cut. Show each proposal on the video at its
-place and ask for all of them in one list. Only what the person accepted stays in `items`.
-
-## The steps of this format
+{{method}}## The steps of this format
 
 Only these, in this order (from the interview):
 
@@ -67,8 +51,8 @@ Only these, in this order (from the interview):
 
 ## Taste
 
-Remarks the person gave while the format was being tuned; they are already in the profile and the
-pipeline applies them. Read them before telling the person what was done.
+Remarks the person gave while the format was being tuned. What the pipeline can apply is in the profile's
+parameters; the rest is for you to follow. Read them before telling the person what was done.
 
 {{taste}}
 
@@ -77,11 +61,11 @@ pipeline applies them. Read them before telling the person what was done.
 - Never publishes, uploads, sends, voices, generates video, music or images. The result is files in the issue folder.
 - No network except the chosen speech recogniser: {{asr}}.
 - Never asks for a key or prints one; keys live in the person's environment or `.env` by name only.
-- Never writes outside the issue folder; the source video is never changed.
+- Never writes outside the issue folder{{writes}}; the source video is never changed.
 - Never changes `profile.json`, `design/` or `runtime/` — that is AIEditing's job («доработка»).
 
 ## Needs
 
 {{tools}}
 
-Missing something → say what is missing in one line and suggest «запусти AIEditing — проверка окружения».
+Missing something → say what is missing in one line and suggest «запусти AIEditing — доработка {{name}}», which checks the tools.

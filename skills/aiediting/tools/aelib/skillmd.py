@@ -9,7 +9,10 @@ APPROVAL = {
     "parts": "«По частям» was chosen, but part-by-part editing is not built yet: the pipeline works as "
              "«план → готовый ролик» — every question of the plan first, then the whole video. Say so to the "
              "person before the first run.",
+    "auto": "«Без вопросов»: the person asked to see the finished video and nothing before it. See «Without questions».",
 }
+METHOD_IF = {"editor.md": lambda p: "cut_spans" in p["steps"], "no-questions.md": lambda p: True,
+             "graphics.md": lambda p: "graphics" in p["steps"]}
 ASR = {"whispercpp": "none — local whisper.cpp", "scribe": "ElevenLabs Scribe",
        "openai_compat": "the OpenAI-compatible address in profile.json", "command": "whatever your own command does"}
 
@@ -26,6 +29,12 @@ def _lines(items, empty: str) -> str:
     return "\n".join(items) if items else empty
 
 
+def _method(profile: dict) -> str:
+    """The parts of «how» only some formats have, one file per part in `templates/format-skill/method/`."""
+    return "".join((FORMAT_TEMPLATE / "method" / name).read_text(encoding="utf-8")
+                   for name, wanted in METHOD_IF.items() if wanted(profile))
+
+
 def render(profile: dict, need: dict, steps: dict, tools: dict, version: str) -> str:
     step_lines = ["{}. `{}` — {}".format(i, s, steps["steps"][s]["what"])
                   for i, s in enumerate(profile["steps"], 1)]
@@ -35,10 +44,12 @@ def render(profile: dict, need: dict, steps: dict, tools: dict, version: str) ->
     values = {
         "name": profile["skill_name"], "description": _description(profile), "version": version,
         "format": profile["format"], "language": profile.get("language", "ru"),
-        "steps": _lines(step_lines, "(no steps)"),
+        "steps": _lines(step_lines, "(no steps)"), "method": _method(profile),
         "approval": APPROVAL.get(profile.get("approval", "plan"), APPROVAL["plan"]),
         "taste": _lines(taste, "(none yet)"), "tools": _lines(tool_lines, "- nothing beyond Python"),
-        "asr": ASR.get(profile["asr"]["provider"], profile["asr"]["provider"]),
+        "asr": ASR.get(profile["asr"]["provider"], profile["asr"]["provider"])
+        + ("; and what «Graphics» names" if "graphics" in profile["steps"] else ""),
+        "writes": ", besides the working folder «Graphics» names" if "graphics" in profile["steps"] else "",
     }
     text = (FORMAT_TEMPLATE / "SKILL.md.tmpl").read_text(encoding="utf-8")
     for key, value in values.items():

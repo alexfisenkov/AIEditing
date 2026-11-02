@@ -13,6 +13,7 @@ PRESETS_DIR = TEMPLATES_DIR / "profiles"
 RUNTIME_DIR = SKILL_DIR / "runtime"
 SCHEMA_DIR = SKILL_DIR / "schema"
 DESIGN_DIR = SKILL_DIR / "design"
+OVERLAY_KIT = SKILL_DIR / "overlay-kit"
 STATE_TEMPLATE = TOOLS_DIR / "state" / "dashboard.html"
 
 WORK_NAME = ".aiediting-work"

@@ -24,14 +24,15 @@ def parser() -> argparse.ArgumentParser:
     ap = argparse.ArgumentParser(prog="ae.py")
     sub = ap.add_subparsers(dest="cmd")
     _sub(sub, "init", cmd_run.init, mode={"choices": ["new", "refine"], "default": "new"},
-         title={}, fresh={"action": "store_true"})
+         title={}, fresh={"action": "store_true"}, no_questions={"action": "store_true"})
+    _sub(sub, "no-questions", cmd_run.no_questions)
     p = _sub(sub, "stage", cmd_run.stage, "id", note={})
     p.add_argument("status", nargs="?", choices=["done", "skip"])
     _sub(sub, "ask", cmd_run.ask, "kind", note={"required": True})
     _sub(sub, "answered", cmd_run.answered, note={})
     _sub(sub, "finish", cmd_run.finish, result={"required": True})
     _sub(sub, "stop-server", cmd_run.stop_server, delay={"type": float, "default": 0.0})
-    _sub(sub, "formats", cmd_profile.cmd_formats, "answer", language={"default": "ru"})
+    _sub(sub, "formats", cmd_profile.cmd_formats, "answer", language={"default": "ru"}, preset={})
     p = _sub(sub, "profile", cmd_profile.cmd_profile, "action", "skill", video={}, fresh={"action": "store_true"},
              replace={})
     p.add_argument("values", nargs="*")

@@ -19,6 +19,26 @@ from ..media.ffmpeg import MediaError
 from .contract import AsrError, make_transcript
 
 _SPECIAL = re.compile(r"^\s*\[[^\]]*\]\s*$")   # [BLANK_AUDIO], [_BEG_] and the like
+_PHANTOMS = {"продолжение следует", "субтитры создавал", "субтитры сделал", "субтитры делал"}  # heard in silence
+_CREDIT = re.compile(r"^[A-Za-z][\w.-]*$")      # the invented name that follows «субтитры создавал»
+
+
+def _plain(word: dict) -> str:
+    return re.sub(r"[^\w-]", "", str(word["text"]).lower())
+
+
+def drop_phantoms(words: list) -> list:
+    """Whisper was trained on subtitled films and writes their credits into silence, even over real speech."""
+    out, i = [], 0
+    while i < len(words):
+        if " ".join(_plain(w) for w in words[i:i + 2]) in _PHANTOMS:
+            i += 2
+            if i < len(words) and _CREDIT.match(str(words[i]["text"]).strip()):
+                i += 1
+            continue
+        out.append(words[i])
+        i += 1
+    return out
 
 
 def _program(cfg: dict) -> list:
@@ -59,4 +79,8 @@ def transcribe(media: Path, cfg: dict) -> dict:
              for seg in data.get("transcription", [])
              if seg.get("text", "").strip() and not _SPECIAL.match(seg.get("text", ""))]
     detected = (data.get("result") or {}).get("language")
-    return make_transcript(words, cfg.get("language") or detected, "whispercpp")
+    clean = drop_phantoms(words)
+    result = make_transcript(clean, cfg.get("language") or detected, "whispercpp")
+    if len(clean) != len(words):  # said aloud it would be lost silently, so the report names it
+        result["phantoms"] = len(words) - len(clean)
+    return result

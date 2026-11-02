@@ -56,6 +56,20 @@ only for a format that chose inserts, after your yes. HyperFrames comes from a c
 (`npm ci --ignore-scripts`) into `~/.aiediting/node` (Windows: `%LOCALAPPDATA%\AIEditing\node`), its
 telemetry is off, and its project history is written into the issue's work folder and goes with it.
 
+**Without questions.** Say «без вопросов» in your first message and give a recording: «/aiediting новый формат
+«обращение», без склеек, в нашем стиле, без вопросов, вот запись». The workshop takes what it can find out — the
+design system you mentioned, real screens of what you named, the output folder of your other skills — and decides the
+rest itself. You get the finished video, the installed skill, and one list: what it decided, what it installed, what it
+opened and what it could not know. The limits do not change: nothing is published, generated or paid for, your speech
+goes to no outside service unless you named one, and no key is asked for. The format then keeps running without
+questions until a refinement turns that off.
+
+**Graphics over the video.** For anyone talking to the camera in 16:9: the model reads the whole speech and writes
+scenes on the words, with real screens and materials you named; the speaker's frame moves between layouts. The speech
+stays as it is, and with cuts the scenes go on the finished video. Scenes are checked by contact sheets, a search for
+empty stretches and a sound check against the base video. The price is Node.js 22+, Remotion with its browser in the working folder
+(≈700 MB; see its licence below), and rendering about as long as the video.
+
 A format skill puts the result into `<your issues folder>/<date-topic>/`: the video, a `.srt` when the
 format makes one, and a short report. A remark after watching goes into that report, and the skill
 suggests running AIEditing to refine the format.
@@ -64,9 +78,9 @@ suggests running AIEditing to refine the format.
 
 | Does | Never does |
 |---|---|
-| interviews you and builds a format skill from your answers | publishes, uploads or sends anything |
-| edits **one trial piece** of your source to show you | voices, generates video, music or images |
-| installs only the tools your formats need, by pinned versions, after your yes | asks for a key or prints one |
+| interviews you and builds a format skill from your answers, or takes one message if you ask for no questions | publishes, uploads or sends anything |
+| edits **one trial piece** of your source to show you; without questions, the whole recording | voices, generates video, music or images |
+| installs only the tools your formats need, by pinned versions, after your yes (asking for no questions is that yes, and each is named at the end) | asks for a key or prints one |
 | keeps the previous version of a skill and restores it in one command | puts into a skill anything you did not choose |
 
 ## Speech recognition — what is best where
@@ -82,8 +96,8 @@ Changing the provider is one answer in the interview or a refinement.
 
 ## Tools and licences
 
-Only tools with open licences are in the catalog (`skills/aiediting/catalog/tools.json`), each pinned and
-installed by AIEditing's own scripts, only when chosen.
+The catalog (`skills/aiediting/catalog/tools.json`) holds tools with open licences, plus Remotion, whose licence is not
+open and is named below; each is pinned and installed by AIEditing's own scripts, only when chosen.
 
 | Tool | What for | Licence | Weight |
 |---|---|---|---|
@@ -92,6 +106,7 @@ installed by AIEditing's own scripts, only when chosen.
 | Pillow, numpy, OpenCV | plates and captions as images, face and layout | MIT-CMU, BSD-3-Clause, Apache-2.0 | light |
 | Tesseract | text on frames when looking for secrets (Apple Vision on macOS) | Apache-2.0 | light |
 | Node.js 22+ + HyperFrames 0.8.201 | animated inserts in a lesson: files, steps, a list, a number — only when chosen | MIT, Apache-2.0 | Node ≈100 MB; HyperFrames with its own Chrome ≈300 MB |
+| Remotion 4.0.513 | graphics over the video — only when chosen; from the kit's lockfile into the working folder | Remotion License | ≈700 MB per working folder, with its browser |
 | Remotion + RobustVideoMatting | effects "behind the head" in a vertical — **not yet**: not offered, not installed | Remotion License, GPL-3.0 | heavy |
 
 Python packages are pinned by Python version; Python 3.9 is the minimum. On 3.12 and newer — Pillow 13.0.0,
@@ -99,8 +114,8 @@ numpy 2.5.4; on 3.10–3.11 — Pillow 12.3.0, numpy 2.2.6; on 3.9 — Pillow 11
 4.14.0.94 everywhere. CI installs each set together on Python 3.9, 3.12 and 3.14.
 
 > **Remotion is not open source.** It is free for individuals and companies of up to three people;
-> larger companies need a paid licence. Check the terms at remotion.pro before choosing effects that need it.
-> Nothing is installed by default; these effects are not built yet, so the workshop does not offer them.
+> larger companies need a paid licence. Check the terms at remotion.pro before choosing graphics over the video.
+> Nothing is installed by default. Effects "behind the head" are not built yet, so the workshop does not offer them.
 
 [OpenMontage](https://github.com/calesthio/OpenMontage) (AGPL-3.0) is a full production pipeline from
 script to generation; AIEditing does not include it — only this link.

@@ -1,0 +1,22 @@
+{
+  "name": "overlay-kit-work",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Overlays on top of a finished recording: Remotion project filled by tools/overlay.py",
+  "scripts": {
+    "studio": "remotion studio src/index.ts",
+    "check": "tsc --noEmit",
+    "render": "remotion render src/index.ts Full out/render.mp4"
+  },
+  "dependencies": {
+    "@remotion/cli": "4.0.513",
+    "playwright": "1.56.1",
+    "react": "19.0.0",
+    "react-dom": "19.0.0",
+    "remotion": "4.0.513"
+  },
+  "devDependencies": {
+    "@types/react": "19.0.0",
+    "typescript": "5.8.3"
+  }
+}

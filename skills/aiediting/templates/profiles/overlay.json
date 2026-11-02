@@ -1,0 +1,5 @@
+{
+  "steps": ["write_srt", "graphics"],
+  "params": {"lufs": -14, "glossary": {}},
+  "approval": "plan"
+}

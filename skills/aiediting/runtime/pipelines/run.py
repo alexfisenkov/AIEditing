@@ -33,6 +33,10 @@ def run(src, profile: Dict, outdir, approve: Callable[[str, dict], bool], screen
 
     pieces = ctx.pieces or [{"id": None, "keep": ctx.keep, "layout": None}]
     ctx.report["outputs"] = [render_piece(ctx, piece) for piece in pieces]
+    if ctx.has("graphics") and not ctx.has("vertical"):
+        from .graphics import write_words
+
+        write_words(ctx)
     from .report import finish
 
     report = finish(ctx)

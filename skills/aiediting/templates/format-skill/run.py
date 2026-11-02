@@ -5,6 +5,7 @@
     python tools/run.py edit <video> [--topic T]    edit by the profile into <output_dir>/<date>-<topic>/
                        [--out DIR] [--answers F]    exit 3: a decision is needed, see вопросы.json
                        [--screen FILE]              the screen recording when camera and screen are separate
+                       [--no-questions]             the person asked for none, in this run or in the profile
     python tools/run.py note <issue folder> "text"  a remark for the next refinement, into отчёт.md
 """
 import argparse
@@ -37,7 +38,7 @@ for _s in (sys.stdout, sys.stderr):
     except (AttributeError, ValueError):
         pass
 
-from approvals import FileApprover, NeedsApproval  # noqa: E402
+from approvals import QUESTIONS, NeedsApproval, approver_for  # noqa: E402
 from issue import issue_folder  # noqa: E402
 from notes import add_note  # noqa: E402
 from runtime.profile import load_profile  # noqa: E402
@@ -55,13 +56,14 @@ def edit(profile, opt):
         print("Нет такого файла экрана: {}".format(screen))
         return 2
     out = Path(opt.out).resolve() if opt.out else issue_folder(profile, src, opt.topic)
-    approve = FileApprover(out, Path(opt.answers) if opt.answers else None)
+    approve = approver_for(profile, out, Path(opt.answers) if opt.answers else None, opt.no_questions)
     try:
         report = pipelines.run(src, profile, out, approve, **({"screen": screen} if screen else {}))
     except NeedsApproval as e:
         print(str(e))
         print("Папка выпуска: {}".format(out))
         return 3
+    (out / QUESTIONS).unlink(missing_ok=True)  # answered: the folder holds the result, not the plan
     print("Готово: {}".format((report or {}).get("output") or out))
     print("Папка выпуска: {}".format(out))
     return 0
@@ -77,6 +79,7 @@ def main(argv):
     e.add_argument("--out")
     e.add_argument("--answers")
     e.add_argument("--screen")
+    e.add_argument("--no-questions", action="store_true")
     n = sub.add_parser("note")
     n.add_argument("issue")
     n.add_argument("text")

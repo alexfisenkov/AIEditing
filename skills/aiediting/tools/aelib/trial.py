@@ -13,7 +13,7 @@ from .session import CliError
 
 if str(FORMAT_TEMPLATE) not in sys.path:
     sys.path.insert(0, str(FORMAT_TEMPLATE))
-from approvals import FileApprover, NeedsApproval  # noqa: E402
+from approvals import NeedsApproval, approver_for  # noqa: E402
 
 
 class Waiting(Exception):
@@ -72,7 +72,7 @@ def cmd_trial(opt) -> str:
     folder.mkdir(parents=True, exist_ok=True)
     piece, screen = _piece(src, folder, opt.start, opt.duration), _screen(opt, folder)
     try:
-        report = pipelines.run(piece, profile, folder / "out", FileApprover(folder, opt.answers),
+        report = pipelines.run(piece, profile, folder / "out", approver_for(profile, folder, opt.answers),
                                **({"screen": screen} if screen else {}))
     except NeedsApproval as e:
         session.event(lambda d: st.ask(d, "approve", "пробный монтаж {}: нужно решение".format(opt.skill)))

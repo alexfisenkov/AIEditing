@@ -20,6 +20,9 @@ their answer to `trials/NN/ответы.json` as `{"<key>": true}`, `{"<key>": f
 `{"<key>": {"ok": true, "payload": {...}}}` with what they changed. Then the same call with
 `--answers trials/NN/ответы.json`. Never approve on their behalf.
 
+A format with `graphics`: the trial is the base; put the graphics on it by `overlay-kit/README.md`, the
+working folder for this piece kept until the «да». The clip shown is the one with graphics.
+
 ## «Так нравится?»
 
 When the clip is ready the dashboard already asks; say it in the chat too, with one line of what was

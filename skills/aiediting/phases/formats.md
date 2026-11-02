@@ -10,6 +10,7 @@ welcome, through commas:
 2. Урок — вырезаем паузы и «э-э», главы плашками, .srt рядом.
 3. Выпуск YouTube — монтаж по частям с согласованием каждой, главы.
 4. Вертикаль (Reels, Shorts, TikTok) — 9:16, речь без пауз, вшитые субтитры; нарезка из длинного — ролики до 60 с.
+5. Наложения — речь целиком, без склеек; поверх неё графика и настоящие экраны.
 Например: «2, 4, подкаст».
 ```
 
@@ -26,6 +27,7 @@ outside the list) → ask again in one line with the reason it printed.
   Never translate or shorten it. A word that names an existing skill → ask whether this is a refinement.
 - **An own format goes the same path** as a listed one: its draft starts from a neutral preset (pauses,
   loudness, `.srt`) and the interview shapes it like any other. Never skip a phase because it is «свой».
+  An own word that wants another start: `ae.py formats "<word>" --preset overlay`.
 
 ## Order
 

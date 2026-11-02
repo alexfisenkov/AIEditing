@@ -1,7 +1,8 @@
 # Start
 
 Read when `/aiediting` is called and `.aiediting-work/state.js` in the current folder is absent or
-finished. An unfinished one → `phases/resume.md` instead.
+finished. An unfinished one → `phases/resume.md` instead. The person asked for no questions → §1 here,
+then `phases/no-questions.md`. Said in the middle of a workshop → `phases/no-questions.md`, §1.
 
 ## 1. Find the skill and the tool
 

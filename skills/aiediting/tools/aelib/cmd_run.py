@@ -24,11 +24,23 @@ def init(opt) -> str:
         raise CliError("Здесь уже идёт мастерская ({}) — продолжите её (phases/resume.md) "
                        "или начните заново с --fresh".format(old.get("title")))
     st.install_page(w)
+    (w / ".gitignore").write_text("*\n", encoding="utf-8")  # frames of a screen and drafts: never into a project's git
     data = st.fresh(opt.mode, opt.title or ("Новый скилл монтажа" if opt.mode == "new" else "Доработка"),
                     __version__)
+    data["noQuestions"] = bool(opt.no_questions)
     st.log(data, "init", mode=opt.mode)
     line = session.commit(data)
     return "Мастерская: {}\nДашборд: {}".format(w, line)
+
+
+def no_questions(opt) -> str:
+    """Said in the middle of a workshop: the draft stays, the questions stop."""
+    def change(d):
+        d["noQuestions"] = True
+        st.close_wait(d, "дальше без вопросов")
+        st.log(d, "no-questions")
+
+    return session.event(change)
 
 
 def stage(opt) -> str:

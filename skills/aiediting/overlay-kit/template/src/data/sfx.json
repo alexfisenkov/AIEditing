@@ -1,0 +1,9 @@
+{
+  "files": {
+    "pop-soft": "sfx/pop-soft.wav",
+    "riser-1s": "sfx/riser-1s.wav",
+    "tick": "sfx/tick.wav",
+    "whoosh-soft": "sfx/whoosh-soft.wav"
+  },
+  "music": null
+}

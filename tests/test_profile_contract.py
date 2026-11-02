@@ -11,7 +11,7 @@ sys.path.insert(0, str(SKILL / "tools"))
 
 CATALOG = json.loads((SKILL / "catalog" / "steps.json").read_text(encoding="utf-8"))
 PRESETS = SKILL / "templates" / "profiles"
-NOT_BUILT = ("graphics", "behind_head")  # named in the step vocabulary, not done by the runtime yet
+NOT_BUILT = ("behind_head",)  # named in the step vocabulary, not done by the runtime yet
 
 
 def read(path):
@@ -57,7 +57,7 @@ class StepVocabulary(unittest.TestCase):
             self.assertTrue(CATALOG["steps"][step].get("not_built"), step)
         for name in ("interview.md", "refine.md"):
             text = read(SKILL / "phases" / name)
-            for word in ("Remotion", "«за головой»") + tuple("`{}`".format(s) for s in NOT_BUILT):
+            for word in ("«за головой»",) + tuple("`{}`".format(s) for s in NOT_BUILT):
                 self.assertNotIn(word, text, "{} offers {}".format(name, word))
 
     def test_readmes_say_the_heavy_layers_are_not_there_yet(self):

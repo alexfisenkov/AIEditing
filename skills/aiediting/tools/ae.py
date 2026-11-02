@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 """AIEditing workshop — one call per event, for the agent. The person never runs it.
 
-    python ae.py init --mode new|refine [--title T] [--no-serve]   dashboard + server on 127.0.0.1
+    python ae.py init --mode new|refine [--title T] [--fresh] [--no-questions]   dashboard + server on 127.0.0.1
+    python ae.py no-questions                                       the person asked for no more questions
     python ae.py stage <id> [done|skip] [--note N]                  start|formats|sources|interview|design|trial|build
     python ae.py ask <kind> --note N  ·  answered [--note N]        the workshop waits for the person
-    python ae.py formats "эфир, урок, подкаст"                      parse the answer, draft one profile per format
+    python ae.py formats "эфир, урок, подкаст" [--preset P]         parse the answer, draft one profile per format
     python ae.py profile set|taste|check|open <skill> …             edit the draft profile in the workshop folder
                                                                     (taste --replace PART: instead of that line)
     python ae.py frames <video> [--n 6]  ·  layout <source-id>      frames and layout on the dashboard
@@ -13,7 +14,7 @@
     python ae.py build-skill <profile.json> <dest> [--replace]
     python ae.py install-skill <built folder>  ·  list-skills [--json]
     python ae.py backup-skill <name>  ·  restore-skill <name> [--backup ID]
-    python ae.py doctor [--steps a,b] [--install ID] [--yes]
+    python ae.py doctor [--steps a,b] [--asr P] [--install ID] [--yes]
     python ae.py finish --result R  ·  python ae.py                  (bare: re-raise the server)
 """
 import os

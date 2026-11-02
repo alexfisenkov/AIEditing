@@ -53,6 +53,9 @@ class Context:
     def transcript(self) -> Dict:
         if self._words is None:
             self._words = recognise(self)
+            if self._words.get("phantoms"):
+                self.note("Убраны титры, которые распознавание дописывает в тишине («продолжение следует», «субтитры "
+                          "создавал»): {} слов. Если вы сказали это вслух, этих слов нет в тексте".format(self._words["phantoms"]))
         if self.loud is not None and not self._timed:
             self._check_times()
         return self._words

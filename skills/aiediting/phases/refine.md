@@ -1,7 +1,8 @@
 # Refine an existing format skill
 
 Read instead of `formats.md` and `sources.md` when the person chose «доработать». The same workshop,
-starting from the installed skill instead of a preset.
+starting from the installed skill instead of a preset. A skill with `approval: auto`, or a person asking for
+no questions now → `phases/no-questions.md`, unless they ask to be asked.
 
 ## 1. Open it
 

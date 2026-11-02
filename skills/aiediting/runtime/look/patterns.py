@@ -10,9 +10,10 @@ _SCALE = r"(?:[  ]?(?:тыс\.?|млн\.?|млрд\.?|[кk]))?"
 
 # Order is priority: when two hits overlap, the earlier kind wins.
 PATTERNS = [
-    ("key", re.compile(r"(?<![\w-])(?:sk-(?:proj-|ant-)?[A-Za-z0-9_-]{16,}|gh[pousr]_[A-Za-z0-9]{30,}"
+    ("key", re.compile(r"(?<![\w-])(?:sk-(?:proj-|ant-)?[A-Za-z0-9_-]{16,}|sk_[A-Za-z0-9]{20,}|gh[pousr]_[A-Za-z0-9]{30,}"
                        r"|github_pat_[A-Za-z0-9_]{30,}|xox[abpr]-[A-Za-z0-9-]{10,}|AKIA[0-9A-Z]{16}"
-                       r"|AIza[0-9A-Za-z_-]{35})")),
+                       r"|AIza[0-9A-Za-z_-]{35}|\d{8,10}:[A-Za-z0-9_-]{35}|eyJ[\w-]{10,}\.[\w-]{10,}\.[\w-]{5,}"
+                       r"|(?i:password|passwd|token|secret|api[_-]?key)\s*[=:]\s*\S{6,})")),
     ("email", re.compile(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}")),
     ("card", re.compile(r"(?<![\d+])\d(?:[ -]?\d){12,18}(?!\d)")),
     ("phone", re.compile(r"(?<![\w+])(?:\+\d{1,3}|8)[ -]?\(?\d{2,4}\)?(?:[ -]?\d){5,8}(?!\d)")),

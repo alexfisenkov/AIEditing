@@ -1,7 +1,9 @@
 # Resume
 
 Read instead of `start.md` when `.aiediting-work/state.js` exists and has no `finishedAt`. The files
-are the memory: do not redo finished stages, do not ask answered questions again.
+are the memory: do not redo finished stages, do not ask answered questions again. `noQuestions` in
+`state.js` → read `phases/no-questions.md` and `.aiediting-work/<skill>/решения.md` instead of steps 1, 4, 5 and 6, go
+on from where `решения.md` stops; step 3 is the only line the person gets before the end.
 
 1. **Read** `state.js` (`mode`, the stages, `waiting`, `formats`, `sources`, `trials`, the last lines of
    `log`), then the draft `profile.json` of the format in work — the one in the active stage's work, or

@@ -1,6 +1,7 @@
 """Making one finished video from the plan: cut → blur → movement → 9:16 → pictures → music → loudness."""
 from __future__ import annotations
 
+import os
 import shutil
 from pathlib import Path
 from typing import Dict
@@ -36,6 +37,30 @@ def name_of(ctx, piece: Dict) -> Path:
     stem = ctx.src.stem + ("-" + piece["id"] if piece.get("id") else "")
     out = ctx.outdir / (stem + ".mp4")
     return ctx.outdir / (stem + "-монтаж.mp4") if out == ctx.src else out
+
+
+def _clear_place(ctx, final: Path, same_picture: bool) -> bool:
+    """What an earlier run left there may be a hard link to a source: it is unlinked, never written through.
+    True when that file already is this source and nothing changed the picture."""
+    if not final.exists():
+        return False
+    if same_picture and os.path.samefile(str(ctx.src), str(final)):
+        return True
+    final.unlink()
+    return False
+
+
+def _same_picture(ctx, final: Path) -> None:
+    """Nothing changed the picture: a copy, never the source. Under graphics this file is only their base, so a
+    long recording is not stored twice: a hard link where the disk allows it."""
+    if ctx.has("graphics"):
+        try:
+            os.link(str(ctx.src), str(final))
+            ctx.note("{} — жёсткая ссылка на исходник: не меняйте этот файл на месте, изменится и исходник".format(final.name))
+            return
+        except OSError:
+            pass
+    shutil.copyfile(str(ctx.src), str(final))
 
 
 def render_piece(ctx, piece: Dict) -> Dict:
@@ -86,8 +111,11 @@ def render_piece(ctx, piece: Dict) -> Dict:
     if ctx.p("delivery"):
         cur = media.deliver(cur, tmp / "9-выпуск.mp4", ctx.p("delivery"))
     final = name_of(ctx, piece)
-    if Path(cur) == ctx.src:
-        shutil.copyfile(str(cur), str(final))  # nothing changed the picture: a copy, never the source
+    same = Path(cur) == ctx.src
+    if _clear_place(ctx, final, same):
+        pass
+    elif same:
+        _same_picture(ctx, final)
     else:
         shutil.move(str(cur), str(final))
     done.update(video=final, duration=round(media.probe(final)["duration"], 3))

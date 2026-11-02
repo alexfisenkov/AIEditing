@@ -8,7 +8,7 @@ import state as st
 
 from . import formats, profiles, session
 from .install import find_installed
-from .paths import DESIGN_DIR
+from .paths import DESIGN_DIR, PRESETS_DIR
 from .session import CliError
 
 
@@ -24,9 +24,14 @@ def _remember(data: dict, fmt: dict, path: Path) -> None:
 
 def cmd_formats(opt) -> str:
     chosen = formats.parse_answer(opt.answer)
+    if opt.preset and not (PRESETS_DIR / (opt.preset + ".json")).is_file():
+        raise CliError("Такой заготовки нет: {}".format(opt.preset))
     lines = []
     for fmt in chosen:
+        fmt = dict(fmt, preset=opt.preset or fmt["preset"])
         path = draft(fmt["skill"])
+        if opt.preset and path.is_file():
+            raise CliError("Черновик {} уже есть, заготовка к нему не применится: задайте шаги через ae.py profile set".format(path))
         if not path.is_file():
             profiles.write(profiles.new_profile(fmt, language=opt.language), path)
         session.touch(lambda d, f=fmt, p=path: _remember(d, f, p))

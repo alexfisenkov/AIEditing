@@ -47,7 +47,7 @@ class Download(TempDirCase):
 
         def loader(url):
             self.calls.append(url)
-            return body
+            return [body[:3], body[3:]]
 
         opt = Namespace(catalog=None, steps=None, asr=None, install="yunet-model", yes=True, requirements=False)
         with mock.patch("aelib.downloads.fetch", loader), \
@@ -76,12 +76,37 @@ class Download(TempDirCase):
     def test_the_command_exits_with_a_nonzero_code_on_a_wrong_sum(self):
         from aelib import cli
 
-        with mock.patch("aelib.downloads.fetch", lambda url: b"something else"), \
+        with mock.patch("aelib.downloads.fetch", lambda url: [b"something else"]), \
                 mock.patch("aelib.catalog.tools", lambda base=None: {"yunet-model": self.row}):
             with contextlib.redirect_stdout(io.StringIO()):
                 code = cli.main(["doctor", "--install", "yunet-model", "--yes"])
         self.assertNotEqual(code, 0)
         self.assertFalse(self.dest.exists())
+
+    def test_a_file_already_there_is_not_fetched_again(self):
+        self.install(BODY)
+        self.calls.clear()
+        out, err = self.install(BODY)
+        self.assertIsNone(err)
+        self.assertEqual(self.calls, [])
+        self.assertIn("уже на месте", out)
+
+    def test_a_download_cut_off_midway_is_one_clear_line_and_no_file(self):
+        import http.client
+
+        from aelib import downloads
+        from aelib.checks import current_os
+        from aelib.session import CliError
+
+        def cut(url):
+            yield b"abc"
+            raise http.client.IncompleteRead(b"abc")
+
+        step = self.row["install"][current_os()]
+        with mock.patch("aelib.downloads.fetch", cut), self.assertRaises(CliError):
+            downloads.download(step)
+        self.assertFalse(self.dest.exists())
+        self.assertFalse(self.dest.with_name(self.dest.name + ".part").exists())
 
     def test_network_failure_is_one_clear_line_and_no_file(self):
         from aelib import doctor

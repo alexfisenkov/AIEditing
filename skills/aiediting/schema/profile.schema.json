@@ -23,7 +23,7 @@
         "verify_asr": {"$ref": "#/definitions/asr"}
       }
     },
-    "approval": {"enum": ["plan", "parts"]},
+    "approval": {"enum": ["plan", "parts", "auto"]},
     "design": {"type": "string"},
     "taste": {"type": "array", "items": {"$ref": "#/definitions/taste"}},
     "output_dir": {"type": "string", "minLength": 1}

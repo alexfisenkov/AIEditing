@@ -29,11 +29,16 @@ def _region(c: Dict, step: float, total: float) -> Dict:
     elif end - start < step:  # a time from speech with a box drawn by the person: the stretch around it
         start, end = max(0.0, start - step / 2), min(total, end + step / 2)
     return {"x": rect["x"], "y": rect["y"], "w": rect["w"], "h": rect["h"], "start": start, "end": end,
-            "track": bool(c.get("track")), "what": "{}: {}".format(c.get("kind", ""), c.get("text", ""))}
+            "track": bool(c.get("track")), "what": str(c.get("kind", "") or "секретное")}  # the report names the kind: the value stays out of it
+
+
+def _masked(candidate: Dict) -> str:
+    """The question is a file beside the video: it names a secret by its first characters, enough to recognise it."""
+    return str(candidate.get("text", ""))[:4] + "…"
 
 
 def plan_blur(ctx) -> None:
-    items = [dict(c, id="s{}".format(i + 1), blur=False) for i, c in enumerate(ctx.candidates)]
+    items = [dict(c, id="s{}".format(i + 1), blur=False, text=_masked(c)) for i, c in enumerate(ctx.candidates)]
     ok, data = ctx.ask("secrets", QUESTION, {"candidates": items, "extra": []})
     if not ok:
         return
@@ -43,8 +48,8 @@ def plan_blur(ctx) -> None:
         if not c.get("blur"):
             continue
         if not c.get("rect"):
-            ctx.note("«{}» отмечено, но области на кадре нет — не закрыто; добавьте её в extra".format(
-                c.get("text")))
+            ctx.note("{} отмечено, но области на кадре нет — не закрыто; добавьте её в extra".format(
+                str(c.get("kind", "") or "секретное").capitalize()))
             continue
         regions.append(_region(c, step, total))
     for e in data.get("extra", []):
