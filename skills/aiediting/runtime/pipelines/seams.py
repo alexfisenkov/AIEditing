@@ -6,7 +6,7 @@ video. So a cut starts right after the word before it. A word cut with its comma
 """
 from __future__ import annotations
 
-from typing import Dict, List, Optional, Sequence
+from typing import Dict, List, Optional, Sequence, Tuple
 
 from .wordcut import LEAD, TAIL
 from .words import norm
@@ -35,6 +35,15 @@ def widened(words: Sequence[Dict], takes: Sequence[Dict]) -> List[Dict]:
         start = max(prev["end"] + AIR, a - LEAD) if prev else a - LEAD
         out.append(dict(t, drop=[round(min(a, max(0.0, start)), 3), b]))
     return out
+
+
+def clip_edges(words: Sequence[Dict], start: float, end: float, lead: float, tail: float) -> Tuple[float, float]:
+    """A clip's borders from its first word's start and last word's end: with their margins, short of the neighbours."""
+    prev = _before(words, start)
+    after = next((w for w in words if w["start"] >= end), None)
+    a = max(start - lead, prev["end"] + AIR) if prev else start - lead
+    b = max(end, min(end + tail, after["start"] - lead)) if after else end + tail
+    return round(min(start, max(0.0, a)), 3), round(b, 3)
 
 
 def wordless_inside(keep: Sequence, words: Sequence[Dict], gap: float, longest: float) -> List:

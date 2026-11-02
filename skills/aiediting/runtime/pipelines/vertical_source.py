@@ -29,6 +29,18 @@ def _whole(ctx) -> List[Dict]:
     return [{"id": "v01", "start": ctx.keep[0][0], "end": ctx.keep[-1][1], "said": ""}]
 
 
+def _with_margins(ctx, item: Dict) -> Dict:
+    """In a format cut by words a picked clip keeps the first and last sounds its words keep inside the speech."""
+    if ctx.p("word_gap") is None:
+        return item
+    from .seams import clip_edges
+    from .wordcut import LEAD, TAIL
+
+    start, end = clip_edges(spoken(ctx.transcript()), float(item["start"]), float(item["end"]),
+                            float(ctx.p("word_lead", LEAD)), float(ctx.p("word_tail", TAIL)))
+    return dict(item, start=start, end=end)
+
+
 def stretches(ctx) -> List[Dict]:
     limit = float(ctx.p("max_seconds", 60))
     if is_native(ctx) or length(ctx.keep) <= limit:
@@ -43,4 +55,4 @@ def stretches(ctx) -> List[Dict]:
     ok, data = ctx.ask("clips", "Отрывки по рубрике (баллы из 10): впишите в chosen id тех, что монтировать.",
                        {"items": items, "chosen": [i["id"] for i in items[:1]]})
     chosen = set(data.get("chosen") or []) if ok else set()
-    return [i for i in data.get("items", []) if i["id"] in chosen]
+    return [_with_margins(ctx, i) for i in data.get("items", []) if i["id"] in chosen]

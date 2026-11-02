@@ -98,6 +98,57 @@ class Takes(Run):
         self.assertEqual(self.caption(ctx, 9.0, 12.0), "можно здесь.")
 
 
+class ClipEdges(Run):
+    """A picked clip starts and ends at a word's recognised times: its margins must reach the cut there too."""
+
+    def long_words(self):
+        words, t = [], 1.0
+        while t + 3.0 < 90.0:
+            for i in range(4):
+                text = "слово" + ("." if i == 3 else "")
+                words.append(word(text, round(t + i * 0.6, 2), round(t + i * 0.6 + 0.5, 2)))
+            t += 3.0
+        return words
+
+    def clip(self, **params):
+        from runtime.pipelines.timeline import intersect
+        from runtime.pipelines.vertical_source import stretches
+
+        ctx = self.planned(self.long_words(), [(0.0, 100.0)], vertical_source="clips", max_seconds=30, **params)
+        seen = {}
+
+        def choose(key, data):
+            seen.update(data["items"][0])
+            data["chosen"] = [data["items"][0]["id"]]
+            return True
+
+        ctx.approve = choose
+        st = stretches(ctx)[0]
+        return seen, intersect(ctx.keep, float(st["start"]), float(st["end"]))
+
+    def test_the_first_and_last_sounds_of_a_picked_clip_stay(self):
+        item, keep = self.clip()
+        self.assertAlmostEqual(keep[0][0], item["start"] - 0.1, places=3)
+        self.assertAlmostEqual(keep[-1][1], item["end"] + 0.12, places=3)
+
+    def test_the_margins_of_the_profile_are_the_ones_used(self):
+        item, keep = self.clip(word_lead=0.05, word_tail=0.08)
+        self.assertAlmostEqual(keep[0][0], item["start"] - 0.05, places=3)
+        self.assertAlmostEqual(keep[-1][1], item["end"] + 0.08, places=3)
+
+    def test_a_neighbour_close_by_stays_out_of_the_clip(self):
+        from runtime.pipelines.seams import clip_edges
+
+        words = [word("раньше", 1.0, 1.5), word("начало", 1.52, 2.0), word("конец.", 2.1, 2.5), word("дальше", 2.53, 3.0)]
+        self.assertEqual(clip_edges(words, 1.52, 2.5, 0.1, 0.12), (1.51, 2.5))
+
+    def test_at_the_edges_of_the_recording(self):
+        from runtime.pipelines.seams import clip_edges
+
+        words = [word("начало", 0.05, 0.5), word("конец.", 0.6, 1.0)]
+        self.assertEqual(clip_edges(words, 0.05, 1.0, 0.1, 0.12), (0.0, 1.12))
+
+
 class WithoutCuts(Run):
     def test_a_word_in_the_vertical_keeps_its_comma_when_nothing_is_cut_next_to_it(self):
         words = [word("можно,", 1.0, 1.3), word("здесь.", 1.35, 1.7)]
