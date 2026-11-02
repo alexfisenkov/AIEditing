@@ -20,8 +20,10 @@ SIZE = (640, 360)
 RED = "#FF0000"
 
 
-def red_pixels(video, t=1.0):
-    """How many clearly red pixels the frame at `t` seconds has (the draft's plate colour)."""
+def red_pixels(video, t=0.6):
+    """How many clearly red pixels the frame at `t` seconds has (the draft's plate colour).
+
+    The cuts leave the plate 0.12–1.12 s here, with a 0.3 s fade at each end: `t` is its middle."""
     w, h = SIZE
     cmd = ["ffmpeg", "-hide_banner", "-nostdin", "-loglevel", "error", "-ss", str(t), "-i", str(video),
            "-frames:v", "1", "-f", "rawvideo", "-pix_fmt", "rgb24", "-"]

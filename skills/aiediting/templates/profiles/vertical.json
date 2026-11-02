@@ -1,7 +1,7 @@
 {
   "steps": ["detect_layout", "speech_spans", "cut_spans", "drift_ms", "vertical", "plate", "overlay_png", "loudnorm", "export_platforms"],
   "params": {"gap": 0.3, "pad": 0.12, "word_gap": 0.25, "word_lead": 0.1, "word_tail": 0.12,
-             "lufs": -14, "vertical_source": "auto", "max_seconds": 60, "clips": [5, 10],
+             "fillers_cut": ["э-э", "м-м"], "fillers_keep": ["ну", "вот"], "lufs": -14, "vertical_source": "auto", "max_seconds": 60, "clips": [5, 10],
              "layout": "auto", "captions": "burned", "graphics_per_15s": [1, 2], "music": null, "glossary": {}},
   "approval": "plan"
 }

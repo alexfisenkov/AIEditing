@@ -77,9 +77,9 @@ def plan_cut(ctx) -> None:
     takes = plan_retakes(ctx, words) if ctx.p("retakes") in ("last_good", True) else []
     takes += plan_editing(ctx, words, takes)
     takes = widened(words, takes)
-    tidy(words, takes)
-    cuts =[(w["start"], w["end"]) for w in fillers] + [tuple(t["drop"]) for t in takes]
-    keep = subtract(ctx.keep, cuts)
+    hesitations = widened(words, [{"drop": [w["start"], w["end"]]} for w in fillers])
+    tidy(words, takes + hesitations)
+    keep = subtract(ctx.keep, [tuple(t["drop"]) for t in hesitations + takes])
     mids = _anchors(words, fillers, takes)
     keep = [(a, b) for a, b in keep if b - a >= SLIVER or any(alive(m, [(a, b)]) for m in mids)]
     unvoiced: List[Span] = []
