@@ -37,6 +37,12 @@ class Captions(unittest.TestCase):
                                             {"text": "э-э", "start": 1.0, "end": 1.2, "type": "filler"}]
         self.assertEqual([c["text"] for c in cues(words, {})], ["привет"])
 
+    def test_a_sentence_starts_with_a_capital_letter_and_a_clip_as_it_was_said(self):
+        from runtime.pipelines.captions import cues
+
+        words = scribe_words(["в", "этом", "суть.", "ну", "и", "ладно…", "пойдём", "дальше.", "iCloud", "тут."])
+        self.assertEqual(" ".join(c["text"] for c in cues(words, {})), "в этом суть. Ну и ладно… пойдём дальше. iCloud тут.")
+
 
 if __name__ == "__main__":
     unittest.main()

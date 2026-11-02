@@ -18,13 +18,21 @@ def _glossed(text: str, glossary: Dict[str, str]):
 
 
 def cues(words: List[Dict], glossary: Dict[str, str], fixes: Optional[List[Dict]] = None) -> List[Dict]:
-    """Cues of a few words; `fixes`, if given, gets each glossary change as the .srt lists it."""
+    """Cues of a few words; `fixes`, if given, gets each glossary change as the .srt lists it.
+
+    As in the .srt a sentence starts with a capital letter: a cut leaves «все.» right before «в этом»."""
+    from ..media.srt_words import capital_after
+
     out: List[Dict] = []
+    last = ""
     for w in words:
         text = str(w.get("text", "")).strip()
         if w.get("type", "word") != "word" or not text:  # as the .srt: spacing, hesitations, sounds — out
             continue
         text, changes = _glossed(text, glossary)
+        if last and capital_after(last, text):  # the first word may be the middle of a sentence: a clip starts anywhere
+            text = text[:1].upper() + text[1:]
+        last = text
         cur = out[-1] if out else None
         fresh = (cur is None or cur["n"] >= MAX_WORDS or len(cur["text"]) + 1 + len(text) > MAX_CHARS
                  or w["start"] - cur["end"] > GAP or re.search(r"[.!?…]$", cur["text"]))
