@@ -118,6 +118,7 @@ The video is a dark stage: `muted`, `faint`, `white` are light on dark (the ordi
 
 ## What can go wrong
 
+- A screen recording in `full`: the slow "breathing" zoom crops the left edge, and the corner mark and chapter label sit over the screen. Coordinates on such a screen are not the file's own: check them on a frame.
 - A speaker who is only a small circle over a screen recording: the layouts `right`, `left`, `half` enlarge that circle with the screen around it, so the face is soft and the screen shows in the corners. Stay with `full` and the `pip` layouts there, and put graphics where the screen is calm.
 
 - iCloud: commands "hang" on files marked `compressed,dataless` (`ls -lO`). Work only in `<W>`.

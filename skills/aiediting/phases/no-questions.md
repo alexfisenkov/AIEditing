@@ -73,7 +73,7 @@ Then, for every format:
 
 | When | Add |
 |---|---|
-| `cut_spans` is in the steps | `verify_words`: the second listening stands in for the person's ear, with a local `params.verify_asr` when the main recogniser is paid. Cuts of pauses are safe on any recogniser; cuts inside speech need exact word times, so on local whisper leave `params.wordless` out, keep `params.editor` to what you check by hearing the result again, and say so in the list |
+| `cut_spans` is in the steps | `verify_words`: the second listening stands in for the person's ear, with a local `params.verify_asr` when the main recogniser is paid or a second local model is at hand: the same model does not catch its own mishearings. Cuts of pauses are safe on any recogniser; cuts inside speech need exact word times, so on local whisper leave `params.wordless` out, keep `params.editor` to what you check by hearing the result again, and say so in the list |
 | a screen is visible | `find_secrets`, `blur_regions`. Local and free; a secret left open cannot be taken back |
 | the frame is not 16:9 and they asked for graphics | no `graphics`; a line in the list |
 

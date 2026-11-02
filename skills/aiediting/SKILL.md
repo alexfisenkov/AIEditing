@@ -89,7 +89,7 @@ Store stub on Windows, use `py -3`.
 ```
 .aiediting-work/                 in the folder where the workshop was started
 ├── state.js  dashboard.html  index.html  serve.pid  serve.log
-├── sources/s1/frame-01.png …    frames of the person's sources
+├── frames of the person's sources: `ae.py frames` prints their paths
 └── монтаж-<слово>/
     ├── profile.json             the draft profile — data only, no keys
     ├── design/                  tokens, fonts, samples/ (chosen variants)
