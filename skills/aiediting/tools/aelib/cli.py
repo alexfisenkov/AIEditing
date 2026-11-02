@@ -32,7 +32,8 @@ def parser() -> argparse.ArgumentParser:
     _sub(sub, "finish", cmd_run.finish, result={"required": True})
     _sub(sub, "stop-server", cmd_run.stop_server, delay={"type": float, "default": 0.0})
     _sub(sub, "formats", cmd_profile.cmd_formats, "answer", language={"default": "ru"})
-    p = _sub(sub, "profile", cmd_profile.cmd_profile, "action", "skill", video={}, fresh={"action": "store_true"})
+    p = _sub(sub, "profile", cmd_profile.cmd_profile, "action", "skill", video={}, fresh={"action": "store_true"},
+             replace={})
     p.add_argument("values", nargs="*")
     _sub(sub, "design-example", cmd_profile.cmd_design_example, "skill")
     _sub(sub, "frames", cmd_media.cmd_frames, "video", n={"type": int, "default": 6})

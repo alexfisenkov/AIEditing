@@ -44,7 +44,10 @@ def cmd_profile(opt) -> str:
     if opt.action == "set":
         profiles.set_values(profile, opt.values)
     elif opt.action == "taste":
-        profiles.add_taste(profile, " ".join(opt.values), video=opt.video or "")
+        if opt.replace:
+            profiles.replace_taste(profile, opt.replace, " ".join(opt.values), video=opt.video or "")
+        else:
+            profiles.add_taste(profile, " ".join(opt.values), video=opt.video or "")
         session.touch(lambda d: st.log(d, "taste", skill=opt.skill, note=" ".join(opt.values)))
     from runtime.profile import check_profile
 

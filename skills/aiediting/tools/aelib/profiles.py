@@ -54,6 +54,16 @@ def add_taste(profile: dict, note: str, video: str = "", date: Optional[str] = N
     return profile
 
 
+def replace_taste(profile: dict, part: str, note: str, video: str = "", date: Optional[str] = None) -> dict:
+    """The person changed their mind: the one taste line that holds `part` gives way to `note`."""
+    rows = profile.setdefault("taste", [])
+    found = [i for i, row in enumerate(rows) if part in row.get("note", "")]
+    if len(found) != 1:
+        raise ValueError("Заменяю ровно одну строку taste, а с «{}» их {}".format(part, len(found)))
+    del rows[found[0]]
+    return add_taste(profile, note, video, date)
+
+
 def read(path) -> dict:
     return json.loads(Path(path).read_text(encoding="utf-8"))
 

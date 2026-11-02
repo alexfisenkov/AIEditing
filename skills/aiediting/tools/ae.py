@@ -6,6 +6,7 @@
     python ae.py ask <kind> --note N  ·  answered [--note N]        the workshop waits for the person
     python ae.py formats "эфир, урок, подкаст"                      parse the answer, draft one profile per format
     python ae.py profile set|taste|check|open <skill> …             edit the draft profile in the workshop folder
+                                                                    (taste --replace PART: instead of that line)
     python ae.py frames <video> [--n 6]  ·  layout <source-id>      frames and layout on the dashboard
     python ae.py design-example <skill>  ·  samples <skill> [--frame F]
     python ae.py trial <skill> <video> [--start S --duration D] [--answers F]
