@@ -1,7 +1,8 @@
 """Finding and stopping this workshop's own static server — and only it.
 
-Adapted from AISpa's ap.py (MIT, see NOTICE.md): the check is deliberately narrow (`-m http.server`
-and exactly our `--directory`), because a wide one once killed somebody else's server.
+Adapted from AISpa's ap.py (MIT, see NOTICE.md): the check is deliberately narrow (our script or the
+`-m http.server` of earlier versions, and exactly our `--directory`), because a wide one once killed
+somebody else's server.
 """
 from __future__ import annotations
 
@@ -51,11 +52,21 @@ def _norm(path) -> str:
     return os.path.normcase(os.path.normpath(str(path))).replace("\\", "/")
 
 
-def is_ours(cmd: str, work) -> bool:
+def _matches(cmd: str, work, program: str) -> bool:
     c = cmd.replace("\\", "/")
     c = c.lower() if WIN else c
     ours = re.compile(r"--directory\s+\"?" + re.escape(_norm(work)) + r"\"?(?=\s|$)")
-    return bool(re.search(r"-m\s+http\.server\b", c)) and bool(ours.search(c))
+    return bool(re.search(program, c)) and bool(ours.search(c))
+
+
+def is_current(cmd: str, work) -> bool:
+    """Our server as it is now: worth keeping alive."""
+    return _matches(cmd, work, r"/rangeserver\.py\b")
+
+
+def is_ours(cmd: str, work) -> bool:
+    """Ours to stop, the old `-m http.server` included: it cannot serve ranges, so it gets replaced."""
+    return is_current(cmd, work) or _matches(cmd, work, r"-m\s+http\.server\b")
 
 
 def kill(pid) -> None:

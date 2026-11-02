@@ -1,7 +1,7 @@
 """A static server for the workshop folder on 127.0.0.1, kept alive by every call.
 
 Adapted from AISpa's ap.py (MIT, see NOTICE.md): the previous port first (an open tab revives by
-itself), a detached `python -m http.server`, no server over SSH or in CI.
+itself), a detached `rangeserver.py`, no server over SSH or in CI.
 """
 from __future__ import annotations
 
@@ -9,13 +9,15 @@ import os
 import socket
 import subprocess
 import sys
+import time
 import urllib.error
 import urllib.request
 from pathlib import Path
 
-from .procs import WIN, cmdline, is_ours, kill, kill_orphans
+from .procs import WIN, cmdline, is_current, is_ours, kill, kill_orphans
 
 PID, LOG = "serve.pid", "serve.log"
+SCRIPT = Path(__file__).resolve().with_name("rangeserver.py")
 
 
 def recorded(work: Path):
@@ -62,14 +64,18 @@ def serve(work: Path) -> str:
     if os.environ.get("SSH_CONNECTION") or os.environ.get("CI"):
         return "удалённая сессия — без сервера, дашборд: {}".format(page)
     port, pid = recorded(work)
-    if port and pid and http_ok(port) and is_ours(cmdline(pid), work):
+    if port and pid and http_ok(port) and is_current(cmdline(pid), work):
         return "http://localhost:%d/dashboard.html" % port
-    kill_orphans(work)
+    if kill_orphans(work) and port:
+        for _ in range(20):      # a stopped server lets go of its port in a moment; an open tab needs that port
+            if free_port(port) == port:
+                break
+            time.sleep(0.05)
     port = free_port(port)
     if not port:
         return "порт не нашёлся — дашборд открывается файлом: {}".format(page)
     with open(str(work / LOG), "a", encoding="utf-8") as log:
-        srv = subprocess.Popen([sys.executable, "-m", "http.server", str(port), "--bind", "127.0.0.1",
+        srv = subprocess.Popen([sys.executable, str(SCRIPT), str(port), "--bind", "127.0.0.1",
                                 "--directory", str(work)], stdin=subprocess.DEVNULL,
                                stdout=subprocess.DEVNULL, stderr=log, **_detached())
     for _ in range(20):

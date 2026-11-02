@@ -186,7 +186,7 @@ function design(L, S){
 function trials(L, S){
   const rows = (S.trials || []).slice().reverse().map(t => {
     const v = t.verdict === 'yes' ? `<span class="tag yes">${esc(L.liked)}</span>` : t.verdict === 'no' ? `<span class="tag no">${esc(L.notLiked)}</span>` : `<span class="tag wait">${esc(L.asking)}</span>`;
-    return `<div class="row"><h4>${esc(t.skill)} · ${esc(t.n)}${v}</h4><div class="grid"><figure style="grid-column:1/-1"><video controls preload="metadata" src="${src(t.video)}"></video></figure></div></div>`;
+    return `<div class="row"><h4>${esc(t.skill)} · ${esc(t.n)}${v}</h4><div class="grid"><figure style="grid-column:1/-1"><video controls preload="metadata" src="${src(t.video)}?v=${encodeURIComponent(t.at || '')}"></video></figure></div></div>`;
   });
   return card(L.trials, rows.join('') || empty(L));
 }
@@ -207,8 +207,11 @@ function render(){
   if (!S || typeof S !== 'object') { return bootFail(); }
   const L = I18N[lang] || I18N.ru;
   document.documentElement.lang = lang;
+  const live = new Map(Array.from(app.querySelectorAll('video'), v => [v.getAttribute('src'), v]));
   app.innerHTML = head(L, S) + hero(L, S) + stages(L, S) + `<div class="cols">${formats(L, S)}${skills(L, S)}</div>`
     + sources(L, S) + design(L, S) + trials(L, S) + feed(L, S);
+  // The same video stays the same element: its place and playback survive the redraw. A redone trial has a new ?v=.
+  app.querySelectorAll('video').forEach(v => { const was = live.get(v.getAttribute('src')); if (was) v.replaceWith(was); });
 }
 
 function bootFail(){
@@ -221,7 +224,7 @@ function apply(){
   const S = window.STATE;
   if (!S || typeof S !== 'object') return;
   const st = stampOf(S);
-  if (st === lastStamp) return;
+  if (st === lastStamp || document.fullscreenElement) return;      // moving a fullscreen video would throw it out of fullscreen
   lastStamp = st;
   const y = window.scrollY;
   try { render(); } catch (e) { lastStamp = ''; bootFail(); }
@@ -245,6 +248,7 @@ if (window.STATE) { lastStamp = stampOf(window.STATE); render(); } else { bootFa
 pull(poll);
 setInterval(() => document.querySelectorAll('[data-ago]').forEach(el => { el.textContent = ago(el.dataset.ago); }), 30000);
 document.addEventListener('visibilitychange', () => { if (!document.hidden) pull(); });
+document.addEventListener('fullscreenchange', apply);
 </script>
 </body>
 </html>

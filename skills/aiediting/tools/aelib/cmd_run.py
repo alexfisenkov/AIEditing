@@ -68,4 +68,5 @@ def stop_server(opt) -> str:
 
 def sync(opt) -> str:
     data = session.load()
+    st.install_page(session.work())      # a workshop begun on an older version gets today's page
     return session.commit(data)

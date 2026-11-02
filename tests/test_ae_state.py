@@ -62,6 +62,21 @@ class Workshop(Base):
         self.ae("init", "--fresh", "--mode", "refine")
         self.assertEqual(self.state()["mode"], "refine")
 
+    def test_a_redraw_keeps_the_open_video_and_a_redone_trial_replaces_it(self):
+        # Only the wiring: that the place and playback really survive was checked in a browser.
+        page = (self.work / "dashboard.html").read_text(encoding="utf-8")
+        self.assertIn("if (was) v.replaceWith(was)", page)
+        self.assertIn("?v=${encodeURIComponent(t.at", page)
+        self.assertIn("document.fullscreenElement) return", page)
+
+    def test_the_bare_call_brings_a_running_workshop_todays_page(self):
+        page = self.work / "dashboard.html"
+        page.write_text("<!-- old -->/*STATE-BEGIN*/window.STATE=null;/*STATE-END*/", encoding="utf-8")
+        self.ae()
+        self.assertNotIn("<!-- old -->", page.read_text(encoding="utf-8"))
+        self.assertIn("v.replaceWith(was)", page.read_text(encoding="utf-8"))
+        self.assertEqual(self.page_state()["rev"], self.state()["rev"])
+
     def test_stage_closes_earlier_ones(self):
         self.ae("stage", "interview")
         got = {s["id"]: s["status"] for s in self.state()["stages"]}
