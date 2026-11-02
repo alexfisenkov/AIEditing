@@ -71,7 +71,7 @@ def plan_cut(ctx) -> None:
     from .seams import tidy, widened, wordless_inside
 
     needs_words = ctx.p("fillers_cut") or ctx.p("wordless") == "cut" or ctx.p("editor") or \
-        ctx.p("retakes") in ("last_good", True)
+        ctx.p("retakes") in ("last_good", True) or ctx.p("word_gap") is not None
     words = spoken(ctx.transcript()) if needs_words else []
     fillers = _fillers(ctx, words)
     takes = plan_retakes(ctx, words) if ctx.p("retakes") in ("last_good", True) else []

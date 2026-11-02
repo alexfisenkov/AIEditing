@@ -149,6 +149,15 @@ class ClipEdges(Run):
         self.assertEqual(clip_edges(words, 0.05, 1.0, 0.1, 0.12), (0.0, 1.12))
 
 
+class ShortWords(Run):
+    def test_a_short_word_alone_between_pauses_stays_when_hesitations_are_kept(self):
+        """Kept with its margins it is shorter than a sliver of silence: only its middle tells it is speech."""
+        words = [word("Сказал.", 1.0, 1.5), word("к", 3.0, 3.05), word("дому.", 5.0, 5.5)]
+        ctx = self.planned(words, [(0.0, 7.0)], fillers_cut=[], fillers_keep=[])
+        self.assertEqual(self.caption(ctx), "Сказал. К дому.")
+        self.assertTrue(any(a <= 3.0 and 3.05 <= b for a, b in ctx.keep), ctx.keep)
+
+
 class WithoutCuts(Run):
     def test_a_word_in_the_vertical_keeps_its_comma_when_nothing_is_cut_next_to_it(self):
         words = [word("можно,", 1.0, 1.3), word("здесь.", 1.35, 1.7)]
