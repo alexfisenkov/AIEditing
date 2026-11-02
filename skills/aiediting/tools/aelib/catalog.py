@@ -31,14 +31,16 @@ def check_steps(chosen: List[str], base: Optional[Path] = None) -> List[str]:
             for s in chosen if s not in known]
 
 
-def needs(chosen: List[str], asr_provider: Optional[str], base: Optional[Path] = None) -> dict:
-    """{"runtime": [...], "tools": [...]} for exactly the chosen steps and recogniser, in catalog order."""
+def needs(chosen: List[str], asr_provider: Optional[str], base: Optional[Path] = None,
+          verify_provider: Optional[str] = None) -> dict:
+    """{"runtime": [...], "tools": [...]} for exactly the chosen steps and recognisers, in catalog order."""
     data = steps(base)
     runtime, wanted = set(BASE_RUNTIME), set()
     for name in chosen:
         step = data["steps"][name]
         runtime.update(step.get("runtime", []))
         wanted.update(step.get("tools", []))
-    wanted.update(data["asr_tools"].get(asr_provider or "", []))
+    for provider in (asr_provider, verify_provider):
+        wanted.update(data["asr_tools"].get(provider or "", []))
     order = list(tools(base))
     return {"runtime": sorted(runtime), "tools": [t for t in order if t in wanted]}

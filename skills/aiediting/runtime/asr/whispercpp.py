@@ -2,6 +2,7 @@
 
 `model` is the path to a ggml model file. `command` (optional) replaces the program, e.g.
 ["C:/tools/whisper-cli.exe"]; AIEDITING_WHISPER_CLI does the same from the environment.
+`max_context` (optional) is whisper's `-mc`: 0 keeps a long recording from looping on one phrase.
 """
 from __future__ import annotations
 
@@ -41,7 +42,8 @@ def transcribe(media: Path, cfg: dict) -> dict:
         except MediaError as exc:
             raise AsrError(str(exc))
         prefix = Path(tmp) / "transcript"
-        argv = _program(cfg) + ["-m", str(model), "-l", language, "-ml", "1", "-sow",
+        context = [] if cfg.get("max_context") is None else ["-mc", str(int(cfg["max_context"]))]
+        argv = _program(cfg) + ["-m", str(model), "-l", language, "-ml", "1", "-sow", *context,
                                 "-oj", "-np", "-of", str(prefix), str(wav)]
         try:
             proc = subprocess.run(argv, stdout=subprocess.PIPE, stderr=subprocess.PIPE)

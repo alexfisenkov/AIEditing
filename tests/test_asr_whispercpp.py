@@ -26,6 +26,23 @@ class WhisperCpp(TempDirCase):
             {"text": "э-э", "start": 0.5, "end": 0.9, "type": "filler"},
             {"text": "мир.", "start": 1.0, "end": 1.3, "type": "word"}]})
 
+    def test_max_context_reaches_the_program(self):
+        import subprocess
+        from unittest import mock
+
+        from runtime.asr import AsrError, transcribe
+
+        seen = []
+
+        def fake(argv, **kw):
+            seen.append(argv)
+            return subprocess.CompletedProcess(argv, 1, b"", b"stop")
+
+        with mock.patch("runtime.asr.whispercpp.extract_audio", return_value=self.tmp / "audio.wav"), \
+                mock.patch("subprocess.run", fake), self.assertRaises(AsrError):
+            transcribe(self.media, dict(self.cfg(self.model), max_context=0))
+        self.assertEqual(seen[-1][seen[-1].index("-mc") + 1], "0")
+
     def test_missing_model_is_explained(self):
         from runtime.asr import AsrError, transcribe
 

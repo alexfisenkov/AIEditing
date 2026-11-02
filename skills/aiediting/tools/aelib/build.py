@@ -50,7 +50,8 @@ def build_skill(profile_path, dest, replace: bool = False) -> Path:
     if errors:
         raise BuildError("Профиль {} не готов к сборке:\n- {}".format(profile_path, "\n- ".join(errors)))
     final = _target(dest, profile["skill_name"], replace)
-    need = catalog.needs(profile["steps"], profile["asr"]["provider"])
+    verify = (profile.get("params") or {}).get("verify_asr") or {}
+    need = catalog.needs(profile["steps"], profile["asr"]["provider"], verify_provider=verify.get("provider"))
     dest.mkdir(parents=True, exist_ok=True)
     stage = Path(tempfile.mkdtemp(prefix=".build-", dir=str(dest)))
     try:

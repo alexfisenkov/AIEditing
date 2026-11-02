@@ -65,12 +65,14 @@ def cache_key(src, cfg: Dict) -> str:
     return hashlib.sha1(raw.encode("utf-8")).hexdigest()[:16]
 
 
-def recognise(ctx, media=None) -> Dict:
-    """Transcript of `media` (the source by default), kept in the run folder so a resumed run reuses it."""
+def recognise(ctx, media=None, config=None) -> Dict:
+    """Transcript of `media` (the source by default), kept in the run folder so a resumed run reuses it.
+
+    `config` is another recogniser than the profile's `asr`, for a second listening that costs nothing."""
     from .. import asr
 
     media = media or ctx.src
-    cfg = dict(ctx.profile.get("asr") or {})
+    cfg = dict(config or ctx.profile.get("asr") or {})
     cfg.setdefault("language", ctx.profile.get("language") or "")
     if not ctx.info["has_audio"]:
         return {"words": [], "language": cfg["language"], "provider": cfg.get("provider", "")}

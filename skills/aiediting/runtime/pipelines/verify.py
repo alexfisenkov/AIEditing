@@ -26,5 +26,5 @@ def lost_words(expected: List[Dict], heard: List[Dict]) -> List[Dict]:
 def check_words(ctx, video: Path, keep) -> List[Dict]:
     """Words that survived the plan (hesitations aside) but are not heard in `video`."""
     expected = [w for w in mapped(spoken(ctx.transcript()), keep) if w.get("type") != "filler"]
-    heard = [w for w in spoken(recognise(ctx, video)) if w.get("type") != "filler"]
+    heard = [w for w in spoken(recognise(ctx, video, ctx.p("verify_asr"))) if w.get("type") != "filler"]
     return lost_words(expected, heard)

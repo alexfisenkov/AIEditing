@@ -18,7 +18,10 @@
     "steps": {"type": "array", "items": {"type": "string", "minLength": 1}},
     "params": {
       "type": "object",
-      "properties": {"animations": {"$ref": "#/definitions/animations"}}
+      "properties": {
+        "animations": {"$ref": "#/definitions/animations"},
+        "verify_asr": {"$ref": "#/definitions/asr"}
+      }
     },
     "approval": {"enum": ["plan", "parts"]},
     "design": {"type": "string"},
@@ -41,7 +44,8 @@
           "minLength": 1,
           "description": "Path to a .env the person already keeps the key in (~ allowed); the key is read from it at run time under api_key_env and never copied."
         },
-        "command": {"type": ["array", "null"], "items": {"type": "string"}}
+        "command": {"type": ["array", "null"], "items": {"type": "string"}},
+        "max_context": {"type": ["integer", "null"], "minimum": 0}
       },
       "additionalProperties": false
     },
