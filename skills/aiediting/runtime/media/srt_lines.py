@@ -17,6 +17,7 @@ from .srt_words import CLINGS, OPENS, POSSESSIVES, bare, glued, sentence_end
 MAX_CHARS = 42      # one comfortable subtitle line
 MAX_SECONDS = 5.0
 BREAK_GAP = 0.8     # a pause this long starts a new subtitle
+FLASH = 0.5         # seconds: a part of a sentence shown this briefly cannot be read
 NEVER = 100.0
 _SOFT = re.compile(r"[,;:—–)»]$")
 
@@ -61,6 +62,7 @@ def _split(run: List[dict], keep: Set[int], measure: Callable[[str], int]) -> Li
                 break
             cost = best[a] + 1.0 + 2.0 * ((MAX_CHARS - min(size, MAX_CHARS)) / MAX_CHARS) ** 2
             cost += 4.0 if b - a == 1 and n > 1 else 0.0  # a lone word on screen
+            cost += 4.0 if b - a < n and run[b - 1]["end"] - run[a]["start"] < FLASH else 0.0
             cost += _break_cost(run, b - 1, keep) if b < n else 0.0
             if cost < best[b]:
                 best[b], back[b] = cost, a

@@ -45,6 +45,21 @@ def length(spans: Sequence[Span]) -> float:
     return sum(b - a for a, b in spans)
 
 
+def end_after(start: float, seconds: float, keep: Sequence[Span], longest: float) -> float:
+    """The source moment by which `seconds` of what stays have passed after `start`, at most `longest` s from it."""
+    left, end = float(seconds), float(start) + float(seconds)
+    for a, b in merge(keep):
+        a = max(a, start)
+        if b <= a:
+            continue
+        if b - a >= left:
+            end = a + left
+            left = 0.0
+            break
+        left -= b - a
+    return round(min(end, start + longest), 3)
+
+
 def to_out(t: float, keep: Sequence[Span]) -> Optional[float]:
     """Where source moment `t` lands in the cut video; None if it was cut away."""
     passed = 0.0

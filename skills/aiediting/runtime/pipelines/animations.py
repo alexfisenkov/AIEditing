@@ -8,10 +8,11 @@ from __future__ import annotations
 from typing import Dict, List, Optional
 
 from ..render.anim_spec import template_file, template_id
-from .anim_answer import points, seconds, span
+from .anim_answer import LONGEST, points, seconds, span
 from .anim_slots import every, length, over, slots
 from .chapters import plate_windows
 from .report import stamp
+from .timeline import end_after
 
 TEMPLATES = ["файлы", "шаги", "список", "число"]
 
@@ -34,6 +35,8 @@ def _chosen(ctx, answer: List[Dict]) -> List[Dict]:
         if not (said or str(s.get("title", "")).strip()):
             continue
         times, why = span(s, length(ctx, {"items": said}))
+        if not why:  # what is cut under an insert must not shorten it on screen
+            times = (times[0], end_after(times[0], times[1] - times[0], ctx.keep, LONGEST))
         why = why or _why_not(ctx, s, times[0], times[1], out)
         if why:
             ctx.note("Анимация «{}» ({}) снята: {}".format(s.get("template"), s.get("start"), why))
