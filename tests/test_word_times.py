@@ -48,6 +48,28 @@ class Repaired(unittest.TestCase):
             self.assertAlmostEqual(a["end"], b["start"], places=2)
         self.assertEqual(moved, ["даже через Telegram. 0:40:25.3 → 0:39:23.9"])
 
+    def test_a_stretched_word_shares_its_sound_with_the_tail_of_the_sentence(self):
+        """From the lesson, second recognition: «даже» 2364.29–2427.89, the rest at the edge of the next phrase."""
+        words = [word("ним", 2363.79, 2363.91), word("даже", 2364.29, 2427.89), word("через", 2428.07, 2428.07),
+                 word("Telegram.", 2428.19, 2431.17), word("Под", 2431.19, 2431.29)]
+        fixed, moved = self.fix(words, [(2358.95, 2365.68), (2431.15, 2435.45)], pad=0.05)
+        tail = fixed[1:4]
+        self.assertEqual(tail[0]["start"], 2364.29)
+        self.assertAlmostEqual(tail[-1]["end"], 2365.68, places=2)
+        self.assertLess(tail[1]["start"], tail[2]["start"])
+        self.assertEqual(fixed[4]["start"], 2431.19)
+        self.assertEqual(moved[-1], "через Telegram. 0:40:28.1 → 0:39:24.3")
+
+    def test_a_stretched_word_at_a_full_stop_shares_nothing(self):
+        words = [word("системе.", 10.0, 90.0), word("да", 90.1, 90.12), word("Дальше", 95.0, 95.4)]
+        fixed, _ = self.fix(words, [(9.0, 12.0), (94.9, 96.0)])
+        self.assertEqual((fixed[0]["start"], fixed[0]["end"]), (10.0, 12.0))
+        self.assertEqual((fixed[1]["start"], fixed[1]["end"]), (90.1, 90.12))
+
+    def test_a_short_word_inside_sound_is_not_at_the_edge(self):
+        words = [word("с", 1.0, 1.02), word("ним", 1.03, 1.2)]
+        self.assertEqual(self.fix(words, [(0.9, 2.2)]), (words, []))
+
     def test_a_word_in_its_sound_is_left_alone(self):
         words = [word("Сегодня", 1.0, 1.5), word("говорим", 1.6, 2.1)]
         self.assertEqual(self.fix(words, [(0.9, 2.2)]), (words, []))

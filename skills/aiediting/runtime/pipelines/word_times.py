@@ -18,11 +18,14 @@ LONGEST = 2.5    # no spoken word lasts longer unless sound runs through all of 
 MIN_WORD = 0.25  # free sound shorter than this per word is a tail of the last word or a breath
 CLICK = 0.1      # sound this short is a click, whatever margin the cut has added to it
 BREATH = 0.7     # a silence this short inside a phrase does not end it
+EDGE = 0.1       # this little of a long word over a loud stretch is the margin of the word next to it
 _ENDS = (".", "!", "?", "…")
 
 
 def _overlaps(a: float, b: float, loud: Sequence[Span]) -> List[Span]:
-    return [(max(a, x), min(b, y)) for x, y in loud if x < b and a < y]
+    """The sound under a word; the very edge of a neighbour's sound under a long word is not its own."""
+    parts = [(max(a, x), min(b, y)) for x, y in loud if x < b and a < y]
+    return [p for p in parts if p[1] - p[0] >= min(EDGE, b - a)]
 
 
 def _unstretched(w: Dict, parts: List[Span], loud: Sequence[Span]) -> Optional[Span]:
@@ -78,6 +81,11 @@ def _spread(words: List[Dict], span: Span) -> None:
         at += size * unit
 
 
+def _shared(w: Dict, count: int) -> bool:
+    """A word cut back to its sound left its sentence open and has room for `count` more words in that sound."""
+    return not str(w["text"]).strip().endswith(_ENDS) and w["end"] - w["start"] >= MIN_WORD * (count + 1)
+
+
 def _orphan(w: Dict, loud: Sequence[Span]) -> bool:
     return not _overlaps(w["start"], w["end"], loud) and not alive((w["start"] + w["end"]) / 2.0, loud)
 
@@ -104,14 +112,21 @@ def repaired(transcript: Dict, loud: Sequence[Span], pad: float = 0.12,
     words = [w for w in all_words if w.get("type") != "spacing" and str(w.get("text", "")).strip()]
     sound = [s for s in loud if s[1] - s[0] >= 2 * pad + CLICK]
     moved: List[str] = []
+    stretched = []
     for w in words:
         fitted = None if fixed(w) else _fitted(w, sound)
         if fitted:
             moved.append("{} {}–{} → {}".format(quote([w]), stamp(w["start"]), stamp(w["end"]), stamp(fitted[0])))
+            if w["end"] - w["start"] > LONGEST:
+                stretched.append(id(w))
             w["start"], w["end"] = round(fitted[0], 3), round(fitted[1], 3)
     for i, j in _orphan_runs(words, sound, fixed):
         span = _free_sound(words, i, j, sound, pad)
         if span:
             moved.append("{} {} → {}".format(quote(words[i:j]), stamp(words[i]["start"]), stamp(span[0])))
             _spread(words[i:j], span)
+        elif i and id(words[i - 1]) in stretched and _shared(words[i - 1], j - i):
+            # «даже» took all the sound of «даже через Telegram.» when it was cut back: the words share it
+            moved.append("{} {} → {}".format(quote(words[i:j]), stamp(words[i]["start"]), stamp(words[i - 1]["start"])))
+            _spread(words[i - 1:j], (words[i - 1]["start"], words[i - 1]["end"]))
     return dict(transcript or {}, words=all_words), moved
