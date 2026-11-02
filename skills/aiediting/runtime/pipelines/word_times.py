@@ -17,6 +17,7 @@ from .words import quote
 LONGEST = 2.5    # no spoken word lasts longer unless sound runs through all of it
 MIN_WORD = 0.25  # free sound shorter than this per word is a tail of the last word or a breath
 CLICK = 0.1      # sound this short is a click, whatever margin the cut has added to it
+BREATH = 0.7     # a silence this short inside a phrase does not end it
 _ENDS = (".", "!", "?", "…")
 
 
@@ -50,11 +51,22 @@ def _free_sound(words: List[Dict], i: int, j: int, loud: Sequence[Span], pad: fl
     if i == 0 or str(words[i - 1]["text"]).strip().endswith(_ENDS):
         return None
     after, count = words[i - 1]["end"], j - i
-    for a, b in loud:
+    for a, b in _speech_runs(loud):
         if a <= after < b:
             end = min(b - pad, words[i]["start"], after + words[j - 1]["end"] - words[i]["start"])
             return (after, end) if end - after >= MIN_WORD * count else None
     return None
+
+
+def _speech_runs(loud: Sequence[Span]) -> List[Span]:
+    """Loud stretches with the short breaths between them closed: a dense cut splits speech at each."""
+    runs: List[Span] = []
+    for a, b in loud:
+        if runs and a - runs[-1][1] <= BREATH:
+            runs[-1] = (runs[-1][0], b)
+        else:
+            runs.append((a, b))
+    return runs
 
 
 def _spread(words: List[Dict], span: Span) -> None:

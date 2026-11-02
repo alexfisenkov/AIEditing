@@ -8,6 +8,8 @@ from .timeline import Span, length, merge, removed, subtract
 from .words import norm, spoken
 
 SLIVER = 0.3  # a kept bit this short with no word in it is just leftover silence
+LONGEST_NOISE = 3.0  # seconds: a longer loud piece without words is left in, it may be a demo with its sound
+NEAR_LOST = 1.5      # seconds around a word that lost its place: a loud piece there may be that word
 
 
 def plan_speech(ctx) -> None:
@@ -31,15 +33,15 @@ def _fillers(ctx, words) -> List[Dict]:
             and (w.get("type") == "filler" or norm(w["text"]) in listed)]
 
 
-def _why(piece: Span, fillers: List[Dict], takes: List[Dict]) -> str:
+def _why(piece: Span, fillers: List[Dict], takes: List[Dict], unvoiced=()) -> str:
     a, b = piece
     for t in takes:
         if t["drop"][0] < b and a < t["drop"][1]:
-            return "дубль: «{}»".format(t["said"])
+            return "{}: «{}»".format(t.get("why", "дубль"), t["said"])
     for w in fillers:
         if w["start"] < b and a < w["end"]:
             return "запинка «{}»".format(w["text"])
-    return "пауза"
+    return "звук без слов" if any(x < b and a < y for x, y in unvoiced) else "пауза"
 
 
 def _anchors(words: List[Dict], fillers: List[Dict], takes: List[Dict]) -> List[float]:
@@ -48,10 +50,27 @@ def _anchors(words: List[Dict], fillers: List[Dict], takes: List[Dict]) -> List[
     return [(w["start"] + w["end"]) / 2.0 for w in live]
 
 
+def _voiced(keep: List[Span], words: List[Dict], fillers: List[Dict], takes: List[Dict]):
+    """(`keep` without loud pieces where nobody says anything, the pieces taken out): a click, a breath.
+
+    A long piece may be a demo with its own sound; a piece near a word that lost its place may be that word."""
+    drops = [tuple(t["drop"]) for t in takes]
+    said = [w for w in words if w not in fillers and not any(a <= (w["start"] + w["end"]) / 2.0 < b for a, b in drops)]
+    lost = [w for w in said if not alive((w["start"] + w["end"]) / 2.0, keep)]
+    stay, out = [], []
+    for a, b in keep:
+        if any(w["start"] < b and a < w["end"] for w in said) or b - a > LONGEST_NOISE or \
+                any(a - NEAR_LOST < w["start"] < b + NEAR_LOST for w in lost):
+            stay.append((a, b))
+        else:
+            out.append((a, b))
+    return stay, out
+
+
 def plan_cut(ctx) -> None:
     from .retakes import plan_retakes
 
-    needs_words = ctx.p("fillers_cut") or ctx.p("retakes") in ("last_good", True)
+    needs_words = ctx.p("fillers_cut") or ctx.p("wordless") == "cut" or ctx.p("retakes") in ("last_good", True)
     words = spoken(ctx.transcript()) if needs_words else []
     fillers = _fillers(ctx, words)
     takes = plan_retakes(ctx, words) if ctx.p("retakes") in ("last_good", True) else []
@@ -59,8 +78,11 @@ def plan_cut(ctx) -> None:
     keep = subtract(ctx.keep, cuts)
     mids = _anchors(words, fillers, takes)
     keep = [(a, b) for a, b in keep if b - a >= SLIVER or any(alive(m, [(a, b)]) for m in mids)]
+    unvoiced: List[Span] = []
+    if ctx.p("wordless") == "cut" and words:
+        keep, unvoiced = _voiced(keep, words, fillers, takes)
     ctx.keep = merge(keep) or ctx.keep
     total = ctx.info["duration"]
-    ctx.report["cuts"] = [{"start": round(a, 3), "end": round(b, 3), "why": _why((a, b), fillers, takes)}
+    ctx.report["cuts"] = [{"start": round(a, 3), "end": round(b, 3), "why": _why((a, b), fillers, takes, unvoiced)}
                           for a, b in removed(ctx.keep, total) if b - a >= 0.01]
     ctx.report["kept_seconds"] = round(length(ctx.keep), 3)
