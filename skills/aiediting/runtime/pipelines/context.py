@@ -39,7 +39,9 @@ class Context:
         self.notes: List[str] = []
         self.report: Dict = {"cuts": [], "blurred": [], "fixes": [], "drift_ms": 0.0, "chapters": [],
                              "motion": [], "clips": [], "words_lost": [], "outputs": [], "exports": []}
+        self.loud: Optional[List] = None   # loud stretches of the source, once `speech_spans` has measured them
         self._words: Optional[Dict] = None
+        self._timed = False
 
     def has(self, step: str) -> bool:
         return step in self.steps
@@ -51,7 +53,20 @@ class Context:
     def transcript(self) -> Dict:
         if self._words is None:
             self._words = recognise(self)
+        if self.loud is not None and not self._timed:
+            self._check_times()
         return self._words
+
+    def _check_times(self) -> None:
+        from .cutplan import _fillers
+        from .word_times import repaired
+
+        self._timed = True
+        self._words, moved = repaired(self._words, self.loud, float(self.p("pad", 0.12)),
+                                      lambda w: w.get("type") == "filler" or bool(_fillers(self, [w])))
+        if moved:
+            self.note("Время слов поправлено по звуку, распознавание поставило их мимо речи ({}): {}".format(
+                len(moved), "; ".join(moved[:10]) + (" …" if len(moved) > 10 else "")))
 
     def note(self, text: str) -> None:
         if text not in self.notes:
