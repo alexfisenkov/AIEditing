@@ -8,10 +8,9 @@ from __future__ import annotations
 
 from typing import Dict, List, Optional, Sequence
 
-from .wordcut import TAIL
+from .wordcut import LEAD, TAIL
 from .words import norm
 
-LEAD = 0.1   # seconds before the recognised start that may belong to the cut word
 AIR = 0.01   # left after the word before the cut
 _ENDS = (".", "!", "?", "…")
 OPENS_A_CLAUSE = {"то", "что", "чтобы", "который", "которая", "которое", "которые", "которых", "которой", "потому",

@@ -221,7 +221,7 @@ class InTheRun(unittest.TestCase):
         words = [word("даже", 20.0, 80.0), word("через", 80.3, 80.6), word("Telegram.", 80.8, 83.8), word("Дальше", 90.0, 90.4)]
         ctx = self.context({"word_gap": 0.25}, words)
         self.speech(ctx, [(19.9, 21.5), (89.9, 90.5)])
-        self.assertEqual(ctx.keep, [(19.92, 21.5), (89.92, 90.5)])
+        self.assertEqual(ctx.keep, [(19.9, 21.5), (89.9, 90.5)])
         self.assertEqual([w["text"] for w in kept_words(ctx.transcript()["words"], ctx.keep)],
                          ["даже", "через", "Telegram.", "Дальше"])
 

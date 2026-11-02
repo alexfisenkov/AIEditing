@@ -13,7 +13,7 @@ from typing import Dict, List, Sequence
 from .timeline import Span, intersect, merge
 from .word_times import LONGEST
 
-LEAD, TAIL = 0.08, 0.12  # s: room for a word's first and last sounds that the recogniser's timing misses
+LEAD, TAIL = 0.1, 0.12  # s: room for a word's first and last sounds that the recogniser's timing misses
 
 
 def word_runs(words: Sequence[Dict], lead: float, tail: float, join: float) -> List[Span]:

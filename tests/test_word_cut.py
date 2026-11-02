@@ -30,14 +30,14 @@ class ByWords(unittest.TestCase):
         from runtime.pipelines.wordcut import by_words
 
         keep = by_words([(0.0, 10.0)], WORDS, join=0.25, total=10.0)
-        self.assertEqual(keep, [(0.92, 2.12), (3.92, 4.72)], "the pause 1.5–1.62 stays, 2.0–4.0 goes")
+        self.assertEqual(keep, [(0.9, 2.12), (3.9, 4.72)], "the pause 1.5–1.62 stays, 2.0–4.0 goes")
 
     def test_first_and_last_sounds_stay_and_a_word_is_never_cut_into(self):
         from runtime.pipelines.wordcut import by_words
 
         keep = by_words([(0.0, 10.0)], WORDS, join=0.25, total=10.0)
         for w in WORDS:
-            self.assertTrue(inside((w["start"] - 0.08, w["end"] + 0.12), keep), w["text"])
+            self.assertTrue(inside((w["start"] - 0.1, w["end"] + 0.12), keep), w["text"])
         quiet_start = by_words([(1.3, 2.2)], WORDS[:2], join=0.25, total=10.0)
         self.assertTrue(inside((1.0, 2.0), quiet_start), "the recogniser's word is kept whole")
 
@@ -57,7 +57,7 @@ class ByWords(unittest.TestCase):
 
         words = [{"text": "слово", "start": 10.0, "end": 70.0, "type": "word"}]
         self.assertEqual(by_words([(0.0, 5.0), (80.0, 85.0)], words, join=0.25, total=100.0), [])
-        self.assertEqual(by_words([(9.5, 11.0)], words, join=0.25, total=100.0), [(9.92, 11.0)])
+        self.assertEqual(by_words([(9.5, 11.0)], words, join=0.25, total=100.0), [(9.9, 11.0)])
 
 
 class Presets(unittest.TestCase):
