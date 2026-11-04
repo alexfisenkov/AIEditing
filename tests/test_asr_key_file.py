@@ -54,7 +54,8 @@ class KeyFileLookup(TempDirCase):
         self.home.mkdir()
         self.work = self.tmp / "работа"
         self.work.mkdir()
-        env = mock.patch.dict(os.environ, {"HOME": str(self.home), "LOCALAPPDATA": str(self.home)})
+        env = mock.patch.dict(os.environ, {"HOME": str(self.home), "USERPROFILE": str(self.home),
+                                           "LOCALAPPDATA": str(self.home)})
         env.start()
         self.addCleanup(env.stop)
         os.environ.pop(KEY_NAME, None)

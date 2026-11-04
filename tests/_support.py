@@ -54,6 +54,5 @@ class TempDirCase(unittest.TestCase):
     def setUp(self):
         self._tmp = tempfile.TemporaryDirectory(prefix="aiediting тест ")
         self.tmp = Path(self._tmp.name)
-
-    def tearDown(self):
-        self._tmp.cleanup()
+        # A cleanup, not tearDown: a test's own cleanups (leaving the folder) run first, or Windows refuses to delete it.
+        self.addCleanup(self._tmp.cleanup)
