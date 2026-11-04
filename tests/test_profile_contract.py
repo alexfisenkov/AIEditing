@@ -30,6 +30,11 @@ def params_read_by_pipeline():
     return names
 
 
+def params_read_by_skill_builder():
+    """Profile keys that choose a part of the format skill's SKILL.md instead of a step of the pipeline."""
+    return set(re.findall(r'\.get\("params"\) or \{\}\)\.get\("([a-z_0-9]+)"\)', read(SKILL / "tools" / "aelib" / "skillmd.py")))
+
+
 def interview_rows():
     rows = [line for line in read(SKILL / "phases" / "interview.md").splitlines() if line.startswith("| ")]
     return rows[2:]  # header and rule
@@ -81,7 +86,7 @@ class ProfileKeys(unittest.TestCase):
         self.assertEqual(sorted(named - read_keys), [])
 
     def test_every_preset_key_is_read_by_the_pipeline(self):
-        read_keys = params_read_by_pipeline()
+        read_keys = params_read_by_pipeline() | params_read_by_skill_builder()
         for path in sorted(PRESETS.glob("*.json")):
             unread = sorted(set(json.loads(read(path))["params"]) - read_keys)
             self.assertEqual(unread, [], path.name)

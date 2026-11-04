@@ -7,8 +7,8 @@
 <!--
   AIEditing workshop dashboard. Adapted from the AISpa dashboard template (MIT): the «Графит» colour tokens
   and both themes, the state snapshot between STATE markers, polling state.js through a script tag, the
-  «no state» screen. Copyright (c) 2026 Alexander Fisenkov; AISpa is based on Autopilot 2.2.0,
-  Copyright (c) 2026 Nick Vels. Full MIT notices: tools/state/NOTICE.md in the AIEditing skill.
+  «no state» screen. Copyright (c) 2026 Alexander Fisenkov. Full MIT notices: tools/state/NOTICE.md in the
+  AIEditing skill.
 -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -54,7 +54,9 @@
     color:var(--quiet);margin:0 0 14px;display:flex;align-items:center;gap:10px}
   .wt::before{content:"";flex:0 0 24px;height:1px;background:var(--quiet);opacity:.5}
   .top{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
-  .brand{margin-right:auto}
+  .brand{margin-right:auto;display:flex;align-items:center;gap:12px}
+  .logo{width:50px;height:50px;flex:none;filter:drop-shadow(0 6px 12px rgba(20,20,22,.18))}
+  .logo svg{display:block;width:100%;height:100%}
   .brand small{display:block;font-size:12px;color:var(--quiet)}
   .brand h1{margin:0;font-family:'Unbounded','Onest',sans-serif;font-size:24px;line-height:1.1}
   .pill{padding:6px 12px;border-radius:999px;background:var(--card);border:1px solid var(--line);font-size:13px;color:var(--mut)}
@@ -111,7 +113,7 @@ const I18N = {
     none:"пока пусто", updated:"обновлено", live:"на связи", file:"снимок с диска", snap:"снимок", lost:"нет связи",
     boot:"Состояния нет", bootWhy:"Ни в странице, ни в файле state.js рядом: мастерская только начинается. Страница оживёт сама.",
     theme:["Свет","Тьма","Система"], words:{start:"Старт",formats:"Форматы",sources:"Исходники",interview:"Интервью",design:"Дизайн",trial:"Пробный монтаж",build:"Сборка"}},
-  en: {brand:"AI workshop", modes:{new:"New format skill", refine:"Refining a skill"}, now:"Now", waitFor:"Waiting for you",
+  en: {brand:"AI мастерская", modes:{new:"New format skill", refine:"Refining a skill"}, now:"Now", waitFor:"Waiting for you",
     done:"Done", stages:"Stages", formats:"Formats", own:"own", sources:"Sources and layout", layout:"layout",
     byPerson:"corrected", design:"Design system — variants side by side", trials:"Trial edit", liked:"liked",
     notLiked:"to rework", asking:"awaiting answer", skills:"Skills", built:"built", installed:"installed", feed:"Feed",
@@ -135,7 +137,7 @@ function curTheme(){ try { return localStorage.getItem('ae-theme') || ''; } catc
 
 function head(L, S){
   const t = curTheme();
-  return `<header class="top"><div class="brand"><small>${esc(L.brand)}</small><h1>AIEditing</h1></div>
+  return `<header class="top"><div class="brand"><div class="logo"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" aria-hidden="true" focusable="false"><rect width="256" height="256" rx="52" fill="#171717"/><rect x="22" y="102" width="112" height="109" rx="14" fill="#F4F5F6"/><rect x="45" y="124" width="62" height="66" rx="8" fill="#171717"/><path d="M122 211V84L173 159L224 84V211" fill="none" stroke="#F4F5F6" stroke-width="24" stroke-linecap="round" stroke-linejoin="round"/><rect x="110" y="33" width="24" height="24" rx="6" fill="#F4F5F6"/></svg></div><div><small>${esc(L.brand)}</small><h1>AIEditing</h1></div></div>
     <span class="pill">v${esc(S.version || '')}</span>
     <span class="src ${kind()}"><i></i>${esc(L[kind()])} · ${esc(L.updated)} <span data-ago="${esc(S.updatedAt)}">${esc(ago(S.updatedAt))}</span></span>
     <span class="tabs">${['light','dark',''].map((v,i) => `<button aria-pressed="${t === v}" onclick="theme('${v}')">${esc(L.theme[i])}</button>`).join('')}</span>

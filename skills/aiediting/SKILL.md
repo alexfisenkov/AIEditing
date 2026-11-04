@@ -63,8 +63,8 @@ Every event is one call: `python "<skillDir>/tools/ae.py" <command>` — `init`,
 `answered`, `formats`, `profile`, `frames`, `layout`, `design-example`, `samples`, `choose`, `trial`,
 `verdict`, `build-skill`, `install-skill`, `list-skills`, `backup-skill`, `restore-skill`, `doctor`,
 `finish`. The command list with arguments is at the top of `tools/ae.py`. `phases/start.md` says how to
-find `<skillDir>`. You never edit `state.js` or the dashboard by hand. Where `python` is the Microsoft
-Store stub on Windows, use `py -3`.
+find `<skillDir>`. You never edit `state.js` or the dashboard by hand. Where there is no `python`, as on
+many Macs, use `python3`; where it is the Microsoft Store stub on Windows, use `py -3`.
 
 ## Rules that never lose
 
