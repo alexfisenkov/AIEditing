@@ -27,6 +27,7 @@
   "R": { "block": 26, "card": 22, "inner": 15, "pill": 999 },
   "RIM": "0 0 0 1px rgba(199,201,204,.2), inset 0 1px 0 rgba(255,255,255,.08)",
   "SHADOW": "0 40px 90px rgba(0,0,0,.55)",
+  "MARK": "0 0 0 2.5px #FFFFFF, 0 0 0 4px rgba(14,14,16,.7)",
   "SHINE": "linear-gradient(100deg,#9A9DA2 0%,#E0E2E5 30%,#FFFFFF 42%,#E0E2E5 54%,#9A9DA2 100%)",
   "families": { "display": "Unbounded", "text": "Onest", "mono": "JetBrains Mono" },
   "fonts": [

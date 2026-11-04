@@ -18,7 +18,7 @@ Everything is the Python standard library (3.9+, macOS and Windows). OpenCV is u
 
 | Command | Does |
 |---|---|
-| `prepare <video> <W> --words F --design D [--logo F] [--sfx DIR] [--music F] [--no-install]` | checks, then unpacks the template, makes `public/clips/source.mp4` (H.264, no sound) and `speech.wav`, copies the words to `raw/words.txt`, builds the face track, writes the design data, lists the sounds, sets the duration, installs packages (`npm ci` by the pinned `package-lock.json`). Repeat-safe: filled scenes are never overwritten |
+| `prepare <video> <W> --words F --design D [--logo F] [--sfx DIR] [--music F] [--speech WAV] [--no-install]` | checks, then unpacks the template, makes `public/clips/source.mp4` (H.264, no sound) and `speech.wav`, copies the words to `raw/words.txt`, builds the face track, writes the design data, lists the sounds, sets the duration, installs packages (`npm ci` by the pinned `package-lock.json`). Repeat-safe: filled scenes are never overwritten. `--speech`: a clean speech of the same length replaces the sound of the video as `speech.wav` |
 | `frame <W> <sec...>` | stills of any seconds |
 | `draft <W>` | type check, then a half-size render |
 | `sheets <video> <dir> [--step 4]` | contact sheets, 30 frames each; the first frame is half a step in, then one every step |
@@ -28,8 +28,14 @@ Everything is the Python standard library (3.9+, macOS and Windows). OpenCV is u
 | `final <W> <release dir> <name> [--lufs -14] [--reuse-render]` | full render, AAC delay measured and removed, loudness set, atomic write, `sync` |
 | `sync <base> <final>` | the speech of the result against the source; exit 1 outside 10 ms |
 | `index <W>` | rebuilds the scene and layout lists (frame/draft/final do it themselves) |
+| `vertical-init <W> [--spans F] [--renew]` | puts the vertical set `src/vertical/` into the folder; never overwrites scenes or your data |
+| `vertical-check <W> [c1 ...] [--step 0.1667]` | vertical clips: types, bundle, the audit of every frame in the browser, sheets with the real second on each frame; exit 1 on findings |
+| `vertical-final <W> <dest> [c1 ...]` | vertical clips: render, sound from the clean speech, measuring of the finished file (format, tracks, -14 LUFS, tail, hum, the call to action); exit 1 on failure |
+| `vertical-sheets <dest> [--step 2]` | sheets from the finished vertical files themselves and the tail of each |
 
-Exit codes: 0 done, 1 a check found a problem (`sync`, `final`), 2 an error with a stated reason.
+Exit codes: 0 done, 1 a check found a problem (`sync`, `final`, `vertical-check`, `vertical-final`), 2 an error with a stated reason.
+
+A horizontal video recut into 9:16 clips with graphics (the `vertical-*` commands): `vertical.md`.
 
 `prepare` refuses to start when: the frame is not 16:9; there is no sound; less than 8 GB is free (`OVERLAY_MIN_FREE_GB` changes the limit); the folder is not absolute; on macOS the folder is inside `~/Documents`, `~/Desktop` or iCloud Drive (iCloud unloads files and the render hangs at 0 % CPU); the words reach further than the video (they belong to another recording). A 4K or 50 fps 16:9 video is converted to 1920x1080 at 30 fps in the working copy.
 
@@ -121,9 +127,12 @@ Sound: the speech unchanged; the pad (only if one was passed) at 0.055; service 
   "rim": "0 0 0 1px rgba(199,201,204,.2), inset 0 1px 0 rgba(255,255,255,.08)",
   "shadow": "0 40px 90px rgba(0,0,0,.55)",
   "shine": "linear-gradient(100deg,#9A9DA2 0%,#E0E2E5 30%,#FFFFFF 42%,#E0E2E5 54%,#9A9DA2 100%)",
-  "radius": { "block": 26, "card": 22, "inner": 15, "pill": 999 }
+  "radius": { "block": 26, "card": 22, "inner": 15, "pill": 999 },
+  "mark": "0 0 0 2.5px #FFFFFF, 0 0 0 4px rgba(14,14,16,.7)"
 }
 ```
+
+`mark` is the one frame that highlights a place on a screenshot in vertical clips (`MARK` in `src/vertical/VKit.tsx`); omitted, a thin neutral ring is used. A brand colour for it belongs in the design's tokens, not in code.
 
 The video is a dark stage: `muted`, `faint`, `white` are light on dark (the ordinary `muted` of a light page would be unreadable, so it is not borrowed). `ok` is the only coloured token.
 
@@ -166,5 +175,6 @@ Take everything that is known and create. The design comes as the format's profi
 - `tools/overlay.py` and `tools/overlaylib/`: the command line, one module per job.
 - `tools/capture-guide.md`, `capture-receiver.mjs`, `capture-snippet.js`, `capture-render.mjs`: capturing real screens. `tools/add-logos.mjs`: logos on request.
 - `template/`: the Remotion project (`src/kit` is the toolbox, `src/scenes` the segments, `src/data` the data), the pinned `package-lock.json`, fonts, four sounds.
+- `vertical.md`: the vertical cut (clips 9:16): order of work, rules of the frame, the call to action, sound, covers. `template/src/vertical/` is its set, `examples/vertical/c1.tsx` a sample scene, `tools/vertical-frames.mjs` the frame audit.
 - `brief-template.md`: the brief for scene executors.
 - `examples/`: four neutral scenes (`seg-a.tsx`, `layouts-a.ts`), a demo screen and a words file that fit together. `overlay.py example <W>` installs them.

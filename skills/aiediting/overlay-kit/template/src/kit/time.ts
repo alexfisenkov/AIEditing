@@ -36,7 +36,14 @@ export const toNew = (o: number) => {
   return next ? next[0] : ROWS[ROWS.length - 1][1];
 };
 
-export const useT = () => toOld(useCurrentFrame() / FPS);
+// A vertical clip lays its own map over this: frame of the clip -> second of the source file (vertical/VRoot.tsx).
+// The long video never sets one, so for it nothing changes.
+let frameToNew: (frame: number) => number = (f) => f / FPS;
+export const setFrameMap = (map: (frame: number) => number) => {
+  frameToNew = map;
+};
+
+export const useT = () => toOld(frameToNew(useCurrentFrame()));
 
 // 0 to 1 from moment a over dur seconds with the signature ease-out
 export const ease = (t: number, a: number, dur = 0.7, fn = EASE) =>

@@ -21,6 +21,7 @@ DEFAULT_RADIUS = {"block": 26, "card": 22, "inner": 15, "pill": 999}
 CHROME_STOPS = [0, 40, 62, 100]  # where the four stops of the chrome gradient sit, as in the reference look
 SHADOW = "0 40px 90px rgba(0,0,0,.55)"
 LINE = "rgba(255,255,255,.14)"
+MARK = "0 0 0 2.5px #FFFFFF, 0 0 0 4px rgba(14,14,16,.7)"  # the frame that marks a place on a screenshot, when the design names none
 
 _LATIN_WIDE = "U+0000-03FF,U+2000-206F,U+20AC"
 _CYR = "U+0400-04FF,U+2116"
@@ -128,6 +129,13 @@ def _faces_for(role: str, spec: Dict, root: Path, work: Path, tokens: Dict, trie
     return family, []
 
 
+def mark_of(tokens: Dict) -> str:
+    """"overlay.mark" of the design (a CSS box-shadow), else the neutral ring."""
+    block = tokens.get("overlay")
+    value = block.get("mark") if isinstance(block, dict) else None
+    return value if isinstance(value, str) and value.strip() else MARK
+
+
 def check(design: Path) -> None:
     """Fail on a broken or incomplete design before anything is written."""
     tokens, _ = load_tokens(design)
@@ -156,6 +164,7 @@ def build(design: Path, work: Path, logo: Optional[str]) -> str:
         "FONT": {role: "'{}',{}".format(families[role], STACKS[role]) for role in STACKS},
         "R": {k: radius[k] for k in RADIUS_KEYS},
         "RIM": surfaces["rim"], "SHADOW": surfaces["shadow"], "SHINE": surfaces["shine"],
+        "MARK": mark_of(tokens),
         "families": families, "fonts": faces, "logo": logo,
     }
     write_atomic(work / "src" / "data" / "design.json", json.dumps(data, ensure_ascii=False, indent=2) + "\n")

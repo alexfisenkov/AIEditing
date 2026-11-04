@@ -56,11 +56,11 @@ def duration_of(path: Path) -> float:
         raise ToolError("Не удалось узнать длительность: {}".format(path))
 
 
-def check_16x9(info: Dict) -> None:
+def check_16x9(info: Dict, need_sound: bool = True) -> None:
     if abs(info["width"] / info["height"] - 16 / 9) >= 0.02:
         raise ToolError("Кадр {}x{}, а наложения рассчитаны на 16:9. "
                         "Подготовьте запись 16:9 (в ролике 9:16 раскладки спикера не работают).".format(info["width"], info["height"]))
-    if not info["audio"]:
+    if need_sound and not info["audio"]:
         raise ToolError("В видео нет звука: без речи нечего сверять. Передайте запись со звуком.")
 
 
@@ -73,7 +73,24 @@ def _identity(video: Path) -> Dict:
     return {"size": st.st_size, "mtime": int(st.st_mtime)}
 
 
-def make_copies(video: Path, info: Dict, work: Path) -> bool:
+def check_speech(speech: Path, video_seconds: float) -> None:
+    """--speech must be the speech of this very video: the same length (to a third of a second)."""
+    if not Path(speech).is_file():
+        raise ToolError("--speech: нет файла {}".format(speech))
+    if not probe_audio(speech):
+        raise ToolError("--speech: в файле {} нет звука.".format(speech))
+    have = duration_of(Path(speech))
+    if abs(have - video_seconds) > 0.35:
+        raise ToolError("--speech: чистая речь длится {:.2f} с, а видео {:.2f} с. Это речь другой записи или обрезанная: нужна ровно та же, "
+                        "иначе отрезки поедут.".format(have, video_seconds))
+
+
+def probe_audio(path: Path) -> bool:
+    out = run(["ffprobe", "-v", "error", "-select_streams", "a:0", "-show_entries", "stream=codec_type", "-of", "csv=p=0", path], "Звук " + str(path)).stdout
+    return "audio" in out
+
+
+def make_copies(video: Path, info: Dict, work: Path, speech_src: Optional[Path] = None) -> bool:
     """public/clips/source.mp4 (picture only, key frame every 15) and speech.wav. Done files are kept for the same
     video. Another video under the same folder (say, re-edited after a remark) replaces them: True then."""
     clips = work / "public" / "clips"
@@ -109,10 +126,12 @@ def make_copies(video: Path, info: Dict, work: Path) -> bool:
         ffmpeg(*args, "-c:v", "libx264", "-preset", "medium", "-crf", "15", "-g", "15", "-pix_fmt", "yuv420p", tmp,
                what="Рабочая копия видео")
         _replace(tmp, source)
-    if not speech.is_file():
+    if speech_src is not None or not speech.is_file():  # a clean speech that was passed always replaces the sound of the video
         tmp = clips / "speech.part.wav"
-        ffmpeg("-i", video, "-map", "0:a:0", "-c:a", "pcm_s16le", "-ar", "48000", tmp, what="Речь в WAV")
+        ffmpeg("-i", speech_src or video, "-map", "0:a:0", "-c:a", "pcm_s16le", "-ar", "48000", tmp, what="Речь в WAV")
         _replace(tmp, speech)
+        if speech_src is not None:
+            say("Речь взята из {}, а не из звука видео.".format(speech_src))
     mark.parent.mkdir(parents=True, exist_ok=True)
     mark.write_text(json.dumps(_identity(video)), encoding="utf-8")
     return replaced

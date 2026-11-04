@@ -1,0 +1,9 @@
+{
+  "rate": 1.2,
+  "cta_lead": 2.0,
+  "cta_tail": 4.0,
+  "cta": { "lead": "Want the full lesson?", "before": "Write", "word": "LESSON", "after": "and I will send the link" },
+  "safe": "reels",
+  "spans": { "c1": [[0.0, 12.0]] },
+  "names": { "c1": "Example clip" }
+}

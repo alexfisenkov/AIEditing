@@ -22,6 +22,9 @@ export const RIM = design.RIM;
 export const SHADOW = design.SHADOW;
 export const SHINE = design.SHINE;
 
+// The frame that marks a place on a screenshot: "overlay.mark" in the design's tokens.json, a neutral ring when there is none
+export const MARK: string = (design as { MARK?: string }).MARK ?? "0 0 0 2.5px #FFFFFF, 0 0 0 4px rgba(14,14,16,.7)";
+
 // A token colour with transparency: tint(C.silver, 0.2). A colour not written as #RRGGBB is used as it is.
 export const tint = (color: string, alpha: number): string => {
   const m = /^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(color);

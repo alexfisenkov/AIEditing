@@ -67,12 +67,15 @@ def run_prepare(args) -> int:
     if not args.no_install:
         check_node()
     info = media.probe(video)
-    media.check_16x9(info)
+    speech = Path(args.speech).expanduser() if getattr(args, "speech", None) else None
+    media.check_16x9(info, need_sound=speech is None)
+    if speech is not None:
+        media.check_speech(speech, info["duration"])
     design_mod.check(Path(args.design))  # a broken design or wrong words stop here, before any file is written
     words.check_words(Path(args.words).expanduser(), info["duration"])
 
     scaffold.deploy_template(work)
-    replaced = media.make_copies(video, info, work)
+    replaced = media.make_copies(video, info, work, speech)
     n_words = words.install_words(Path(args.words).expanduser(), info["duration"], work)
     face_note = face.build_track(work / "public" / "clips" / "source.mp4", work, again=replaced)
     logo = scaffold.add_logo(work, args.logo)

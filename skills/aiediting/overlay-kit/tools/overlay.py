@@ -28,7 +28,7 @@ if (__name__ == "__main__" and not os.environ.get("AIEDITING_IN_VENV") and sys.p
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from overlaylib import commands, final, prepare  # noqa: E402
+from overlaylib import commands, final, prepare, vertical  # noqa: E402
 from overlaylib.common import ToolError, stdout_utf8  # noqa: E402
 
 
@@ -49,6 +49,7 @@ def build_parser() -> argparse.ArgumentParser:
     sp.add_argument("--logo", help="логотип SVG или PNG для углового знака")
     sp.add_argument("--sfx", help="папка со своими звуками (имена как в src/kit/Sound.tsx)")
     sp.add_argument("--music", help="файл тихой музыки-подложки; без него фона нет")
+    sp.add_argument("--speech", help="чистая речь WAV той же длины, что видео: она станет public/clips/speech.wav вместо звука видео")
     sp.add_argument("--no-install", action="store_true", help="не ставить npm-пакеты (тесты)")
 
     sp = add("frame", commands.cmd_frame, "контрольные кадры: out/frames/<секунда>.jpg", "work")
@@ -72,6 +73,22 @@ def build_parser() -> argparse.ArgumentParser:
     add("index", commands.cmd_index, "пересобрать списки сцен и раскладок (делают сами frame/draft/final)", "work")
     sp = add("example", commands.cmd_example, "положить нейтральный образец из examples/ как сегмент A", "work")
     sp.add_argument("--force", action="store_true", help="заменить уже заполненный сегмент A")
+
+    sp = add("vertical-init", vertical.run_init, "положить набор для вертикальных клипов (src/vertical) в рабочую папку", "work")
+    sp.add_argument("--spans", help="свой spans.json (отрезки, скорость, призыв)")
+    sp.add_argument("--renew", action="store_true", help="обновить файлы набора; сцены c<N>.tsx не трогаются никогда")
+    sp = add("vertical-check", vertical.run_check, "вертикаль: типы, сборка, покадровая проверка в браузере, листы кадров", "work")
+    sp.add_argument("ids", nargs="*", help="клипы (c1 c2 ...); без них все")
+    sp.add_argument("--step", type=float, default=1 / 6, help="шаг проверки, секунд (по умолчанию 0.1667)")
+    sp = add("vertical-final", vertical.run_final, "вертикаль: рендер, звук из чистой речи, проверка готового файла", "work", "dest")
+    sp.add_argument("ids", nargs="*", help="клипы (c1 c2 ...); без них все")
+    sp.add_argument("--lufs", type=float, default=-14.0, help="целевая громкость (по умолчанию -14)")
+    sp.add_argument("--hum-accepted", metavar="ОСНОВАНИЕ", help="находка про гул становится предупреждением, основание печатается в итоге (решение человека)")
+    sp = add("vertical-words", vertical.run_words, "вертикаль: слова клипа в секундах файла, сцены и ролика (для папки с картой времени)", "work")
+    sp.add_argument("ids", nargs="*", help="клипы (c1 c2 ...); без них все")
+    sp.add_argument("--words", help="файл слов «секунда слово» в секундах файла public/clips/source.mp4 (по умолчанию raw/words.txt)")
+    sp = add("vertical-sheets", vertical.run_sheets, "вертикаль: листы из самих готовых файлов и хвост каждого ролика", "dest")
+    sp.add_argument("--step", type=float, default=2.0, help="шаг между кадрами листа всего ролика, секунд (по умолчанию 2)")
     return p
 
 
@@ -83,6 +100,8 @@ def main(argv=None) -> int:
         if extra:  # seconds written after an option: argparse leaves them over
             if ns.command in ("frame", "frames") and all(re.fullmatch(r"\d+(?:\.\d+)?", x) for x in extra):
                 ns.seconds = list(ns.seconds) + extra
+            elif ns.command in ("vertical-check", "vertical-final", "vertical-words") and all(re.fullmatch(r"c\d+", x) for x in extra):
+                ns.ids = list(ns.ids) + extra
             else:
                 parser.error("неизвестные аргументы: " + " ".join(extra))
     except SystemExit as exc:

@@ -12,13 +12,18 @@ LOGO_EXT = {".svg", ".png"}
 SEG_ID = re.compile(r"^[a-z0-9]+$")
 
 
+def _vertical_apart(folder: str, names: List[str]) -> List[str]:
+    """src/vertical is the vertical set: `vertical-init` puts it in, `prepare` does not (a long video does not carry it)."""
+    return ["vertical"] if Path(folder) == TEMPLATE / "src" else []
+
+
 def deploy_template(work: Path) -> bool:
     """Copy the template once. A folder that already has it is left alone: scenes are the person's work."""
     if (work / "src" / "scenes" / "seg-a.tsx").is_file():
         say("Шаблон уже развёрнут, сцены не трогаю.")
         return False
     work.mkdir(parents=True, exist_ok=True)
-    shutil.copytree(str(TEMPLATE), str(work), dirs_exist_ok=True)
+    shutil.copytree(str(TEMPLATE), str(work), dirs_exist_ok=True, ignore=_vertical_apart)
     return True
 
 
