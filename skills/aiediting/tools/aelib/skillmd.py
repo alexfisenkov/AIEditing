@@ -12,7 +12,8 @@ APPROVAL = {
     "auto": "«Без вопросов»: the person asked to see the finished video and nothing before it. See «Without questions».",
 }
 METHOD_IF = {"editor.md": lambda p: "cut_spans" in p["steps"], "no-questions.md": lambda p: True,
-             "graphics.md": lambda p: "graphics" in p["steps"]}
+             "graphics.md": lambda p: "graphics" in p["steps"],
+             "takes.md": lambda p: bool((p.get("params") or {}).get("clean_speech"))}
 ASR = {"whispercpp": "none — local whisper.cpp", "scribe": "ElevenLabs Scribe",
        "openai_compat": "the OpenAI-compatible address in profile.json", "command": "whatever your own command does"}
 

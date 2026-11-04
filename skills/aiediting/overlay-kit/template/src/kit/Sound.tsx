@@ -6,6 +6,7 @@ import React from "react";
 import { Audio, Sequence, staticFile } from "remotion";
 import sfx from "../data/sfx.json";
 import { FPS } from "./tokens";
+import { toNewExact } from "./time";
 import { DURATION } from "../data/layouts";
 
 export const VOL = {
@@ -59,7 +60,7 @@ export const SoundTrack: React.FC<{ cues: readonly Cue[] }> = ({ cues }) => (
       const file = fileFor(name);
       if (!file) return null;
       return (
-        <Sequence key={i} from={Math.round(t * FPS)} durationInFrames={FPS * 4} layout="none">
+        <Sequence key={i} from={Math.round((toNewExact(t) ?? -9999) * FPS)} durationInFrames={FPS * 4} layout="none">
           <Audio src={staticFile(file)} volume={VOL[name]} />
         </Sequence>
       );

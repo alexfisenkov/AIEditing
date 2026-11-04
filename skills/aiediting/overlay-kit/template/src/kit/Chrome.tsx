@@ -2,7 +2,7 @@
 import React from "react";
 import { CHAPTERS, DURATION } from "../data/layouts";
 import { C, FONT } from "./tokens";
-import { ease, useT } from "./time";
+import { ease, toNew, useT } from "./time";
 import { Logo } from "./Logo";
 
 export const Frame: React.FC = () => {
@@ -20,13 +20,13 @@ export const Frame: React.FC = () => {
       </div>
       {/* Progress strip: fills with time, chapter marks */}
       <div style={{ position: "absolute", left: x0, top: 1048, width, height: 2, background: "rgba(255,255,255,.2)", borderRadius: 2 }}>
-        <div style={{ width: `${(t / DURATION) * 100}%`, height: 2, background: C.white, borderRadius: 2, boxShadow: "0 0 10px rgba(255,255,255,.75)" }} />
+        <div style={{ width: `${(toNew(t) / DURATION) * 100}%`, height: 2, background: C.white, borderRadius: 2, boxShadow: "0 0 10px rgba(255,255,255,.75)" }} />
         {CHAPTERS.map((c) => (
           <div
             key={c.t}
             style={{
               position: "absolute",
-              left: (c.t / DURATION) * width - 3,
+              left: (toNew(c.t) / DURATION) * width - 3,
               top: -2,
               width: 6,
               height: 6,
@@ -39,7 +39,7 @@ export const Frame: React.FC = () => {
       <div
         style={{
           position: "absolute",
-          left: x0 + (ch.t / DURATION) * width,
+          left: x0 + (toNew(ch.t) / DURATION) * width,
           top: 1012,
           opacity: label,
           transform: `translateX(${(1 - label) * -14}px)`,

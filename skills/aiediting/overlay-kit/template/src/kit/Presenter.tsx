@@ -8,12 +8,46 @@ import { ease, lerp, useT } from "./time";
 
 const TRANSITION = 0.85;
 
-// Face position at time t (the track is smoothed, 0.5 s step)
-const faceAt = (t: number) => {
-  const pts = face as number[][];
-  const i = Math.min(Math.max(0, Math.floor(t * 2)), pts.length - 1);
-  return { cx: pts[i][1], cy: pts[i][2], fh: pts[i][3] };
+// The camera follows the face without steps: the 0.5 s track is cleaned by a median, smoothed by a Gaussian
+// and read with a spline between points. Never read the nearest point: that makes the frame walk in visible steps.
+const STEP = 0.5;
+const track = (col: number, sigmaSec: number) => {
+  const raw = (face as number[][]).map((p) => p[col]);
+  const med = raw.map((_, i) => {
+    const w = raw.slice(Math.max(0, i - 2), i + 3).sort((a, b) => a - b);
+    return w[w.length >> 1];
+  });
+  const sigma = sigmaSec / STEP;
+  const radius = Math.ceil(sigma * 3);
+  const kernel = Array.from({ length: radius * 2 + 1 }, (_, k) => Math.exp(-((k - radius) ** 2) / (2 * sigma * sigma)));
+  return med.map((_, i) => {
+    let sum = 0;
+    let weight = 0;
+    for (let k = -radius; k <= radius; k++) {
+      const j = i + k;
+      if (j < 0 || j >= med.length) continue;
+      sum += med[j] * kernel[k + radius];
+      weight += kernel[k + radius];
+    }
+    return sum / weight;
+  });
 };
+const CX = track(1, 2);
+const CY = track(2, 2);
+const FH = track(3, 4);
+
+const spline = (a: number[], t: number) => {
+  const x = Math.max(0, Math.min(a.length - 1.001, t / STEP));
+  const i = Math.floor(x);
+  const u = x - i;
+  const p0 = a[Math.max(0, i - 1)];
+  const p1 = a[i];
+  const p2 = a[i + 1];
+  const p3 = a[Math.min(a.length - 1, i + 2)];
+  return 0.5 * (2 * p1 + (p2 - p0) * u + (2 * p0 - 5 * p1 + 4 * p2 - p3) * u * u + (3 * p1 - p0 - 3 * p2 + p3) * u * u * u);
+};
+
+const faceAt = (t: number) => ({ cx: spline(CX, t), cy: spline(CY, t), fh: spline(FH, t) });
 
 type Rect = { x: number; y: number; w: number; h: number; r: number; s: number; px: number; py: number; ring: number };
 

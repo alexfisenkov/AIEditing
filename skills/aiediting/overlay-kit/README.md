@@ -79,6 +79,21 @@ A design system named for this video replaces the tokens and the mark for this r
 - Real frames carry the speaker and the audience's view of the product, nothing else. Switch the product to the audience's view before capturing; cut owner-only blocks (see the capture guide); never capture other people's personal data.
 - Pace: a new event every 6-10 seconds, each readable. The speaker fills the whole frame at least a quarter of the time.
 
+Lessons from a 73-marker review of a finished video. Each one is a rule now:
+
+- Do not fan or crowd a set of cards: spread them over the whole frame with the speaker in a circle.
+- What is said is what is shown. "Presentations" needs real slides, "videos" the videos themselves, a named student their real work with their name. Look for the material in the person's chats and bases first; a card with words comes last. A link in a remark is meant to be downloaded and shown; credit someone else's video with its author's name.
+- Neighbouring items show different screens, never the same frame twice in a row.
+- A slide or carousel frame is shown whole from afar first and only then zoomed: a close crop reads as some other element.
+- What is shown fits in the frame. If a recording cuts it off, take it from its real source.
+- Find a button on the screen recording, not from memory; name and highlight it from the same frame.
+- Hold a full-screen prompt for as long as the speaker reads it: its end is when they look at the camera again, not the last word.
+- The camera never walks in steps. Read the face track with a spline, never the nearest point; check that the frame moves less than 1 px per frame through the whole video.
+
+## Clean speech and edits by markers
+
+A video cut from several takes, and any cuts by the person's markers: `takes-and-markers.md`. A format where the recording stays whole does not cut; it can still read picture remarks with `tools/markers.py`.
+
 ## Layouts and the language of motion
 
 Layouts: `full`, `close`, `right`, `left`, `half`, `pip`, `pipL`, `pipTop`. A change sits at the start of a phrase, with the sound `whoosh-soft`, and takes 0.85 s. Alternate: the speaker full frame with corner cards, then the speaker at the side with big graphics, then the circle with a full-screen diagram or real screen. Things appear out of blur, a shine runs along the edge, pulses run along lines; no jumps.

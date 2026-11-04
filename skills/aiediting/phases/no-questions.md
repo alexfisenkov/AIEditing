@@ -66,6 +66,7 @@ ask its questions. Set them: `ae.py profile set <skill> steps=[...] params.x=...
 | They said or the frames show | The format |
 |---|---|
 | no cuts, and graphics, overlays, «красиво», «вау» | `--preset overlay` |
+| several takes or repeats, a long video for a channel, and graphics | `--preset youtube-graphics` |
 | no cuts, or a silent stretch that shows something («молча показываю»), and nothing about graphics | no `cut_spans`, no `graphics`: `steps=["loudnorm","write_srt"]` |
 | anything else | that format or `custom`; `graphics` added when they asked for graphics |
 

@@ -23,6 +23,8 @@ the file before `prepare`. A recording that ends mid-word ends so, when the pers
 design's colour rules hold: a design with an accent and no «ok» uses the accent for that token. Nothing here is a reason
 to ask.
 
+`<skillDir>/design/sources.md`, when it exists, says where this person's materials live: read it before the scenes.
+
 The working folder lies outside the issue folder because rendering from a cloud-synced folder hangs: it is the one place
 this step writes elsewhere. The Node packages and the renderer's browser come on the first run; those downloads, the
 logos and the pages the person named are the only network this step uses, besides the recogniser.
