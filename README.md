@@ -103,7 +103,7 @@ The list offers six formats, under these words; anything else you name becomes y
 |---|---|
 | эфир (stream) | barely touches it: blur over secrets, loudness, `.srt` beside the video |
 | урок (lesson) | cuts pauses and "uh", chapter plates, `.srt` beside the video |
-| youtube | an episode, with chapters |
+| youtube | an episode with chapters; you approve the plan once, part-by-part approval is not built yet |
 | вертикаль (vertical) | 9:16, speech without pauses, burned-in captions, export for three platforms, clips up to 60 s from a long recording |
 | наложения (overlays) | the speech stays whole, without a single cut; graphics and real screens on top |
 | ютуб (YouTube with graphics) | clean speech from your takes, graphics and real screens on top, remarks by Final Cut markers |
@@ -152,7 +152,7 @@ suggests running AIEditing to refine the format.
 |---|---|
 | interviews you and builds a format skill from your answers, or takes one message if you ask for no questions | publishes, uploads or sends anything |
 | edits **one trial piece** of your source to show you; without questions, the whole recording | voices, generates video, music or images |
-| installs only the tools your formats need, by pinned versions, after your yes (asking for no questions is that yes, and each is named at the end) | asks for a key or prints one |
+| installs only the tools your formats need, at an exact version or a tested minimum, after your yes (asking for no questions is that yes, and each is named at the end) | asks for a key or prints one |
 | keeps the previous version of a skill and restores it in one command | puts into a skill anything you did not choose |
 
 ---
