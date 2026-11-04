@@ -1,4 +1,5 @@
 """Paths of a format, the re-edit as one of them, and a workshop that stays open to any editing skill."""
+import importlib.util
 import json
 import os
 import shutil
@@ -19,6 +20,7 @@ AE = SKILL / "tools" / "ae.py"
 PRESETS = SKILL / "templates" / "profiles"
 CATALOG = json.loads((SKILL / "catalog" / "formats.json").read_text(encoding="utf-8"))["formats"]
 STEPS = json.loads((SKILL / "catalog" / "steps.json").read_text(encoding="utf-8"))["steps"]
+needs_pillow = unittest.skipUnless(importlib.util.find_spec("PIL"), "нет Pillow: путь с полями его требует")
 
 
 def draft_of(word, **changes):
@@ -546,7 +548,7 @@ class Pipeline(TempDirCase):
         from runtime.pipelines.errors import PipelineError
         from runtime.pipelines.reedit import _names
 
-        ctx = types.SimpleNamespace(src=Path("а:б?.mp4"))
+        ctx = types.SimpleNamespace(src=types.SimpleNamespace(stem="а:б?"))  # Path would read «а:» as a drive on Windows
         self.assertEqual(_names(ctx, [{"id": "c1"}]), {"c1": "а б -c1"})
         for one, other in (("Урок", "урок"), ("Урок?", "урок"), ("Зой", "Зой")):
             with self.assertRaises(PipelineError):
@@ -600,7 +602,7 @@ class Pipeline(TempDirCase):
             payload["chosen"] = ["c01"]
 
         report = self.run_it(answer=long_one)
-        self.assertTrue(any("больше params.max_seconds" in n for n in report["notes"]), report["notes"])
+        self.assertTrue(any("рекомендованных params.max_seconds, но не запрет" in n for n in report["notes"]), report["notes"])
 
     def refused(self, video, steps=("reedit",), **params):
         from runtime import pipelines
@@ -655,6 +657,7 @@ class Trial(Workshop):
         clip = make_av(self.tmp / "ролик.mp4", [(0.2, 1.0)], 1.5, size="180x320")
         self.ae("show", "монтаж-нарезка", clip, "--variant", "reedit")
 
+    @needs_pillow
     def test_a_way_of_ones_own_is_probed_shown_beside_the_others_and_can_be_turned_down(self):
         self.ae("profile", "set", "монтаж-нарезка", 'steps=["reedit"]', "params.covers=2")
         self.ae("variant", "монтаж-нарезка", "--own", "кружок")
@@ -681,6 +684,7 @@ class Trial(Workshop):
         self.assertEqual(out.returncode, 1)
         self.assertIn("--start", out.stdout)
 
+    @needs_pillow
     def test_one_answer_serves_every_probe_and_each_path_has_its_own_folder(self):
         answers = self.answers("один.json")
         self.ae("trial", "монтаж-нарезка", self.src, "--variant", "bands", "--answers", answers)
@@ -703,6 +707,7 @@ class Trial(Workshop):
         self.assertEqual((row["n"], row["variant"], row["title"], row["probe"]), ("01", "reedit", "Перемонтаж под вертикаль", True))
         self.assertNotEqual((self.state().get("waiting") or {}).get("kind"), "trial", "a probe asks nothing by itself")
 
+    @needs_pillow
     def test_a_probe_of_the_fields_is_one_clip_without_a_teaser_and_hears_nothing_twice(self):
         self.probe_reedit()
         self.assertEqual(self.ae("trial", "монтаж-нарезка", self.src, "--variant", "bands", ok=False).returncode, 3)

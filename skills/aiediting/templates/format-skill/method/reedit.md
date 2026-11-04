@@ -5,7 +5,8 @@ video») and writes into the issue folder `отрывки.json`, the stretches o
 `слова-таймкоды.txt`, both in seconds of the whole source. The clips are made on top of them: **read
 `<skillDir>/design/overlay-kit/vertical.md` and follow its order of work and its rules of the frame**, with
 `python "<skillDir>/design/overlay-kit/tools/overlay.py"` as its command. The clips in `отрывки.json` are already chosen, so
-its first step only checks them against the sentence and the length.
+its first step only checks them against the sentence and the length. On this path `params.max_seconds` is a recommendation, not
+a limit: a clip may run longer when its thought needs it, and the report says so; never cut a thought to fit.
 
 `<skillDir>/design/sources.md`, when it exists, says where this person's materials live: read it now, before the question below.
 A folder older than this kit stops `vertical-check` on the types: give it `tint` in `kit/tokens.ts` and `data/design.json` by the

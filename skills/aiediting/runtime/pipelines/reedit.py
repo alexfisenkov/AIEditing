@@ -100,7 +100,7 @@ def _notes(ctx, spans: Dict) -> None:
     for piece in ctx.pieces:
         total = length(piece["keep"]) / rate + spans["cta_tail"]
         if total > float(ctx.p("max_seconds", 60)):
-            ctx.note("{}: готовый ролик выйдет на {:.0f} с вместе с хвостом, больше params.max_seconds".format(piece["id"], total))
+            ctx.note("{}: готовый ролик выйдет на {:.0f} с вместе с хвостом, это дольше рекомендованных params.max_seconds, но не запрет".format(piece["id"], total))
     if ctx.p("cta") and spans["cta"] is not None and not spans["cta"]["word"]:
         ctx.note("В params.cta_parts нет слова, которое пишет зритель (word), а в params.cta призыв есть: сверьте их")
     if spans["cta"] is None:

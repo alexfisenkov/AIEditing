@@ -40,6 +40,9 @@ def _description(profile: dict) -> str:
             "folder. Use when the user says «смонтируй как {w}» or «{n}». A bare «смонтируй <путь>» names no "
             "format: with several монтаж-* skills installed, ask which format first, do not assume this one. Never "
             "publishes, voices or generates.").format(w=word, n=profile["skill_name"])
+    if "reedit" in profile.get("steps", ()):
+        text += (" Turns a finished horizontal video into vertical clips rebuilt for 9:16, not shot that way: «из горизонтального "
+                 "в вертикальное», «перемонтаж под вертикаль», «нарезка под Reels».")
     return text.replace('"', "'")
 
 
