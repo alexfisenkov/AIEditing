@@ -6,10 +6,6 @@
   </picture>
 </p>
 
-<p align="center">
-  <a href="https://skills.sh/alexfisenkov/AIEditing"><img src="https://skills.sh/b/alexfisenkov/AIEditing" alt="skills.sh"></a>
-</p>
-
 <p align="center"><strong>Покажи один раз, как ты монтируешь, — дальше агент монтирует так сам.</strong></p>
 
 <p align="center"><a href="README.md">English</a> · <b>Русский</b></p>

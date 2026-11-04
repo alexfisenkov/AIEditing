@@ -6,10 +6,6 @@
   </picture>
 </p>
 
-<p align="center">
-  <a href="https://skills.sh/alexfisenkov/AIEditing"><img src="https://skills.sh/b/alexfisenkov/AIEditing" alt="skills.sh"></a>
-</p>
-
 <p align="center"><strong>Show it once how you edit — your agent edits that way from then on.</strong></p>
 
 <p align="center"><b>English</b> · <a href="README.ru.md">Русский</a></p>
