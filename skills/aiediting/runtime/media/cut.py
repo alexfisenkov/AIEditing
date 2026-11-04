@@ -30,8 +30,10 @@ def _graph(spans: Sequence[Tuple[float, float]], video: bool, audio: bool) -> st
     return ";\n".join(parts)
 
 
-def cut_spans(src, spans: List[Tuple[float, float]], out) -> Path:
-    """Writes `out` with only `spans` of `src` (seconds), H.264 yuv420p + AAC, one encode."""
+def cut_spans(src, spans: List[Tuple[float, float]], out, kbps=None) -> Path:
+    """Writes `out` with only `spans` of `src` (seconds), H.264 yuv420p + AAC, one encode.
+
+    `kbps` overrides the source's own bitrate where the result is encoded again later."""
     src, out = ensure_file(src), Path(out)
     spans = [(float(a), float(b)) for a, b in spans if float(b) > float(a)]
     if not spans:
@@ -41,7 +43,7 @@ def cut_spans(src, spans: List[Tuple[float, float]], out) -> Path:
     maps = (["-map", "[vout]"] if video else []) + (["-map", "[aout]"] if audio else [])
     post = maps + (["-c:a", "aac", "-b:a", "192k"] if audio else [])
     post += ["-movflags", "+faststart"]
-    kbps = min(max(info["video_kbps"] or 8000, 2000), 50000)
+    kbps = kbps or min(max(info["video_kbps"] or 8000, 2000), 50000)
     out.parent.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(prefix="aiediting-") as tmp:
         pre = ["-i", src] + graph_args(_graph(spans, video, audio), Path(tmp))

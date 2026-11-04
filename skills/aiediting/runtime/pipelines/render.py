@@ -10,6 +10,8 @@ from .aftercare import after, fit_audio
 from .speed import rate_of
 from .timeline import map_range, to_out
 
+CLIP_KBPS = 16000
+
 
 def _full(ctx, keep) -> bool:
     return len(keep) == 1 and keep[0][0] <= 0.05 and keep[0][1] >= ctx.info["duration"] - 0.05
@@ -34,7 +36,9 @@ def _moves(ctx, keep):
 
 
 def name_of(ctx, piece: Dict) -> Path:
-    stem = ctx.src.stem + ("-" + piece["id"] if piece.get("id") else "")
+    from .bands import clean_name
+
+    stem = clean_name(piece.get("name") or "") or ctx.src.stem + ("-" + piece["id"] if piece.get("id") else "")
     out = ctx.outdir / (stem + ".mp4")
     return ctx.outdir / (stem + "-монтаж.mp4") if out == ctx.src else out
 
@@ -72,7 +76,8 @@ def render_piece(ctx, piece: Dict) -> Dict:
     tmp.mkdir(parents=True, exist_ok=True)
     cur, screen, done = ctx.src, ctx.screen, {"id": piece.get("id")}
     if not _full(ctx, keep):
-        cur = media.cut_spans(cur, keep, tmp / "1-склейка.mp4")
+        # a clip of a finished video is encoded several more times: its first pass must not lose the text on screen
+        cur = media.cut_spans(cur, keep, tmp / "1-склейка.mp4", kbps=CLIP_KBPS if piece.get("layout") else None)
         if screen is not None and ctx.motion:
             screen = media.cut_spans(screen, keep, tmp / "1-экран.mp4")
     regions = _regions(ctx, keep) if ctx.has("blur_regions") else []
@@ -85,6 +90,10 @@ def render_piece(ctx, piece: Dict) -> Dict:
         ctx.report["motion"] += moves
     if piece.get("layout"):
         cur = media.vertical(cur, piece["layout"], tmp / "4-вертикаль.mp4")
+        if ctx.has("bands"):
+            from .bands import lay_bands
+
+            cur = lay_bands(ctx, piece, cur, tmp)
     pictures = ctx.has("plate") or ctx.has("overlay_png")  # captions and plates only with their own steps
     items = [i for i in specs(ctx, piece) if pictures or i["kind"] == "animation"] \
         if pictures or ctx.has("animations") else []

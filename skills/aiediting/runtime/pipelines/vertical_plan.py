@@ -6,10 +6,11 @@ from __future__ import annotations
 
 from typing import Dict, List
 
-from .timeline import intersect
+from .timeline import intersect, subtract
 from .vertical_source import stretches
 from .words import quote, spoken
 
+OWN = ("headline", "name", "drop")  # what a clip brings from the person's answer into its piece
 FACE_ROOM = 2.8  # a detected face box is just the face: show head and shoulders
 WINDOW_ROOM = 0.8  # inside a round camera window, so its rim does not show in the corners
 TO_9x16 = {"screen_face_window": "stack", "screen_only": "stack", "face_full": "face",
@@ -29,7 +30,8 @@ def _layout(ctx, start: float, end: float, tag: str) -> Dict:
         g = guess(ctx, start, end, tag)
     kind = g.get("kind")
     if kind in ("stack", "face", "native"):
-        return {"kind": kind, "face": g.get("face"), "screen": g.get("screen"), "room": g.get("room", 1.0)}
+        return {"kind": kind, "face": g.get("face"), "screen": g.get("screen"), "room": g.get("room", 1.0),
+                "background": g.get("background")}
     prefer = ctx.p("vertical_layout")  # "stack" | "face": the profile's choice for a camera window
     out = {"kind": prefer if kind == "screen_face_window" and prefer in ("stack", "face") else
            TO_9x16.get(kind, "stack"), "face": g.get("face"), "screen": g.get("screen")}
@@ -46,15 +48,22 @@ def _warning(ctx, layout: Dict):
     return None
 
 
+def _kept(ctx, item: Dict) -> List:
+    """What stays of a stretch: the format's cut, minus `drop`, the sentences that do not stand alone in a clip."""
+    keep = intersect(ctx.keep, float(item["start"]), float(item["end"]))
+    return subtract(keep, [(float(a), float(b)) for a, b in item.get("drop") or []])
+
+
 def plan_vertical(ctx) -> None:
     pieces = []
     for st in stretches(ctx):
-        keep = intersect(ctx.keep, float(st["start"]), float(st["end"]))
+        keep = _kept(ctx, st)
         lay = _layout(ctx, keep[0][0], keep[-1][1], st["id"]) if keep else None
         if not keep:
             continue
-        pieces.append({"id": st["id"], "start": keep[0][0], "end": keep[-1][1], "said": st.get("said") or
-                       quote(spoken(ctx.transcript())), "layout": lay, "warning": _warning(ctx, lay)})
+        pieces.append(dict({k: st[k] for k in OWN if st.get(k)}, id=st["id"], start=keep[0][0], end=keep[-1][1],
+                           said=st.get("said") or quote(spoken(ctx.transcript())), layout=lay,
+                           warning=_warning(ctx, lay)))
     from .errors import PipelineError
 
     if not pieces:
@@ -64,7 +73,14 @@ def plan_vertical(ctx) -> None:
     if not ok:
         raise PipelineError("План вертикали не утверждён — ролик не собран.")
     ctx.pieces = []
+    from .bands import name_key
+
+    # one file on the disk: the second clip would silently take the place of the first
+    keys = [name_key(p["name"]) for p in data.get("pieces", []) if p.get("name")]
+    same = sorted({p["name"] for p in data.get("pieces", []) if p.get("name") and keys.count(name_key(p["name"])) > 1})
+    if same:
+        raise PipelineError("У двух отрывков одно имя файла: {}".format(", ".join(same)))
     for p in data.get("pieces", []):
         if p.get("warning"):
             ctx.note("{}: {}".format(p["id"], p["warning"]))
-        ctx.pieces.append(dict(p, keep=intersect(ctx.keep, float(p["start"]), float(p["end"]))))
+        ctx.pieces.append(dict(p, keep=_kept(ctx, p)))

@@ -1,7 +1,8 @@
 """Best stretches of a long video for 9:16: whole phrases only, scored by a plain rubric.
 
 Rubric (10 points): hook at the start (question, number, strong word) 0–3; ends on a full stop 0–2;
-speech density 0–2; length in the sweet spot 0–2; starts clean (no hesitation) 0–1.
+speech density 0–2; length in the sweet spot 0–2; starts clean (no hesitation) 0–1. A clip that points at
+something the viewer of a short does not have («под этим видео», «как я уже говорил») loses 3.
 """
 from __future__ import annotations
 
@@ -12,6 +13,9 @@ from .words import norm, phrases, quote
 
 HOOKS = {"почему", "как", "зачем", "секрет", "ошибка", "ошибки", "главное", "важно", "никогда", "всегда",
          "смотрите", "лайфхак", "бесплатно", "быстро", "why", "how", "secret", "mistake", "never"}
+OUTSIDE = re.compile(r"под этим видео|в описании|ниже в|как я (уже )?(говорил|сказал|перечислял)|мы с вами уже|"
+                     r"(в|на) (прошлом|предыдущем|следующем) (видео|уроке|шаге)|below this video|in the description|"
+                     r"as i said", re.I)
 
 
 def _score(ph: List[Dict]) -> Dict:
@@ -25,6 +29,8 @@ def _score(ph: List[Dict]) -> Dict:
     parts = {"hook": min(3, hook), "ending": 2 if re.search(r"[.!?…]$", text.strip()) else 0,
              "density": 2 if rate >= 2.0 else (1 if rate >= 1.4 else 0),
              "length": 2 if 20 <= dur <= 45 else 1, "clean": int(words[0].get("type") != "filler")}
+    if OUTSIDE.search(text):
+        parts["outside"] = -3
     return dict(parts, total=sum(parts.values()))
 
 

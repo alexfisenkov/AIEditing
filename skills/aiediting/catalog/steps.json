@@ -12,12 +12,15 @@
     "plate":            {"what": "рисует плашки глав, подписи и карточки в стиле дизайн-системы", "runtime": ["render"], "tools": ["pillow"]},
     "overlay_png":      {"what": "накладывает плашки и субтитры картинками поверх видео", "runtime": ["media", "render"], "tools": ["ffmpeg", "pillow"]},
     "vertical":         {"what": "собирает 9:16: стек «экран сверху, лицо снизу» или лицо крупно", "runtime": ["media", "look"], "tools": ["ffmpeg", "opencv-python", "numpy", "yunet-model"]},
+    "bands":            {"what": "на полях вокруг горизонтальной картинки в 9:16: сверху заголовок отрывка, снизу постоянный призыв", "runtime": ["media", "render"], "tools": ["ffmpeg", "pillow"]},
+    "teaser":           {"what": "отдельный короткий ролик: чёрный экран, кнопка Play, фрагменты и быстрая перемотка с полосой времени всего видео", "runtime": ["media", "render"], "tools": ["ffmpeg", "pillow"]},
     "export_platforms": {"what": "выгружает версии под Reels, Shorts и TikTok", "runtime": ["media"], "tools": ["ffmpeg"]},
     "music":            {"what": "подкладывает трек из папки-библиотеки человека на −20 дБ", "runtime": ["media"], "tools": ["ffmpeg"]},
     "motion":           {"what": "укрупнения по раскладке и «камера в бок, экран в бок» в утверждённых местах", "runtime": ["media"], "tools": ["ffmpeg"]},
     "verify_words":     {"what": "сверяет готовый ролик повторной расшифровкой: ни одного обрезанного слова", "runtime": ["media", "asr"], "tools": ["ffmpeg"]},
     "animations":       {"what": "анимированные вставки на HyperFrames там, где перечисляют файлы, шаги, пункты или называют число: в углу напротив лица вместо карточки, не чаще раза в 30–60 с", "runtime": ["media", "render", "asr"], "tools": ["ffmpeg", "node", "hyperframes"]},
     "graphics":         {"what": "графика поверх готового видео на Remotion: сцены пишет модель по речи, спикер переезжает между раскладками, время — секунды готового видео, поэтому работает и с нарезкой, и без неё; кадр 16:9", "runtime": ["media", "asr"], "tools": ["ffmpeg", "node", "remotion", "opencv-python", "numpy", "yunet-model"]},
+    "reedit":           {"what": "перемонтаж длинного горизонтального ролика под 9:16 на Remotion: согласует отрывки, отдаёт их модели, а она собирает ролики по методу: спикер ездит снизу, сверху, кружком, та же графика, текст только в безопасных зонах", "runtime": ["media", "asr"], "tools": ["ffmpeg", "node", "remotion", "opencv-python", "numpy", "yunet-model"]},
     "behind_head":      {"what": "эффекты «за головой» при вертикальной съёмке — пока нет: шаг только оставляет заметку в отчёте", "runtime": [], "tools": [], "not_built": true}
   },
   "asr_tools": {

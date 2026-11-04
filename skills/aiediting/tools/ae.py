@@ -5,12 +5,17 @@
     python ae.py no-questions                                       the person asked for no more questions
     python ae.py stage <id> [done|skip] [--note N]                  start|formats|sources|interview|design|trial|build
     python ae.py ask <kind> --note N  ·  answered [--note N]        the workshop waits for the person
-    python ae.py formats "эфир, урок, подкаст" [--preset P]         parse the answer, draft one profile per format
+    python ae.py formats "эфир, урок, подкаст" [--preset P] [--like F]   parse the answer, draft one profile per format
+                                                                    (--like: an own word narrowed from a catalog format, with its paths)
     python ae.py profile set|taste|check|open <skill> …             edit the draft profile in the workshop folder
                                                                     (taste --replace PART: instead of that line)
     python ae.py frames <video> [--n 6]  ·  layout <source-id>      frames and layout on the dashboard
     python ae.py design-example <skill>  ·  samples <skill> [--frame F]
-    python ae.py trial <skill> <video> [--start S --duration D] [--answers F]
+    python ae.py variant <skill> [<id>] [--own WORD] [--keep]       the paths of a format: list them, choose one
+    python ae.py trial <skill> <video> [--start S --duration D] [--answers F] [--variant ID]   --variant: a short probe of that path
+    python ae.py show <skill> <video> [--variant ID]                a clip made by the kit, on the dashboard
+    python ae.py hear <skill> <video>                               what the draft's recogniser hears in a finished clip
+    python ae.py kit <skill> own|renew                              a kit changed after its build: keep it as the format's own, or renew
     python ae.py build-skill <profile.json> <dest> [--replace]
     python ae.py install-skill <built folder>  ·  list-skills [--json]
     python ae.py backup-skill <name>  ·  restore-skill <name> [--backup ID]

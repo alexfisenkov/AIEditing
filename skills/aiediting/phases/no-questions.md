@@ -26,7 +26,8 @@ or it is a visible gap.
 - **They want a video from a format they have, and no change to it** («смонтируй как урок, без вопросов»): no
   workshop. Run that skill as its `SKILL.md` says, with `--no-questions`. Stop reading here.
 - **They want an installed format changed:** `init --mode refine --no-questions --fresh`, `ae.py profile open
-  <skill>`. Its `approval` stays as it is unless they ask.
+  <skill>`. Its `approval` stays as it is unless they ask. A skill with no profile is changed in the copy the command gives and
+  put back with `ae.py install-skill`, by `phases/refine.md`, §1; its own method and kit stay.
 - **An unfinished workshop here, on the same format and source:** `ae.py no-questions`, keep the draft.
   On anything else: `init --mode new --no-questions --fresh`.
 - **A new format:** `python "<skillDir>/tools/ae.py" init --mode new --no-questions --title "<their words>"`.
@@ -47,7 +48,9 @@ the speech names come later, by the kit's order of work, because the speech is n
 | What | Where to look | Nothing found |
 |---|---|---|
 | Design system, when they mentioned a style | the system they named, or for «в нашем стиле» the current project (`design-system/`, `tokens.*`, its `CLAUDE.md`, `AGENTS.md`), then the skills of this session. Several → the one the project's instructions name. The name Chrome & Graphite with no such system in the project: the bundled example | the bundled example, and say so |
-| Design system, when they mentioned none | not looked for: the format's own design, or the bundled example. A format with no visual layer needs none | |
+| Design system, when they mentioned none | not looked for: the format's own design, or the bundled example. A format with no visual layer needs none. A format on the path `reedit`: the design the long video was made in, from its working folder below, because its graphics stay | the bundled example, and say so |
+| Working folder of a long video, when they gave a finished one | what they named; `design/sources.md` of the skill that made it; beside the video; `~/.local/share/overlay-kit/*/*`. It is that video's when it has `public/clips/source.mp4` and the two lengths match within 0.35 s. After `run.py edit` compare its `raw/words.txt` with `слова-таймкоды.txt`: not the same speech, beyond what a recogniser mishears → it is another video's folder: go on as with none, and say so in the list. Whether a bed lies under the speech is in its project; a clean track is `public/clips/speech.wav` only when nothing was mixed into it | none: the path below goes without it, a line in the list |
+| Call to action, before the recognition runs, because the path `reedit` refuses to start with it undecided | their message; the description or script they named; the working folder's `raw/words.txt`, where the long video says it aloud | none: nothing is made up; on `reedit` `params.cta_parts=null`, on `bands` no `params.cta`; a line in the list |
 | The mark in the corner | a file they named, or the logo of the design system they mentioned | no mark; a line in the list |
 | Real materials | a site, product or file they named: only note it here, it is captured later by `overlay-kit/tools/capture-guide.md`, read only. No place for it in the speech: where it fits best, stated in the list | scenes without it; a line in the list |
 | Remarks on a skill being refined | «Замечания для доработки» in `отчёт.md` of its latest issue folder | |
@@ -59,12 +62,13 @@ the speech names come later, by the kit's order of work, because the speech is n
 
 ## 3. Their words become the format
 
-A new format: `ae.py formats "<word>"`, with `--preset overlay` when the first row below holds; then `ae.py profile
+A new format: `ae.py formats "<word>"`, with the start the table below names; then `ae.py profile
 set <skill> approval=auto`. `phases/interview.md`, «Themes», is your reference for steps and parameters; you do not
 ask its questions. Set them: `ae.py profile set <skill> steps=[...] params.x=...`. Take the rows from the top:
 
 | They said or the frames show | The format |
 |---|---|
+| a video already edited, to be turned into shorts or a teaser | the word `нарезка`; an own word: `--like нарезка`; its path by «A format with paths» below |
 | no cuts, and graphics, overlays, «красиво», «вау» | `--preset overlay` |
 | several takes or repeats, a long video for a channel, and graphics | `--preset youtube-graphics` |
 | no cuts, or a silent stretch that shows something («молча показываю»), and nothing about graphics | no `cut_spans`, no `graphics`: `steps=["loudnorm","write_srt"]` |
@@ -75,7 +79,7 @@ Then, for every format:
 | When | Add |
 |---|---|
 | `cut_spans` is in the steps | `verify_words`: the second listening stands in for the person's ear, with a local `params.verify_asr` when the main recogniser is paid or a second local model is at hand: the same model does not catch its own mishearings. Cuts of pauses are safe on any recogniser; cuts inside speech need exact word times, so on local whisper leave `params.wordless` out, keep `params.editor` to what you check by hearing the result again, and say so in the list |
-| a screen is visible | `find_secrets`, `blur_regions`. Local and free; a secret left open cannot be taken back |
+| a screen is visible, on any path but `reedit` | `find_secrets`, `blur_regions`. Local and free; a secret left open cannot be taken back. `reedit` has neither, and refuses them, because the pipeline makes no picture there: secrets are kept out by the crop of each screen and the choice of scenes, by «Screens» in `overlay-kit/vertical.md`, and looked for in the sheets |
 | the frame is not 16:9 and they asked for graphics | no `graphics`; a line in the list |
 
 The design: the system you found goes into `.aiediting-work/<skill>/design/tokens.json`, in the shape of
@@ -83,6 +87,22 @@ The design: the system you found goes into `.aiediting-work/<skill>/design/token
 named file as `logo.svg` or `logo.png`; the bundled example is `ae.py design-example <skill>`. What holds for the
 format goes into the taste, in their words: `ae.py profile taste <skill> "…"`. What concerns this one video stays in
 `решения.md`. So the next video comes out the same way without you deciding again.
+
+**A format with paths: you choose, and you say so.** `ae.py variant <skill>` lists them; `ae.py variant <skill> <id>` takes one,
+before the tools are looked at. Their words decide first (for `нарезка`: «перемонтаж», a speaker who moves, graphics rebuilt →
+`reedit`; «быстро», «как есть» → `bands`). With no such words: the path the material can carry, from what §2 found. A working folder
+of the long video is there → `reedit`; only a finished file → `bands`. Their word for a re-edit with only a finished file: go on, with its
+scenes written anew by the method, unless a bed lies under the speech. A bed is the one case that needs a word nobody gave
+(`vertical-final --hum-accepted`), so it does not go `reedit`: with only a finished file, known in advance or found when `vertical-final`
+fails on the hum, it goes `bands`, whose sound keeps that bed too, and the list says both. With a clean track, or on a clip of nonstop
+talk, that failure is not a bed: the path stays; that clip is not released, and the list says so. Write the path into `решения.md`, and
+into the last message with what the other path would have given.
+
+A rejected path is shown only when its probe is cheap, meaning no new tool and a render shorter than the clip itself: then, after your
+video, one probe of it on the same stretch, `ae.py trial <skill> "<video>" --variant <id>`, its path in the list at the end. `reedit` is not
+cheap, and goes in words. `bands` is, and it needs three things a `reedit` draft may not have: the `headline` of the item, by
+`templates/format-skill/method/clips-headline.md`, in their words; `params.cta` as one text, joined from the parts of `params.cta_parts`, by
+`ae.py profile set`; and `video.band`, `video.teaser` in the tokens, copied from the example when the design lacks them.
 
 ## 4. Tools
 
@@ -105,28 +125,32 @@ change has not been tried. Exit code 3 is for you: the built `SKILL.md`, «Witho
 what it says to look at after a run holds at any exit code. A failed check of the cut is fixed in the profile, and
 the skill is built and run again.
 
-A format with `graphics`: go on by `.aiediting-work/build/<skill>/SKILL.md`, «Graphics». Take the time the method
+A format with `graphics` or `reedit`: go on by `.aiediting-work/build/<skill>/SKILL.md`, «Graphics» or «Re-edit». Take the time the method
 takes, with parallel executors for scenes where your environment has them. On a metered account this is the one real
 cost of the mode: say so at the end.
 
 ## 6. Install and hand over
 
 The call was the request for the skill, so no separate «да». A check you could not fix: the video is not called
-finished, it goes first in the list, and the skill is not installed: its draft stays in the workshop.
+finished, and the skill is not installed: its draft stays in the workshop.
 
 ```bash
 python "<skillDir>/tools/ae.py" install-skill .aiediting-work/build/<skill>
 python "<skillDir>/tools/ae.py" finish --result "<what is installed, one line>"
 ```
 
-Then one message, in their language, from `решения.md`:
+Then one message, in their language, from `решения.md`, in this order:
 
+- what stands in the way of using it, if anything: a check you could not fix, a clip not released, a bed left in the sound, a secret said
+  aloud or left open;
 - where the video is;
+- the path of a format with paths, why, and what the other would have given;
 - what you decided for them: the format, the design system and where it came from, what was cut, the folders;
 - what was checked by frames and by measurement, and that nobody watched it end to end with sound unless you did;
 - secrets: whether they were looked for and that only the recording was searched, in sampled frames, for typical
   patterns, so a search can miss them; which stretches you closed and looked at; what was said aloud stays in the sound
-  and in the text files beside the video;
+  and in the text files beside the video. On `reedit` no search ran: say that they were kept out by crop and choice of scenes, and looked for
+  in the sheets;
 - the pages you opened and the seconds of the video that show them, and that their address stays in that browser's
   history; logos added, with «check the brand's rules before publishing»;
 - tools installed; Remotion's licence when used: free for individuals and teams up to three, paid beyond that, check

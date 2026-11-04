@@ -34,6 +34,11 @@ def _from_recording(ctx, drift: float) -> bool:
     return abs(drift_ms(ctx.src) - drift) < DRIFT_OK
 
 
+def _taken_out(clip: Dict) -> str:
+    drops = clip.get("drop") or []
+    return "; вынуто: " + ", ".join("{}–{}".format(stamp(a), stamp(b)) for a, b in drops) if drops else ""
+
+
 def _body(ctx, r: Dict) -> List[str]:
     lines = ["# Отчёт монтажа", "", "Исходник: {}".format(ctx.src.name),
              "Формат: {}; шаги: {}".format(ctx.profile.get("format", ""), ", ".join(ctx.steps)), "",
@@ -55,13 +60,14 @@ def _body(ctx, r: Dict) -> List[str]:
             stamp(a["at"]), stamp(a["end"]), a["template"], " · ".join(x for x in (a["title"], a["text"]) if x))
             for a in r["animations"]]
     if r["clips"]:
-        lines += ["", "## Отрывки", ""] + ["- {} {}–{}: {}".format(c["id"], stamp(c["start"]), stamp(c["end"]),
-                                                                 c.get("said", "")) for c in r["clips"]]
+        lines += ["", "## Отрывки", ""] + ["- {} {}–{}: {}{}".format(c["id"], stamp(c["start"]), stamp(c["end"]),
+                                                                   c.get("said", ""), _taken_out(c)) for c in r["clips"]]
     sync = "в норме" if r["drift_ms"] < DRIFT_OK else ("так в самой записи, склеек нет" if r.get("drift_in_source") else
                                                        "БОЛЬШЕ НОРМЫ ({:.0f} мс)".format(DRIFT_OK))
     lines += ["", "## Синхрон", "", "- рассинхрон звука и картинки: {:.1f} мс — {}".format(r["drift_ms"], sync)]
     if "words_lost" in r and any(ctx.has(s) for s in ("verify_words",)):
-        lost = ", ".join("«{}» ({})".format(w["text"], stamp(w["at"])) for w in r["words_lost"])
+        lost = ", ".join("«{}» ({}{})".format(w["text"], w["piece"] + " " if w.get("piece") else "", stamp(w["at"]))
+                         for w in r["words_lost"])
         lines.append("- повторная расшифровка: {}".format("ни одно слово не потеряно" if not lost else
                                                          "не слышно: " + lost))
     if getattr(ctx.approve, "auto", False):
@@ -82,7 +88,7 @@ def finish(ctx) -> Dict:
     if rate != 1.0:
         ctx.note("Готовое видео ускорено в {:g} раза: таймкоды глав и субтитров — уже с ускорением, "
                  "вырезанное указано по времени исходника".format(rate))
-    r["clips"] = [{k: p[k] for k in ("id", "start", "end", "said") if k in p} for p in (ctx.pieces or [])]
+    r["clips"] = [{k: p[k] for k in ("id", "start", "end", "said", "drop") if k in p} for p in (ctx.pieces or [])]
     r["drift_in_source"] = _from_recording(ctx, r["drift_ms"])
     if r["drift_ms"] >= DRIFT_OK and not r["drift_in_source"]:
         ctx.note("Рассинхрон {:.0f} мс — больше {:.0f} мс; проверьте склейки".format(r["drift_ms"], DRIFT_OK))

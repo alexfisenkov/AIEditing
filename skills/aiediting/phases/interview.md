@@ -13,7 +13,7 @@ Before it goes out: `ae.py ask question --note "<тема>: <вопросы че
 
 Each answer goes into the draft at once: `python "<skillDir>/tools/ae.py" profile set <skill> <key>=<value>`
 (values are JSON when they parse: `params.gap=0.4`, `steps=["speech_spans","cut_spans"]`,
-`approval="parts"`). After each round `ae.py profile check <skill>`.
+`approval="plan"`). After each round `ae.py profile check <skill>`.
 
 ## Examples on their footage
 
@@ -23,10 +23,41 @@ Each answer goes into the draft at once: `python "<skillDir>/tools/ae.py" profil
   the profile — `ae.py trial <skill> <path> --start S --duration 15` — and the clip is on the dashboard.
 - No source of the needed kind → `phases/sources.md`, «Missing kinds».
 
+## A format with paths: the first question
+
+Before the rounds, one message of your own, built on what you saw in their video and what they have seen elsewhere; not the
+catalog's text read out. Name the paths and what each costs. Offer another where you see one. It ends with the probes, not with
+a decision on words:
+
+```
+Из такого ролика вертикаль можно сделать двумя способами:
+1. Картинка целиком: ваш кадр как есть, с заголовком и призывом сверху и снизу. Быстро, но мелкий текст на экране станет мельче,
+   а звук берётся из готового файла: если под речью подложка, она останется.
+2. Перемонтаж: как в роликах, где спикер то снизу, то сверху, то кружком, а графика пересобрана под вертикаль. Дольше: нужен
+   Remotion (≈700 МБ) и проверка каждого ролика по кадрам.
+Покажу оба на одном вашем отрывке, а вы выберете. Или вам сразу ясно, какой не нужен?
+```
+
+`ae.py ask choice --note "какой путь: пробы или сразу"`. A path they turn down in words is not probed: their word is enough.
+None is chosen here: `ae.py variant` waits for `phases/trial.md`.
+
+**What a probe needs is asked now, before `phases/trial.md`, for every path not turned down.** A probe is a real edit on their
+video and has nothing to guess from:
+
+- `bands`: how much the source is already sped up and the speed wanted; the call to action as one text, or none; in whose words the
+  headline is; the colour of the fields; the design. When they lean to this path, say again that its sound comes from the finished
+  file: a bed under the speech stays in every clip and nothing here takes it out.
+- `reedit`: the call to action in parts, or «без призыва», which is `params.cta_parts=null`, not an empty one; where the working folder
+  of the long video lies, with its scenes, assets and clean speech, and if there is none, whether a bed lies under the speech; how
+  much the source is already sped up and the speed wanted; the design.
+
+Everything else of a path, such as the number of covers or the teaser, is asked once that path is chosen.
+
 ## Themes — the ones this format's steps touch
 
 | Theme | Questions | Profile |
 |---|---|---|
+| Niche and audience | one question, early, for every format: what the niche is and who watches. It decides the tone of whatever goes on screen, how long a piece may be, what is worth showing and which terms stay as they are. Their answer in their words is a taste line, and what it changes goes into the parameters | `ae.py profile taste`, `params.max_seconds`, `params.glossary` |
 | How it is approved | «план → готовый ролик»: every question of the plan first, then the whole video. «По частям» (parts approved one by one, then joined) is not built yet — say «пока нет» if asked | `approval` = `plan`; `auto` when they want the finished video and no questions on every next run |
 | Pauses and cuts | cut or not; pause threshold (0.5 s) and margin (0.12 s); «э-э», «м-м» out, «ну», «вот» stay?; retakes — the last good take, the list to approve; vertical — continuous speech: a stretch with no word longer than 0.25 s is cut, words keep 0.1 s before and 0.12 s after | `steps`, `params.gap`, `params.pad`, `params.fillers_cut`, `params.fillers_keep`, `params.retakes`, `params.word_gap`, `params.word_lead`, `params.word_tail`; «плотно» on a lesson: `params.gap` 0.3, `params.pad` 0.05, `params.editor` true (the agent's pass over the speech), `params.wordless` `cut` (needs a recogniser with exact word times; on local whisper it eats words) |
 | Layout and zoom | per layout from `sources`: zoom on a full face; none on «экран + лицо в окне»; «камера в бок, экран в бок» on separate tracks at moments to show; screen zoom on or off (only a note so far) | `steps` (`detect_layout`, `motion`), `params.layout`, `params.face`, `params.zoom_face`, `params.moves`, `params.zoom_screen` |
@@ -38,6 +69,8 @@ Each answer goes into the draft at once: `python "<skillDir>/tools/ae.py" profil
 | Sound | target loudness (−16 LUFS; −14 for vertical); noise reduction off (not built: `true` only puts a note in the report); music only from their own library folder | `params.lufs`, `params.denoise`, `params.music` |
 | Speed | play the finished video faster? (1.05 — on 5%; the voice keeps its pitch, subtitles and timecodes follow) | `params.speed` |
 | Vertical | source: shot vertically → the whole recording is cut (pauses and bad takes out), as long as it is, no clip pick and no limit; a long horizontal recording → 5–10 scored clips for approval, each up to 60 s; the mode follows the layout of the source (`auto`) unless they say «целиком» (`native`) or «нарезать» (`clips`); stack or face with inserts; burned-in captions; Reels/Shorts/TikTok | `params.vertical_source`, `params.max_seconds`, `params.clips`, `params.layout`, `params.vertical_layout`, `params.captions`, `steps` (`vertical`, `export_platforms`) |
+| From a finished video | **what goes out:** how many clips, how long each, a teaser or not (it keeps the frame of the source; a vertical teaser is not built); **frame:** the picture whole in the centre with fields around it, so nothing of the edit is lost and its small text gets smaller; a crop has no fields, so it has no `bands`; the colour of the fields, dark, because the headline is chrome; **speed:** the rate the person wants is for the speech, so ask how much the source was already sped up: `speed` = wanted ÷ already (1.2 on a source at 1.07 is 1.12); **pauses:** only real silence goes (`gap`): the speech of an edited video is already tight, the picture keeps moving, and a gap between words on local whisper can be the end of a word, so `word_gap` stays large and is only there for the margins of a clip; **headline:** in whose words, how long, an example; **call to action:** the exact text and the word the viewer writes; **who is in it:** names of third parties, what may be shown. Not asked here, the edit has already decided them: layout and face, captions and glossary, chapter plates, cards, graphics, secrets (ask only whether the long video was checked). **sound:** on the path `bands` it comes from the finished file, so ask whether a bed lies under the speech and say it stays. Clips are not taken from the rubric: `templates/format-skill/method/clips.md` | `params.clips`, `params.max_seconds` (the whole finished clip, after `speed`, with the tail of the call where there is one), `steps` (`teaser`), `params.teaser_seconds`, `params.teaser_name`, `params.layout`, `params.speed`, `params.word_gap`, `params.gap`, `params.cta`, `steps` (`bands`) |
+| A re-edit under 9:16 (the path `reedit`) | **the source:** is there a working folder of the long video, with scenes, assets and clean speech; only a finished file with a bed under the speech → say before any editing that the hum cannot be taken out, and go on only on their word; **speed:** wanted ÷ already, as above; **how many clips, how long each:** the whole finished clip, speech ÷ speed plus the tail of the call; **safe zones:** where it will be posted: text keeps clear of what Reels, Shorts and TikTok cover (`reels`, the one zone built so far), and elsewhere is said to be unchecked; **call to action:** the exact text in parts: a lead line, the words before and after, the word the viewer writes; it comes 2 s before the end of the speech and stands 4 s after it; or «без призыва», and then the clip ends with the speech; **covers:** needed or not, how many; **design:** the one the long video was made in, so the graphics stay the same. A bed under the speech by request is not built on this path: «пока нет», and a taste line | `params.source_speed`, `params.speed`, `params.max_seconds`, `params.clips`, `params.safe`, `params.cta`, `params.cta_parts`, `params.cta_lead`, `params.cta_tail`, `params.covers` |
 | Speech recognition | local whisper (free, private), ElevenLabs Scribe (precise, paid), any OpenAI-compatible address and model (OpenRouter too), their own command — from `runtime.asr.providers_help()`; where the key is: they put it into their environment or `.env`, or it already lies in another `.env` and they give its path | `asr.provider`, `asr.model`, `asr.base_url`, `asr.api_key_env`, `asr.key_file` |
 | Where results go | the issue folder base; the language of the format | `output_dir`, `language` |
 

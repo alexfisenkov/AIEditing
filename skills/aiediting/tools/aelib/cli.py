@@ -4,7 +4,7 @@ from __future__ import annotations
 import argparse
 import sys
 
-from . import cmd_design, cmd_media, cmd_profile, cmd_run, cmd_skills, doctor
+from . import cmd_design, cmd_media, cmd_profile, cmd_run, cmd_skills, doctor, trial
 from .session import CliError
 
 RUNTIME_ERRORS = {"LookError", "RenderError", "MediaError", "AsrError"}
@@ -32,7 +32,7 @@ def parser() -> argparse.ArgumentParser:
     _sub(sub, "answered", cmd_run.answered, note={})
     _sub(sub, "finish", cmd_run.finish, result={"required": True})
     _sub(sub, "stop-server", cmd_run.stop_server, delay={"type": float, "default": 0.0})
-    _sub(sub, "formats", cmd_profile.cmd_formats, "answer", language={"default": "ru"}, preset={})
+    _sub(sub, "formats", cmd_profile.cmd_formats, "answer", language={"default": "ru"}, preset={}, like={})
     p = _sub(sub, "profile", cmd_profile.cmd_profile, "action", "skill", video={}, fresh={"action": "store_true"},
              replace={})
     p.add_argument("values", nargs="*")
@@ -44,7 +44,13 @@ def parser() -> argparse.ArgumentParser:
     p = _sub(sub, "choose", cmd_design.cmd_choose, "skill", "element")
     p.add_argument("n", type=int)
     _sub(sub, "trial", cmd_media.cmd_trial, "skill", "video", start={"type": float},
-         duration={"type": float}, answers={}, screen={})
+         duration={"type": float}, answers={}, screen={}, variant={})
+    _sub(sub, "show", trial.cmd_show, "skill", "video", variant={})
+    _sub(sub, "hear", trial.cmd_hear, "skill", "video")
+    p = _sub(sub, "kit", cmd_profile.cmd_kit, "skill")
+    p.add_argument("choice", choices=["own", "renew"])
+    p = _sub(sub, "variant", cmd_profile.cmd_variant, "skill", own={}, keep={"action": "store_true"})
+    p.add_argument("id", nargs="?")
     p = _sub(sub, "verdict", cmd_media.cmd_verdict, "skill", note={})
     p.add_argument("verdict", choices=["yes", "no"])
     _sub(sub, "build-skill", cmd_skills.cmd_build, "profile", "dest", replace={"action": "store_true"})

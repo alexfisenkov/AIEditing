@@ -1,0 +1,8 @@
+{
+  "steps": ["reedit"],
+  "params": {"speed": 1.0, "source_speed": 1.0, "vertical_source": "clips", "max_seconds": 60, "clips": [5, 5],
+             "word_gap": 1.5, "word_lead": 0.1, "word_tail": 0.15,
+             "cta": "", "cta_parts": {"lead": "", "before": "", "word": "", "after": ""},
+             "cta_lead": 2.0, "cta_tail": 4.0, "safe": "reels", "covers": 0},
+  "approval": "plan"
+}

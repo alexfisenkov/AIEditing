@@ -20,8 +20,26 @@
       "type": "object",
       "properties": {
         "animations": {"$ref": "#/definitions/animations"},
-        "verify_asr": {"$ref": "#/definitions/asr"}
+        "verify_asr": {"$ref": "#/definitions/asr"},
+        "source_speed": {"type": ["number", "null"], "minimum": 0.5, "maximum": 2.0,
+                         "description": "How much the source was already sped up; `speed` is what is added to the file."},
+        "cta": {"type": ["string", "null"]},
+        "cta_parts": {"$ref": "#/definitions/cta_parts"},
+        "cta_lead": {"type": ["number", "null"], "minimum": 0, "description": "Seconds before the end of the speech the call to action comes."},
+        "cta_tail": {"type": ["number", "null"], "minimum": 0, "description": "Seconds it stands after the end of the speech; part of `max_seconds`."},
+        "safe": {"type": ["string", "null"], "minLength": 1, "description": "The kit's preset of the zone text keeps to; `reels` keeps clear of what Reels, Shorts and TikTok cover."},
+        "covers": {"type": ["integer", "null"], "minimum": 0, "description": "How many vertical covers the format makes."}
       }
+    },
+    "like": {
+      "type": "string",
+      "minLength": 1,
+      "description": "The catalog format a format under the person's own word is narrowed from: its paths hold for this one."
+    },
+    "variant": {
+      "type": "string",
+      "minLength": 1,
+      "description": "The path chosen for a format with `variants` in catalog/formats.json, or own:<word> for one the catalog does not have."
     },
     "approval": {"enum": ["plan", "parts", "auto"]},
     "design": {"type": "string"},
@@ -56,6 +74,17 @@
         "every": {"type": "number", "minimum": 30, "maximum": 60},
         "seconds": {"type": "number", "minimum": 2, "maximum": 15}
       }
+    },
+    "cta_parts": {
+      "type": ["object", "null"],
+      "description": "The call to action of a re-edit, as it is drawn: a lead line, then the word the viewer writes between what stands before and after it. null: the person said the clips go without one.",
+      "properties": {
+        "lead": {"type": "string"},
+        "before": {"type": "string"},
+        "word": {"type": "string"},
+        "after": {"type": "string"}
+      },
+      "additionalProperties": false
     },
     "taste": {
       "type": "object",

@@ -11,7 +11,8 @@ python "<skillDir>/tools/ae.py" build-skill .aiediting-work/<skill>/profile.json
 It checks the profile against the schema and the step list, copies this version's `runtime/` (only the
 packages the chosen steps need), the schema, `design/`, writes `pins.json` (only the chosen tools, by
 their pins) and `SKILL.md` from `templates/format-skill/`, and checks that the copy imports by itself.
-A refusal names the problem → fix the draft, build again.
+A refusal names the problem → fix the draft, build again. A format with paths and none chosen is refused: go back to
+`phases/trial.md`, «A format with paths», rather than setting `variant` to get past it.
 
 ## 2. Tools — only the chosen ones, only on «да»
 
@@ -19,8 +20,10 @@ A refusal names the problem → fix the draft, build again.
 shows what this format needs and what is missing. For each missing tool: one line of what it is, its
 licence, its size when heavy, the warning when it has one — and `ae.py ask action --note "поставить <id>"`.
 Only on «да»: `doctor --install <id> --yes`. «Ручная» installs (a model file, Windows releases) → give the
-link and wait. A refused tool → the step that needs it goes out of the profile, and the skill is built
-again; never leave a step whose tool is not there.
+link and wait. Remotion is different: `doctor` lists it as manual with a licence link, but nobody installs it by that link. The kit's
+`prepare` puts it into the working folder from its lockfile, with the renderer's browser (≈700 MB). So its «да» is to the licence and
+the size, and there is nothing to wait for. A refused tool → the step that needs it goes out of the profile, and the skill is built
+again; never leave a step whose tool is not there. The same goes for a probe, by the steps of the path being tried.
 
 ## 3. Install globally
 
@@ -35,7 +38,8 @@ symlink rights); a previous version goes to `~/.agents/skills/.aiediting-backups
 person, in one message:
 
 - the skill is installed and is seen **in a new session**, in any folder;
-- how to use it: «смонтируй <путь>» or «смонтируй как <слово>»; results go to `<output_dir>/<дата-тема>/`;
+- how to use it: «смонтируй как <слово> <путь>»; a bare «смонтируй <путь>» works while this is their only format, with
+  several the agent asks which first; results go to `<output_dir>/<дата-тема>/`;
 - it only edits — publishing, voice-over and generation are theirs;
 - a remark after a video → the skill writes it into the report; to change the format for good —
   «запусти AIEditing — доработка <skill>».

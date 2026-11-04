@@ -1,17 +1,27 @@
 {
-  "_comment": "Formats offered in the first question. Anything else the person names is their own format and starts from the 'custom' preset.",
+  "_comment": "Formats offered in the first question. Anything else the person names is their own format and starts from the 'custom' preset. A format may list `variants`: ways to edit it, each with an id, a title, a hint for the person, a preset, and `short`: what a short probe of the path leaves out. A new way is one row here plus one preset; no code. The format's own `preset` is its first variant's.",
   "formats": [
     {"id": "stream", "word": "эфир", "title": "Эфир", "preset": "stream",
      "hint": "почти не трогаем: точечный блюр секретного, громкость, .srt рядом"},
     {"id": "lesson", "word": "урок", "title": "Урок", "preset": "lesson",
      "hint": "вырезаем паузы и «э-э», главы плашками, .srt рядом"},
     {"id": "youtube", "word": "youtube", "title": "Выпуск YouTube", "preset": "youtube",
-     "hint": "монтаж по частям с согласованием каждой, главы"},
+     "hint": "паузы вон, главы плашками и таймкодами, план согласуется один раз"},
     {"id": "vertical", "word": "вертикаль", "title": "Вертикаль (Reels, Shorts, TikTok)", "preset": "vertical",
      "hint": "9:16, речь без пауз между словами, вшитые субтитры, выгрузка под три площадки; из длинной записи — нарезка клипов до 60 с, снятое вертикально остаётся как есть"},
     {"id": "overlay", "word": "наложения", "title": "Наложения", "preset": "overlay",
      "hint": "речь целиком, без единой склейки; поверх неё графика и настоящие экраны, спикер переезжает между раскладками"},
     {"id": "youtube-graphics", "word": "ютуб", "title": "YouTube с графикой", "preset": "youtube-graphics",
-     "hint": "длинный ролик: из дублей собирается чистая речь, поверх графика и настоящие экраны, правки маркерами из Final Cut"}
+     "hint": "длинный ролик: из дублей собирается чистая речь, поверх графика и настоящие экраны, правки маркерами из Final Cut"},
+    {"id": "repurpose", "word": "нарезка", "title": "Нарезка из готового ролика", "preset": "repurpose",
+     "hint": "из уже смонтированного горизонтального ролика: вертикальные отрывки; два пути на выбор после пробы — картинка целиком на полях или настоящий перемонтаж под 9:16",
+     "variants": [
+       {"id": "bands", "title": "Картинка целиком", "preset": "repurpose",
+        "hint": "кадр ролика как есть по центру, заголовок и призыв на полях, короткий тизер; быстро, но мелкий текст на картинке становится мельче, а звук берётся из готового файла: подложка под речью, если есть, останется",
+        "short": {"without": ["teaser"], "params": {"clips": [1, 1]}}},
+       {"id": "reedit", "title": "Перемонтаж под вертикаль", "preset": "repurpose-reedit",
+        "hint": "настоящий монтаж под 9:16: спикер ездит снизу, сверху, кружком, та же графика пересобрана, текст только в безопасных зонах площадки; дольше: Remotion и проверка по кадрам каждого ролика",
+        "short": {"params": {"clips": [1, 1], "covers": 0}}}
+     ]}
   ]
 }

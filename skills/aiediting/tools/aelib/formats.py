@@ -30,8 +30,9 @@ def skill_name(word: str) -> str:
 
 def _entry(word: str, known: Optional[dict]) -> dict:
     if known:
-        return {"id": known["id"], "word": known["word"], "title": known["title"],
-                "preset": known["preset"], "skill": skill_name(known["word"]), "custom": False}
+        entry = {"id": known["id"], "word": known["word"], "title": known["title"],
+                 "preset": known["preset"], "skill": skill_name(known["word"]), "custom": False}
+        return dict(entry, variants=known["variants"]) if known.get("variants") else entry
     return {"id": "custom", "word": word, "title": word, "preset": "custom",
             "skill": skill_name(word), "custom": True}
 
@@ -45,7 +46,7 @@ def _match(token: str, formats: List[dict]) -> Optional[dict]:
 
 
 def parse_answer(answer: str, formats: Optional[List[dict]] = None) -> List[dict]:
-    """[{"id","word","title","preset","skill","custom"}] in the order named, without repeats."""
+    """[{"id","word","title","preset","skill","custom"}, plus "variants" where the format has paths] in the order named, without repeats."""
     formats = formats if formats is not None else load_formats()
     out, seen = [], set()
     for raw in _SPLIT.split(answer or ""):

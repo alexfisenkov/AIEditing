@@ -32,6 +32,22 @@ For each element the format uses — in this order: font and colours, chapter pl
 A frame with a face and a frame with a screen show different things — use the one the element will
 live on (a chapter plate over a screen, captions over a face in a vertical).
 
+A format with `bands` has one more element, `video.band` in the tokens: the headline and the call to action on the fields.
+It takes the fonts and chrome of the design and has no sample variants; show it on the first frames of the trial. A finished
+video was made in some design: «тот же стиль» means that one, so its tokens are the start, not the example; tokens older
+than this format have no `video.band`, `video.teaser`: copy them from the example, or the run refuses at its start.
+
+A format with `reedit` is drawn by the kit, from the same `design/`: the plates and captions above are not its elements, and it has
+no sample variants either. Its graphics stay those of the long video, so the design is the one that video was made in; the first
+look at it is the probe. Asked in `phases/interview.md`, shown in `phases/trial.md`.
+
+## A format whose path is not chosen yet
+
+The probes are drawn with this design, so it is chosen now, in one go for every path not turned down: start and tokens as above,
+with what each of those paths takes from them (`video.band` for `bands`, the design of the long video for `reedit`). Elements that only
+one path uses get no variants yet. After `ae.py variant` come back here for the elements of the chosen path that were left, then go
+on to its full trial.
+
 ## What goes into the skill
 
 `design/` of the draft — tokens, fonts, chosen samples — is copied into the format skill as it is.

@@ -6,7 +6,8 @@ from pathlib import Path
 
 import state as st
 
-from . import formats, profiles, session
+from . import formats, handmade, profiles, session, variants
+from .assemble import KIT_MARK, OWN
 from .install import find_installed
 from .paths import DESIGN_DIR, PRESETS_DIR
 from .session import CliError
@@ -26,17 +27,68 @@ def cmd_formats(opt) -> str:
     chosen = formats.parse_answer(opt.answer)
     if opt.preset and not (PRESETS_DIR / (opt.preset + ".json")).is_file():
         raise CliError("Такой заготовки нет: {}".format(opt.preset))
+    like = variants.catalog_format(opt.like) if opt.like else None
+    if opt.like and like is None:
+        raise CliError("В каталоге нет формата «{}»: --like берёт формат из списка".format(opt.like))
     lines = []
     for fmt in chosen:
+        if like:  # the person's word, narrowed from a format of the catalog: its start and its paths
+            fmt = dict(fmt, preset=like["preset"], **({"variants": like["variants"]} if like.get("variants") else {}))
         fmt = dict(fmt, preset=opt.preset or fmt["preset"])
         path = draft(fmt["skill"])
-        if opt.preset and path.is_file():
+        if (opt.preset or like) and path.is_file():
             raise CliError("Черновик {} уже есть, заготовка к нему не применится: задайте шаги через ae.py profile set".format(path))
         if not path.is_file():
-            profiles.write(profiles.new_profile(fmt, language=opt.language), path)
+            profile = profiles.new_profile(fmt, language=opt.language)
+            if like:
+                profile["like"] = like["word"]
+            named = variants.named_by_preset(fmt, opt.preset)
+            profiles.write(dict(profile, variant=named) if named else profile, path)
         session.touch(lambda d, f=fmt, p=path: _remember(d, f, p))
         lines.append("{} — {}{}: {}".format(fmt["skill"], fmt["title"], " (свой)" if fmt["custom"] else "", path))
+        lines += ["  путь {}: {} — {}".format(r["id"], r["title"], r["hint"]) for r in fmt.get("variants", [])]
     return "\n".join(lines)
+
+
+def cmd_variant(opt) -> str:
+    """The paths of a format: without an id, the list and the choice so far; with one, the draft goes onto that path."""
+    path = draft(opt.skill)
+    if not path.is_file():
+        raise CliError("Черновика {} нет: сначала ae.py formats или ae.py profile open".format(path))
+    profile = profiles.read(path)
+    rows = variants.of_profile(profile)
+    if not opt.id and not opt.own:
+        listed = ["{}: {} — {}".format(r["id"], r["title"], r["hint"]) for r in rows] or ["у этого формата один путь"]
+        return "\n".join(listed + ["выбран: {}".format(profile.get("variant") or "ещё ничего")])
+    if opt.own:
+        chosen = variants.OWN + formats.format_word(opt.own)
+    else:
+        row = variants.by_id(profile, opt.id)
+        chosen = row["id"]
+        profile = profile if opt.keep else variants.switched(profile, row)  # --keep: it already is on that path
+    profile["variant"] = chosen
+    profiles.write(profile, path)
+
+    def change(d):
+        st.log(d, "variant", skill=opt.skill, note=chosen)
+        for row in d.get("trials", []):
+            if row["skill"] == opt.skill and row.get("probe"):
+                row["chosen"] = row.get("variant") == chosen
+
+    session.touch(change)
+    return "{}: путь {}, шаги: {}".format(opt.skill, chosen, ", ".join(profile["steps"]))
+
+
+def cmd_kit(opt) -> str:
+    """The person's choice about a kit changed after its build: it becomes the format's own, or goes and comes back new."""
+    kit = session.work() / opt.skill / "design" / "overlay-kit"
+    if not kit.is_dir():
+        raise CliError("В черновике {} нет design/overlay-kit".format(opt.skill))
+    if opt.choice == "own":
+        (kit / KIT_MARK).unlink(missing_ok=True)
+        return "design/overlay-kit теперь свой: сборка его не обновляет, поправки из мастерской доходят до него вручную"
+    shutil.rmtree(str(kit))
+    return "design/overlay-kit убран из черновика: следующая сборка положит новый; прежний остался в резерве установленной версии"
 
 
 def cmd_profile(opt) -> str:
@@ -65,21 +117,27 @@ def cmd_profile(opt) -> str:
 def _open(skill: str, fresh: bool) -> str:
     """Refinement starts from the installed skill: its profile and design come into the workshop."""
     source = find_installed(skill)
-    if source is None:
+    written = handmade.found(skill) if source is None else None
+    if source is None and written is None:
         raise CliError("Скилл {} не найден среди установленных (ae.py list-skills)".format(skill))
     target = session.work() / skill
     if target.exists() and not fresh:
         raise CliError("Черновик {} уже есть — продолжайте его или откройте заново с --fresh".format(target))
     shutil.rmtree(str(target), ignore_errors=True)
     target.mkdir(parents=True)
+    if written is not None:
+        copy = handmade.open_copy(written, target)
+        return ("Открыт для доработки: {} (из {}). Профиля у него нет, это скилл без сборки: правьте его файлы в этой копии вместе "
+                "с человеком, ничего не отбрасывая; поставить обратно: ae.py install-skill {}".format(copy, written, copy))
     shutil.copy2(str(source / "profile.json"), str(target / "profile.json"))
     if (source / "design").is_dir():
         shutil.copytree(str(source / "design"), str(target / "design"))
+    extra = handmade.own_parts(source, target / OWN)
     profile = profiles.read(target / "profile.json")
     fmt = {"id": "installed", "word": profile["format"], "title": profile["format"], "preset": "custom",
            "skill": skill, "custom": False}
     session.touch(lambda d: _remember(d, fmt, target / "profile.json"))
-    return "Открыт для доработки: {} (из {})".format(target, source)
+    return "\n".join(["Открыт для доработки: {} (из {})".format(target, source)] + extra)
 
 
 def cmd_design_example(opt) -> str:

@@ -27,6 +27,11 @@ def plan_graphics(ctx) -> None:
         ctx.note("Графика рассчитана на кадр 16:9, здесь кадр {}x{}: её слой не делается".format(w, h))
         ctx.steps.remove("graphics")
         return
+    complete_words(ctx)
+
+
+def complete_words(ctx) -> None:
+    """Local whisper loses stretches of a long recording: they are heard again and join the words."""
     words = ctx.transcript()
     if ctx.profile.get("asr", {}).get("provider") == "whispercpp":
         words["words"] = sorted(words.get("words", []) + _lost_words(ctx, words), key=lambda w: w["start"])

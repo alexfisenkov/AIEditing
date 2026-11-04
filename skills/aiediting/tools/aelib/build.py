@@ -8,8 +8,9 @@ import tempfile
 from pathlib import Path
 
 from . import catalog, profiles, skillmd
-from .assemble import copy_design, copy_runtime, copy_tools, write_pins
+from .assemble import copy_design, copy_own, copy_runtime, copy_tools, write_pins
 from .paths import agents_skills, claude_skills
+from .variants import unchosen
 
 
 class BuildError(Exception):
@@ -19,7 +20,8 @@ class BuildError(Exception):
 def _errors(profile: dict):
     from runtime.profile import check_profile
 
-    return check_profile(profile) + catalog.check_steps(profile.get("steps") or [])
+    no_path = unchosen(profile) if isinstance(profile, dict) else None
+    return check_profile(profile) + catalog.check_steps(profile.get("steps") or []) + ([no_path] if no_path else [])
 
 
 def _imports(folder: Path):
@@ -60,9 +62,12 @@ def build_skill(profile_path, dest, replace: bool = False) -> Path:
         copy_tools(stage)
         profile["design"] = "design/"
         profiles.write(profile, stage / "profile.json")
-        write_pins(stage, profile, need, catalog.tools(), __version__)
-        text = skillmd.render(profile, need, catalog.steps(), catalog.tools(), __version__)
+        method = stage / "design" / "method.md"
+        text = skillmd.render(profile, need, catalog.steps(), catalog.tools(), __version__,
+                              own_method=method.read_text(encoding="utf-8") if method.is_file() else "")
         (stage / "SKILL.md").write_text(text, encoding="utf-8")
+        write_pins(stage, profile, need, catalog.tools(), __version__, skill_md=text)
+        copy_own(stage, profile_path.parent)
         _imports(stage)
         if final.exists():
             shutil.rmtree(str(final))

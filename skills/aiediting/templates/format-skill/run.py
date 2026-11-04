@@ -7,6 +7,7 @@
                        [--screen FILE]              the screen recording when camera and screen are separate
                        [--no-questions]             the person asked for none, in this run or in the profile
     python tools/run.py note <issue folder> "text"  a remark for the next refinement, into отчёт.md
+    python tools/run.py hear <video>                what the format's recogniser hears in it: seconds and words
 """
 import argparse
 import os
@@ -64,7 +65,7 @@ def edit(profile, opt):
         print("Папка выпуска: {}".format(out))
         return 3
     (out / QUESTIONS).unlink(missing_ok=True)  # answered: the folder holds the result, not the plan
-    print("Готово: {}".format((report or {}).get("output") or out))
+    print((report or {}).get("handover") or "Готово: {}".format((report or {}).get("output") or out))
     print("Папка выпуска: {}".format(out))
     return 0
 
@@ -83,6 +84,8 @@ def main(argv):
     n = sub.add_parser("note")
     n.add_argument("issue")
     n.add_argument("text")
+    h = sub.add_parser("hear")
+    h.add_argument("video")
     opt = ap.parse_args(argv)
     profile = load_profile(SKILL / "profile.json")
     if opt.cmd == "check":
@@ -90,6 +93,14 @@ def main(argv):
         return 0
     if opt.cmd == "note":
         print(add_note(Path(opt.issue), opt.text, profile["skill_name"]))
+        return 0
+    if opt.cmd == "hear":
+        from runtime import asr
+
+        cfg = dict(profile["asr"], language=profile["asr"].get("language") or profile.get("language") or "")
+        for word in asr.transcribe(Path(opt.video).expanduser().resolve(), cfg).get("words", []):
+            if str(word.get("text", "")).strip():
+                print("{:7.2f} {}".format(word["start"], str(word["text"]).strip()))
         return 0
     return edit(profile, opt)
 

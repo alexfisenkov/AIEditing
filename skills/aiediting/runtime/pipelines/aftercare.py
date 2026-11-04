@@ -35,5 +35,5 @@ def after(ctx, piece: Dict, final: Path, done: Dict) -> Dict:
         from .verify import check_words
 
         done["words_lost"] = check_words(ctx, final, piece["keep"])
-        ctx.report["words_lost"] += done["words_lost"]
+        ctx.report["words_lost"] += [dict(w, piece=piece.get("id")) for w in done["words_lost"]]
     return done

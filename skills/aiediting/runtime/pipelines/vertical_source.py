@@ -42,8 +42,15 @@ def _with_margins(ctx, item: Dict) -> Dict:
 
 
 def stretches(ctx) -> List[Dict]:
-    limit = float(ctx.p("max_seconds", 60))
-    if is_native(ctx) or length(ctx.keep) <= limit:
+    from .speed import rate_of
+
+    seconds = float(ctx.p("max_seconds", 60))  # of the whole finished clip, not of the source
+    if ctx.has("reedit"):  # its clip ends on the tail of the call, which is no speech
+        from .reedit import call_times
+
+        seconds = max(1.0, seconds - call_times(ctx)[1])
+    limit = seconds * rate_of(ctx.p("speed", 1.0))
+    if is_native(ctx) or (length(ctx.keep) <= limit and not ctx.has("bands")):  # with fields a clip needs its headline
         return _whole(ctx)
     from .clips import candidates
 

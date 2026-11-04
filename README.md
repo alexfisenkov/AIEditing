@@ -97,7 +97,7 @@ CI runs the unit tests and installs the pinned Python packages. Rendering of ani
 5. The skill `монтаж-<your word>` is built and installed globally. In a new session, anywhere:
    «смонтируй ~/Videos/lesson.mp4» or «смонтируй как урок».
 
-The list offers six formats, under these words; anything else you name becomes your own format:
+The list offers seven formats, under these words; anything else you name becomes your own format:
 
 | In the list | What it does |
 |---|---|
@@ -107,6 +107,7 @@ The list offers six formats, under these words; anything else you name becomes y
 | вертикаль (vertical) | 9:16, speech without pauses, burned-in captions, export for three platforms, clips up to 60 s from a long recording |
 | наложения (overlays) | the speech stays whole, without a single cut; graphics and real screens on top |
 | ютуб (YouTube with graphics) | clean speech from your takes, graphics and real screens on top, remarks by Final Cut markers |
+| нарезка (clips from a finished video) | from an edited horizontal video: 9:16 clips, two ways to choose from after a probe (below) |
 
 For a lesson (and any format that shows a screen) you can choose **animated inserts**: where you list
 files, steps or points, or name a number, a short animation in your design system plays beside the
@@ -116,6 +117,18 @@ screen, in the corner opposite your face, at most once every 30–60 s (`params.
 - The price: Node.js 22+ and HyperFrames with its own browser on disk (≈400 MB together) and about 5 seconds of rendering per insert.
 - They are installed by `ae.py doctor --install node --yes` and `--install hyperframes --yes`, only for a format that chose inserts, after your yes.
 - HyperFrames comes from a checked lockfile (`npm ci --ignore-scripts`) into `~/.aiediting/node` (Windows: `%LOCALAPPDATA%\AIEditing\node`). Its telemetry is off, and its project history is written into the issue's work folder and goes with it.
+
+**Clips from a finished video** go one of two ways, and you choose after seeing both on one stretch of your own video: the
+picture whole in the centre, with a headline and a call to action on the fields and a short teaser; or a real re-edit for 9:16,
+where the speaker moves between bottom, top and a circle, the same graphics are rebuilt, and text keeps to the platform's safe
+zones. The re-edit is made by the model with the Remotion kit and costs what graphics over the video cost: ≈700 MB and the render
+time. As a way of editing it has been accepted on one real video; the built skill has passed its tests but has not yet made a
+video end to end.
+
+**An open workshop.** AIEditing is a base of ways to edit: narrow skills come out of it for a niche, a task, your own design system,
+under your word and with the paths of the format they start from. A
+way the catalog lacks is added there with one row and a preset. Any installed `монтаж-*` can be refined later, even one written by
+hand: what a profile does not describe stays with the skill and is changed together with you.
 
 **Without questions.** Say «без вопросов» in your first message and give a recording:
 
@@ -151,7 +164,7 @@ suggests running AIEditing to refine the format.
 | Does | Never does |
 |---|---|
 | interviews you and builds a format skill from your answers, or takes one message if you ask for no questions | publishes, uploads or sends anything |
-| edits **one trial piece** of your source to show you; without questions, the whole recording | voices, generates video, music or images |
+| edits **a trial piece** of your source to show you; where a format has several paths, a short probe of each and then the chosen one in full; without questions, the whole recording | voices, generates video, music or images |
 | installs only the tools your formats need, at an exact version or a tested minimum, after your yes (asking for no questions is that yes, and each is named at the end) | asks for a key or prints one |
 | keeps the previous version of a skill and restores it in one command | puts into a skill anything you did not choose |
 

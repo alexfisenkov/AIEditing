@@ -25,6 +25,15 @@ Two recordings of one session (camera and screen apart) → `ae.py layout <s1> -
 The person corrects → `ae.py layout <s1> --set kind=<kind> --set face=[x,y,w,h]` (values as they gave
 them; JSON when it parses). Their word wins over the guess.
 
+## A finished video
+
+The format «нарезка» starts from one video that is already edited, with its graphics in the picture. Ask for that one file
+and do not ask for others. Frames are for you and the person; the layout guess is not: over finished graphics it sees a
+screen and a face and would crop them, so `ae.py layout` is not run and the frame is whatever `params.layout` says. Ask,
+in one message: where it comes from and whether it is finished; where its project lies, with its scenes, assets and clean
+speech, because the design it was made in, how much it was already sped up and whether a bed lies under the speech are there.
+No project and only this one file → say what that closes off: a bed under the speech stays in the sound.
+
 ## Missing kinds
 
 The interview will need an example of a kind of footage the person has not sent (a vertical shot for

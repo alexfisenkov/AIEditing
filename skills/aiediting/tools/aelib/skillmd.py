@@ -1,8 +1,11 @@
 """SKILL.md of a format skill from `templates/format-skill/SKILL.md.tmpl` — only the chosen steps and tools."""
 from __future__ import annotations
 
+import re
+
 from .paths import FORMAT_TEMPLATE
 
+GUARD = re.compile(r"<!-- (if|unless) (\w+) -->\n(.*?)<!-- end -->\n", re.S)
 APPROVAL = {
     "plan": "«План → готовый ролик»: the pipeline shows the plan (cuts, regions, places) for one approval, "
             "then edits the whole video.",
@@ -13,7 +16,20 @@ APPROVAL = {
 }
 METHOD_IF = {"editor.md": lambda p: "cut_spans" in p["steps"], "no-questions.md": lambda p: True,
              "graphics.md": lambda p: "graphics" in p["steps"],
+             "clips.md": lambda p: {"bands", "teaser", "reedit"} & set(p["steps"]),
+             "clips-headline.md": lambda p: "bands" in p["steps"],
+             "clips-teaser.md": lambda p: "teaser" in p["steps"],
+             "reedit.md": lambda p: "reedit" in p["steps"],
              "takes.md": lambda p: bool((p.get("params") or {}).get("clean_speech"))}
+KIT_SECTIONS = (("graphics", "Graphics"), ("reedit", "Re-edit"))  # the steps that go on outside the pipeline, by their section
+KIT_APPROVAL = {
+    "Graphics": "«План → готовый ролик»: the pipeline shows the plan for one approval and makes the base video; the graphics then go on "
+                "top of it by «Graphics», with no further approval until the result is shown.",
+    "Re-edit": "«План → готовые ролики»: the pipeline shows the clips for one approval and makes no video; the clips are then made one "
+               "by one by «Re-edit», and each is shown only after its checks.",
+}
+LATER_WORDS = {"Graphics": ", besides the working folder «Graphics» names",
+               "Re-edit": ", besides the working folder «Re-edit» names, which may be the long video's own"}
 ASR = {"whispercpp": "none — local whisper.cpp", "scribe": "ElevenLabs Scribe",
        "openai_compat": "the OpenAI-compatible address in profile.json", "command": "whatever your own command does"}
 
@@ -21,7 +37,8 @@ ASR = {"whispercpp": "none — local whisper.cpp", "scribe": "ElevenLabs Scribe"
 def _description(profile: dict) -> str:
     word = profile["format"]
     text = ("Edits a video as «{w}» by a profile tuned with its owner, and puts the result into an issue "
-            "folder. Use when the user says «смонтируй <путь>», «смонтируй как {w}» or «{n}». Never "
+            "folder. Use when the user says «смонтируй как {w}» or «{n}». A bare «смонтируй <путь>» names no "
+            "format: with several монтаж-* skills installed, ask which format first, do not assume this one. Never "
             "publishes, voices or generates.").format(w=word, n=profile["skill_name"])
     return text.replace('"', "'")
 
@@ -30,13 +47,37 @@ def _lines(items, empty: str) -> str:
     return "\n".join(items) if items else empty
 
 
+def _for_steps(text: str, profile: dict) -> str:
+    """A method file may hold lines for some steps only: `<!-- if step -->…<!-- end -->`, `<!-- unless step -->…<!-- end -->`."""
+    def keep(found):
+        wanted = (found.group(2) in profile["steps"]) == (found.group(1) == "if")
+        return found.group(3) if wanted else ""
+
+    return GUARD.sub(keep, text)
+
+
 def _method(profile: dict) -> str:
     """The parts of «how» only some formats have, one file per part in `templates/format-skill/method/`."""
-    return "".join((FORMAT_TEMPLATE / "method" / name).read_text(encoding="utf-8")
+    return "".join(_for_steps((FORMAT_TEMPLATE / "method" / name).read_text(encoding="utf-8"), profile)
                    for name, wanted in METHOD_IF.items() if wanted(profile))
 
 
-def render(profile: dict, need: dict, steps: dict, tools: dict, version: str) -> str:
+def _kit_section(profile: dict) -> str:
+    return next((name for step, name in KIT_SECTIONS if step in profile["steps"]), "")
+
+
+def _approval(profile: dict, section: str) -> str:
+    way = profile.get("approval", "plan")
+    if not section or way == "auto":
+        return APPROVAL.get(way, APPROVAL["plan"])
+    if way == "parts":
+        return "«По частям» was chosen, but part-by-part approval is not built yet. Say so to the person before the first run. " + KIT_APPROVAL[section]
+    return KIT_APPROVAL[section]
+
+
+def render(profile: dict, need: dict, steps: dict, tools: dict, version: str, own_method: str = "") -> str:
+    """`own_method`: `design/method.md` of a format that has a method no profile describes; it stays in the skill."""
+    section = _kit_section(profile)
     step_lines = ["{}. `{}` — {}".format(i, s, steps["steps"][s]["what"])
                   for i, s in enumerate(profile["steps"], 1)]
     tool_lines = ["- {} — {} ({}, пин {})".format(t, tools[t]["skills_section"], tools[t]["license"], tools[t]["pin"])
@@ -45,12 +86,12 @@ def render(profile: dict, need: dict, steps: dict, tools: dict, version: str) ->
     values = {
         "name": profile["skill_name"], "description": _description(profile), "version": version,
         "format": profile["format"], "language": profile.get("language", "ru"),
-        "steps": _lines(step_lines, "(no steps)"), "method": _method(profile),
-        "approval": APPROVAL.get(profile.get("approval", "plan"), APPROVAL["plan"]),
+        "steps": _lines(step_lines, "(no steps)"), "method": _method(profile) + (own_method.rstrip() + "\n\n" if own_method.strip() else ""),
+        "approval": _approval(profile, section),
         "taste": _lines(taste, "(none yet)"), "tools": _lines(tool_lines, "- nothing beyond Python"),
         "asr": ASR.get(profile["asr"]["provider"], profile["asr"]["provider"])
-        + ("; and what «Graphics» names" if "graphics" in profile["steps"] else ""),
-        "writes": ", besides the working folder «Graphics» names" if "graphics" in profile["steps"] else "",
+        + ("; and what «{}» names".format(section) if section else ""),
+        "writes": LATER_WORDS.get(section, ""),
     }
     text = (FORMAT_TEMPLATE / "SKILL.md.tmpl").read_text(encoding="utf-8")
     for key, value in values.items():

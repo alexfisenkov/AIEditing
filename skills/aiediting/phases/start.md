@@ -23,7 +23,10 @@ python "<skillDir>/tools/ae.py" init --mode new --title "<what the person asked,
 ```
 
 It creates `.aiediting-work/` in the current folder, copies the dashboard, raises a server on
-127.0.0.1 and prints the address. Open it **once, yourself**, before the first question:
+127.0.0.1 and prints the address. Renders are large and a synced folder (iCloud, Dropbox) slows them down
+and copies them everywhere; there, set `AIEDITING_WORK=<folder outside it>` on this and every later `ae.py`
+call, because a shell may go back to its first folder between calls. Check where it printed. Open it **once,
+yourself**, before the first question:
 
 - Claude Code: `preview_start({url: "http://localhost:PORT"})`, then navigate to `/dashboard.html`.
 - No pane: `open` / `start` / `xdg-open` on `.aiediting-work/dashboard.html`.
@@ -32,7 +35,8 @@ It creates `.aiediting-work/` in the current folder, copies the dashboard, raise
 
 ## 3. The first question: create or refine
 
-`python "<skillDir>/tools/ae.py" list-skills` lists format skills AIEditing has built on this computer.
+`python "<skillDir>/tools/ae.py" list-skills` lists the `монтаж-*` skills on this computer: the ones AIEditing has built, and
+the ones written by hand or by someone else, marked so. Any of them can be refined.
 Then `ae.py ask choice --note "новый скилл или доработка"` and one message:
 
 ```
@@ -43,6 +47,10 @@ Then `ae.py ask choice --note "новый скилл или доработка"`
 
 No skills yet → say so and go straight to a new one. The call already named it («/aiediting refine
 монтаж-урок», «доработай урок») → do not ask again.
+
+A call that names a format with paths («/aiediting нарезка») has named the format, not the path: the path is still offered and
+probed (`phases/formats.md`, «A format with paths»). A call that comes with a finished video goes to the same format, and the
+first thing to find out about it is where it came from (`phases/sources.md`, «A finished video»).
 
 - **New** → `ae.py stage formats`, read `phases/formats.md`.
 - **Refine** → `ae.py init --mode refine --fresh --title "Доработка <name>"`, read `phases/refine.md`.

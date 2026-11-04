@@ -108,14 +108,14 @@ const POLL_MS = 10000;
 const I18N = {
   ru: {brand:"AI мастерская", modes:{new:"Новый скилл формата", refine:"Доработка скилла"}, now:"Сейчас", waitFor:"Ждём тебя",
     done:"Готово", stages:"Этапы", formats:"Форматы", own:"свой", sources:"Исходники и раскладка", layout:"раскладка",
-    byPerson:"поправлено", design:"Дизайн-система — варианты рядом", trials:"Пробный монтаж", liked:"нравится",
+    byPerson:"поправлено", design:"Дизайн-система — варианты рядом", trials:"Пробный монтаж", paths:"пути на выбор", liked:"нравится",
     notLiked:"доработать", asking:"ждёт ответа", skills:"Скиллы", built:"собран", installed:"установлен", feed:"Лента",
     none:"пока пусто", updated:"обновлено", live:"на связи", file:"снимок с диска", snap:"снимок", lost:"нет связи",
     boot:"Состояния нет", bootWhy:"Ни в странице, ни в файле state.js рядом: мастерская только начинается. Страница оживёт сама.",
     theme:["Свет","Тьма","Система"], words:{start:"Старт",formats:"Форматы",sources:"Исходники",interview:"Интервью",design:"Дизайн",trial:"Пробный монтаж",build:"Сборка"}},
   en: {brand:"AI мастерская", modes:{new:"New format skill", refine:"Refining a skill"}, now:"Now", waitFor:"Waiting for you",
     done:"Done", stages:"Stages", formats:"Formats", own:"own", sources:"Sources and layout", layout:"layout",
-    byPerson:"corrected", design:"Design system — variants side by side", trials:"Trial edit", liked:"liked",
+    byPerson:"corrected", design:"Design system — variants side by side", trials:"Trial edit", paths:"paths to choose from", liked:"liked",
     notLiked:"to rework", asking:"awaiting answer", skills:"Skills", built:"built", installed:"installed", feed:"Feed",
     none:"nothing yet", updated:"updated", live:"live", file:"snapshot from disk", snap:"snapshot", lost:"connection lost",
     boot:"No state", bootWhy:"Neither in the page nor in state.js beside it: the workshop is just starting. The page revives by itself.",
@@ -186,11 +186,15 @@ function design(L, S){
 }
 
 function trials(L, S){
-  const rows = (S.trials || []).slice().reverse().map(t => {
+  const all = (S.trials || []).slice().reverse(), probes = {};
+  all.filter(t => t.probe).forEach(t => (probes[t.skill] = probes[t.skill] || []).unshift(t));
+  const sides = Object.keys(probes).map(skill => `<div class="row"><h4>${esc(skill)} · ${esc(L.paths)}</h4><div class="grid">${probes[skill].map(t =>
+    `<figure class="${t.chosen ? 'chosen' : ''}"><video controls preload="metadata" src="${src(t.video)}?v=${encodeURIComponent(t.at || '')}"></video><figcaption>${esc(t.title || t.variant)}${t.chosen ? ' ✓' : ''}</figcaption></figure>`).join('')}</div></div>`);
+  const rows = all.filter(t => !t.probe).map(t => {
     const v = t.verdict === 'yes' ? `<span class="tag yes">${esc(L.liked)}</span>` : t.verdict === 'no' ? `<span class="tag no">${esc(L.notLiked)}</span>` : `<span class="tag wait">${esc(L.asking)}</span>`;
     return `<div class="row"><h4>${esc(t.skill)} · ${esc(t.n)}${v}</h4><div class="grid"><figure style="grid-column:1/-1"><video controls preload="metadata" src="${src(t.video)}?v=${encodeURIComponent(t.at || '')}"></video></figure></div></div>`;
   });
-  return card(L.trials, rows.join('') || empty(L));
+  return card(L.trials, sides.concat(rows).join('') || empty(L));
 }
 
 function skills(L, S){

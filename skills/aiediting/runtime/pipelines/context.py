@@ -32,6 +32,7 @@ class Context:
         self.motion: List[Dict] = []       # approved zoom / side-by-side places (source time)
         self.overlays: List[Dict] = []     # chapters, cards (source time); captions are per piece
         self.pieces: Optional[List[Dict]] = None  # vertical clips; None = one video of the whole source
+        self.teaser: List[Dict] = []       # fragments of the teaser, once approved (source time)
         self.music: Dict = {}
         self.chapters: List[Dict] = []
         self.srt_glossary: Dict[str, str] = {}

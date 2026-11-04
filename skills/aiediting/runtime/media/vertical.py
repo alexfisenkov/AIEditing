@@ -75,8 +75,9 @@ def _face(label: str, layout: Dict, frame, size, out: str) -> str:
 def _graph(layout: Dict, frame, size) -> str:
     kind = layout.get("kind")
     if kind == "native":
+        bg = str(layout.get("background") or BACKGROUND).replace("#", "0x")  # a horizontal picture keeps its shape
         return ("[0:v]scale={w}:{h}:force_original_aspect_ratio=decrease,pad={w}:{h}:(ow-iw)/2:(oh-ih)/2:"
-                "color={bg},setsar=1[vout]").format(w=size[0], h=size[1], bg=BACKGROUND)
+                "color={bg},setsar=1[vout]").format(w=size[0], h=size[1], bg=bg)
     if kind == "stack":
         return _stack("0:v", layout, frame, size, "[vout]")
     if kind != "face":

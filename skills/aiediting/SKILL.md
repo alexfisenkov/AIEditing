@@ -1,6 +1,6 @@
 ---
 name: aiediting
-description: Workshop that builds your own video-editing skills. Interviews you about a format (stream, lesson, vertical or your own), looks at frames of your footage, assembles a design system with you, edits a trial clip until you say yes, and installs a self-contained format skill that edits every next video the same way. Or, if you say «без вопросов», takes one message and a recording and returns the finished video and the installed skill. Also refines a format skill you already have. Starts only on /aiediting.
+description: Workshop that builds your own video-editing skills. Interviews you about a format (stream, lesson, vertical or your own), looks at frames of your footage, offers the ways that format can go and shows each on your video, assembles a design system with you, edits a trial clip until you say yes, and installs a self-contained format skill that edits every next video the same way. Or, if you say «без вопросов», takes one message and a recording and returns the finished video and the installed skill. Also refines any editing skill you already have, built here or not. Starts only on /aiediting.
 disable-model-invocation: true
 argument-hint: "[new|refine] format name or path to a source video"
 metadata:
@@ -11,16 +11,23 @@ metadata:
 
 AIEditing is a **workshop**. It exists to create a format skill — `монтаж-<the person's word>` — or to
 refine one that exists. It interviews the person, looks at frames of their own footage, builds a design
-system with them, edits **one trial piece** of their source to show, reworks it until they say «да», and
-then builds and installs the format skill globally. From then on the format skill does the editing; the
+system with them, edits **a trial** of their source to show (one piece, or where the format has paths a short probe of each and
+then the chosen one in full), reworks it until they say «да», and then builds and installs the format skill globally. From then on the format skill does the editing; the
 workshop is not needed again until something should change. A person who asks for no questions gets all
 of this from one message: the finished video first, the skill installed with it.
 
+**The workshop is the base of how a video can be edited.** Narrow skills come out of it: for a niche, a task, the person's own
+design system. Where a format can go more than one way, it offers the ways, shows each on the person's video, and builds only what
+they chose. It stays open: any installed `монтаж-*` can be changed here later, together with the person, even one built by hand or by
+someone else, and what no profile describes stays with that skill (`phases/refine.md`). A way the catalog lacks goes into it for the
+next person.
+
 **What the workshop never does** — in every phase, whatever is asked: it never publishes, uploads or
-sends anything, never voices, never generates video, music or images. Its only edit is the trial piece,
-shown on the dashboard and kept in the workshop folder; without questions, the built skill edits the whole
+sends anything, never voices, never generates video, music or images. Its only edits are these trials,
+shown on the dashboard and kept in the workshop folder, with one exception: what the overlay kit renders needs a working folder
+outside it, `~/.local/share/overlay-kit/…`, because rendering from a cloud-synced folder hangs; without questions, the built skill edits the whole
 recording into its issue folder instead. The same holds for every format skill it builds:
-«смонтируй <путь>» → a folder with the video, `.srt` and a short report. Nothing else.
+«смонтируй как <слово> <путь>» → a folder with the video, `.srt` and a short report. Nothing else.
 
 ## Reading this skill
 
@@ -33,9 +40,9 @@ the rest of the session.
 | `start` | `phases/start.md` | the dashboard open; «новый» or «доработка» chosen |
 | `formats` | `phases/formats.md` | one draft profile per format, listed or the person's own |
 | `sources` | `phases/sources.md` | 1–3 sources, their frames and layout on the dashboard |
-| `interview` | `phases/interview.md` + `prompts/question-round.md` | the profile answered, round by round |
+| `interview` | `phases/interview.md` + `prompts/question-round.md` | the profile answered, round by round; the paths of the format offered |
 | `design` | `phases/design.md` | `design/` of the skill, chosen variants |
-| `trial` | `phases/trial.md` | a trial clip the person said «да» to; every remark in the profile |
+| `trial` | `phases/trial.md` | a probe of each path and their choice, where the format has paths; a trial clip the person said «да» to; every remark in the profile |
 | `build` | `phases/build.md` | `монтаж-<слово>` built, its tools installed on «да», installed globally |
 | — | `phases/refine.md` — instead of formats and sources, when refining | |
 | — | `phases/resume.md` — instead of start, when `.aiediting-work/state.js` is unfinished | |
@@ -60,7 +67,7 @@ in another one. One word per stage, on the dashboard and in the chat: Старт
 ## The tool
 
 Every event is one call: `python "<skillDir>/tools/ae.py" <command>` — `init`, `no-questions`, `stage`, `ask`,
-`answered`, `formats`, `profile`, `frames`, `layout`, `design-example`, `samples`, `choose`, `trial`,
+`answered`, `formats`, `profile`, `variant`, `frames`, `layout`, `design-example`, `samples`, `choose`, `trial`, `show`, `hear`, `kit`,
 `verdict`, `build-skill`, `install-skill`, `list-skills`, `backup-skill`, `restore-skill`, `doctor`,
 `finish`. The command list with arguments is at the top of `tools/ae.py`. `phases/start.md` says how to
 find `<skillDir>`. You never edit `state.js` or the dashboard by hand. Where there is no `python`, as on
@@ -83,6 +90,8 @@ many Macs, use `python3`; where it is the Microsoft Store stub on Windows, use `
 6. **The previous version is kept.** Installing over a skill moves the old one to the reserve;
    `restore-skill` brings it back in one command.
 7. **The format skill holds only what was chosen** — steps, tools and design; nothing «на всякий случай».
+8. **A format with paths is never built without a choice.** The person chooses after seeing the probes on their own video;
+   asking for no questions makes it your choice, named in the last message.
 
 ## Files
 
@@ -95,7 +104,7 @@ many Macs, use `python3`; where it is the Microsoft Store stub on Windows, use `
     ├── design/                  tokens, fonts, samples/ (chosen variants)
     ├── variants/<element>/      design variants shown side by side
     └── trials/01/ …             trial pieces, вопросы.json / ответы.json, out/
-overlay-kit/                     in this skill: the method and tools of the `graphics` step, copied into formats that use it
+overlay-kit/                     in this skill: the method and tools of the `graphics` and `reedit` steps, copied into formats that use them
 ~/.agents/skills/монтаж-<слово>/ the installed format skill; pointer in ~/.claude/skills/
 ~/.agents/skills/.aiediting-backups/  previous versions
 ```

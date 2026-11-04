@@ -2,5 +2,5 @@
   "steps": ["speech_spans", "cut_spans", "drift_ms", "loudnorm", "write_srt", "plate", "overlay_png"],
   "params": {"gap": 0.5, "pad": 0.12, "lufs": -14, "denoise": false,
              "chapters": {"plates": true, "timecodes": true}, "glossary": {}},
-  "approval": "parts"
+  "approval": "plan"
 }

@@ -31,8 +31,19 @@ def run(src, profile: Dict, outdir, approve: Callable[[str, dict], bool], screen
             PLAN[name](ctx)
     from .render import render_piece
 
-    pieces = ctx.pieces or [{"id": None, "keep": ctx.keep, "layout": None}]
+    # with a teaser and no 9:16 clips the teaser is the only result: the whole video is not made again
+    whole = [] if ctx.has("teaser") and not ctx.has("vertical") else [{"id": None, "keep": ctx.keep, "layout": None}]
+    pieces = ctx.pieces or whole
+    if ctx.has("reedit"):  # the model makes these clips; the pipeline hands over what it agreed
+        from .reedit import hand_over
+
+        pieces = []
+        hand_over(ctx)
     ctx.report["outputs"] = [render_piece(ctx, piece) for piece in pieces]
+    if ctx.teaser:
+        from .teaser import render_teaser
+
+        ctx.report["outputs"].append(render_teaser(ctx))
     if ctx.has("graphics") and not ctx.has("vertical"):
         from .graphics import write_words
 

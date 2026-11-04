@@ -1,0 +1,8 @@
+{
+  "steps": ["speech_spans", "cut_spans", "drift_ms", "vertical", "bands", "teaser", "loudnorm", "verify_words"],
+  "params": {"gap": 0.3, "pad": 0.12, "word_gap": 1.5, "word_lead": 0.1, "word_tail": 0.15, "fillers_cut": [],
+             "lufs": -14, "vertical_source": "clips", "max_seconds": 60, "clips": [5, 5],
+             "layout": {"kind": "native", "background": "#000000"}, "captions": null, "music": null,
+             "speed": 1.0, "cta": "", "teaser_seconds": 30},
+  "approval": "plan"
+}

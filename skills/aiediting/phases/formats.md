@@ -8,14 +8,21 @@ welcome, through commas:
 Какие форматы монтируем? Можно несколько, и свои — через запятую.
 1. Эфир — почти не трогаем: точечный блюр секретного, громкость, .srt рядом.
 2. Урок — вырезаем паузы и «э-э», главы плашками, .srt рядом.
-3. Выпуск YouTube — монтаж по частям с согласованием каждой, главы.
+3. Выпуск YouTube — паузы вон, главы плашками и таймкодами, план согласуется один раз.
 4. Вертикаль (Reels, Shorts, TikTok) — 9:16, речь без пауз, вшитые субтитры; нарезка из длинного — ролики до 60 с.
 5. Наложения — речь целиком, без склеек; поверх неё графика и настоящие экраны.
 6. YouTube с графикой — из дублей чистая речь, поверх графика и настоящие экраны, правки маркерами.
+7. Нарезка — из готового горизонтального ролика: вертикальные отрывки, два пути на выбор после пробы.
 Например: «2, 4, подкаст».
 ```
 
 `ae.py ask question --note "какие форматы"` before it goes out.
+
+Beside this list the person can always hear the wider answer: AIEditing is a base of ways to edit, not a set menu. A format
+named here is a start they can narrow to their niche, their task and their own design system. For example, a nail technician's
+«нарезка» under the word `маникюр`: clips of 30 s because that is what their clients watch, hands and the result in the frame
+rather than the speaker, their clients' words on screen, their own colours. It is the same paths with another profile and another
+design, and the next person's `монтаж-*` shares nothing with it: `ae.py formats "маникюр" --like нарезка`.
 
 ## The answer
 
@@ -29,6 +36,19 @@ outside the list) → ask again in one line with the reason it printed.
 - **An own format goes the same path** as a listed one: its draft starts from a neutral preset (pauses,
   loudness, `.srt`) and the interview shapes it like any other. Never skip a phase because it is «свой».
   An own word that wants another start: `ae.py formats "<word>" --preset overlay`.
+- **An own word narrowed from a format of the list:** `ae.py formats "<word>" --like <that format>`. The draft is under their word and
+  starts where that format starts. It has that format's paths: `ae.py variant`, `ae.py trial --variant` and `build-skill` work on it as
+  on the original, and it is not built until a path is chosen. With `--preset` too, naming one of the paths, it has chosen that path.
+
+## A format with paths
+
+Some formats can be edited in very different ways. Each such way is a row under `variants` in `catalog/formats.json`, and
+`ae.py formats` and `ae.py variant <skill>` print them. **You offer them; you do not pick for the person.** The question is one
+message, in your own words, and it comes once you have seen their video: at the start of `phases/interview.md`. The probes on
+their video are in `phases/trial.md`, and `build-skill` refuses such a format until a path is chosen.
+
+A format with no `variants` goes as it always did. A way the catalog does not have and that fits this person: say so and offer
+it beside the others (`phases/refine.md`, «A new way»).
 
 ## Order
 
