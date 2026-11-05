@@ -26,6 +26,8 @@ def plan_graphics(ctx) -> None:
     if ctx.has("vertical") or not h or abs(w / h - 16 / 9) >= WIDE:
         ctx.note("Графика рассчитана на кадр 16:9, здесь кадр {}x{}: её слой не делается".format(w, h))
         ctx.steps.remove("graphics")
+        if ctx.p("lufs") is not None and not ctx.has("loudnorm"):  # the kit's `final` would have set it
+            ctx.steps.append("loudnorm")
         return
     complete_words(ctx)
 
@@ -82,30 +84,35 @@ def _lost_words(ctx, transcript: Dict) -> List[Dict]:
 
 def _finished_words(ctx) -> List[Dict]:
     """The words of the finished video. Local whisper places words too loosely for a cut to carry them over: a stretched
-    word falls into a cut and is lost though it is heard. Hearing the finished video again costs nothing, and the `.srt`
-    follows. A paid recogniser's times are exact: its words are mapped through the cuts."""
+    word falls into a cut and is lost though it is heard, so a video with cuts is heard again, and the `.srt` follows. It is
+    heard before the speed-up, because a recogniser hears sped-up speech worse and makes up repeats. With nothing cut there
+    is nothing to carry through: the words of the first hearing, at the new speed. A paid recogniser's times are exact: its
+    words are mapped through the cuts."""
     rate = rate_of(ctx.p("speed", 1.0))
     carried = scaled_words(mapped(spoken(ctx.transcript()), ctx.keep), rate)
-    uncut = len(ctx.keep) == 1 and rate == 1.0
-    if ctx.profile.get("asr", {}).get("provider") != "whispercpp" or uncut:
+    if ctx.profile.get("asr", {}).get("provider") != "whispercpp" or len(ctx.keep) == 1:
         return carried
-    from ..media import probe, write_srt
+    from ..media import probe
+    from .subtitles import write_final
     from .words import recognise
 
     final = Path(ctx.report["outputs"][0]["video"])
-    words = spoken(recognise(ctx, media=final))
+    slow = getattr(ctx, "before_speed", None)
+    words = scaled_words(spoken(recognise(ctx, media=slow or final)), rate if slow else 1.0)
     # what this second hearing lost, the first one (with its stretches heard again) still has
     holes = _holes(words, probe(final)["duration"])
     words = sorted(words + [w for w in carried if any(a <= w["start"] < b for a, b in holes)], key=lambda w: w["start"])
     if ctx.has("write_srt"):
-        write_srt({"words": words}, final.with_suffix(".srt"), ctx.srt_glossary)
+        ctx.report["fixes"] = write_final(ctx, words, final.with_suffix(".srt"))
     return words
 
 
 def write_words(ctx) -> Path:
-    """`<issue folder>/слова-таймкоды.txt`: what is said and when, in seconds of the finished video."""
+    """`<issue folder>/слова-таймкоды.txt`: what is said and when, in seconds of the finished video, the same text as the `.srt`."""
+    from .subtitles import write_words_file
+
     words = _finished_words(ctx)
     path = ctx.outdir / WORDS
-    path.write_text("".join("{:7.2f} {}\n".format(w["start"], str(w["text"]).strip()) for w in words), encoding="utf-8")
+    write_words_file(path, words, ctx.srt_glossary, getattr(ctx, "srt_corrections", None))
     ctx.note("Графика ещё не наложена: это делается по design/overlay-kit/README.md поверх этого видео и {}".format(WORDS))
     return path

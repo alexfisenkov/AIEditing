@@ -26,6 +26,9 @@ def run(src, profile: Dict, outdir, approve: Callable[[str, dict], bool], screen
     ctx.outdir.mkdir(parents=True, exist_ok=True)
     if ctx.p("denoise"):
         ctx.note("Шумодав в этой версии не делается — звук не очищался")
+    if ctx.p("clean_speech") and ctx.src.name != "clean-speech.mov":
+        ctx.note("Формат идёт от чистой речи, а на входе {}: записи подрезка и выбор дублей не коснулись. Если это не просьба «как есть», "
+                 "сначала clean-speech.mov".format(ctx.src.name))
     for name in STEPS:
         if ctx.has(name) and PLAN[name] is not None:
             PLAN[name](ctx)
@@ -49,7 +52,9 @@ def run(src, profile: Dict, outdir, approve: Callable[[str, dict], bool], screen
 
         write_words(ctx)
     from .report import finish
+    from .subtitles import keep_final_words
 
+    keep_final_words(ctx)
     report = finish(ctx)
     shutil.rmtree(str(ctx.work), ignore_errors=True)
     return report

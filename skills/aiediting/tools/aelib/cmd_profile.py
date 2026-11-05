@@ -6,7 +6,7 @@ from pathlib import Path
 
 import state as st
 
-from . import formats, handmade, profiles, session, variants
+from . import coherence, formats, handmade, profiles, session, variants
 from .assemble import KIT_MARK, OWN
 from .install import find_installed
 from .paths import DESIGN_DIR, PRESETS_DIR
@@ -108,7 +108,7 @@ def cmd_profile(opt) -> str:
         session.touch(lambda d: st.log(d, "taste", skill=opt.skill, note=" ".join(opt.values)))
     from runtime.profile import check_profile
 
-    errors = check_profile(profile)
+    errors = check_profile(profile) + coherence.problems(profile)
     if opt.action != "check":
         profiles.write(profile, path)
     return "{}: {}".format(path, "в порядке" if not errors else "есть замечания:\n- " + "\n- ".join(errors))

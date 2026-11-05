@@ -36,6 +36,9 @@ class Context:
         self.music: Dict = {}
         self.chapters: List[Dict] = []
         self.srt_glossary: Dict[str, str] = {}
+        self.srt_corrections: Dict = {}    # the person's corrections of what was heard, on the words
+        self.final_words: Dict = {}        # {.srt name: words in seconds of that video}
+        self.before_speed: Optional[Path] = None  # the piece as it was before `params.speed`
         self.decisions: List[Dict] = []
         self.notes: List[str] = []
         self.report: Dict = {"cuts": [], "blurred": [], "fixes": [], "drift_ms": 0.0, "chapters": [],

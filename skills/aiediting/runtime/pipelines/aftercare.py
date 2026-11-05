@@ -34,6 +34,6 @@ def after(ctx, piece: Dict, final: Path, done: Dict) -> Dict:
     if ctx.has("verify_words"):
         from .verify import check_words
 
-        done["words_lost"] = check_words(ctx, final, piece["keep"])
+        done["words_lost"] = check_words(ctx, getattr(ctx, "before_speed", None) or final, piece["keep"])
         ctx.report["words_lost"] += [dict(w, piece=piece.get("id")) for w in done["words_lost"]]
     return done

@@ -24,6 +24,9 @@ their answer to `trials/NN/ответы.json` as `{"<key>": true}`, `{"<key>": f
 `{"<key>": {"ok": true, "payload": {...}}}` with what they changed. Then the same call with
 `--answers trials/NN/ответы.json`. Never approve on their behalf.
 
+A format with `params.clean_speech`: the piece must show its way, so a trial starts from the speech, not the raw recording. Make `clean-speech.mov` from
+the piece by `overlay-kit/takes-and-markers.md` in `trials/NN/речь`, then `ae.py trial <skill> "<that file>"`.
+
 A format with `graphics`: the trial is the base; put the graphics on it by `overlay-kit/README.md`, the
 working folder for this piece kept until the «да». The clip shown is the one with graphics:
 `ae.py show <skill> "<file>"` puts it on the dashboard in place of the base.

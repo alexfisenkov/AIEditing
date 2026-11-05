@@ -18,10 +18,16 @@ changed: that is a defect to fix by the README, not a result to hand over. The `
 times, so it stays right. With nothing cut, `<video>.mp4` is a hard link to the source: never edit it in place.
 
 What is said stays as said: a slip does not go on screen, and the `.srt` keeps what was heard, with mistakes of the
-recogniser corrected. Scene times must fit the sound: when hearing the video shows `слова-таймкоды.txt` wrong, correct
-the file before `prepare`. A recording that ends mid-word ends so, when the person asked to leave it as it is. The
-design's colour rules hold: a design with an accent and no «ok» uses the accent for that token. Nothing here is a reason
-to ask.
+recogniser corrected. A correction goes into `ответы.json` under `srt`, and `python "<skillDir>/tools/run.py" subtitles "<issue folder>"`
+puts it on the `.srt` and `слова-таймкоды.txt` together, in seconds, with no render; code 1 and a line mean a correction found no words,
+so copy them from the `.srt`. Neither file is edited by hand: the next `run.py edit` writes over it. `prepare` copies the words into
+`raw/words.txt`: after a correction run `prepare` again, it keeps the scenes. A doubtful place is heard at the speed of the recording, in a
+narrow piece: `run.py hear "<the file given to run.py edit>" --from S --to E`, in seconds of that file, which are the seconds of the finished
+video × `params.speed`; a recogniser hears sped-up speech worse and makes up repeats. So a word that matters on screen is checked there
+before it goes into a scene. Scene times must fit the sound: a word far from its place in the file is corrected in `raw/words.txt`, for the
+scenes, after the last `prepare`. A recording that ends mid-word ends so, when the person
+asked to leave it as it is. The design's colour rules hold: a design with an accent and no «ok» uses the accent for that token.
+Nothing here is a reason to ask.
 
 `<skillDir>/design/sources.md`, when it exists, says where this person's materials live: read it before the scenes.
 

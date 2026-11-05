@@ -69,15 +69,21 @@ ask its questions. Set them: `ae.py profile set <skill> steps=[...] params.x=...
 | They said or the frames show | The format |
 |---|---|
 | a video already edited, to be turned into shorts or a teaser | the word `нарезка`; an own word: `--like нарезка`; its path by «A format with paths» below |
-| no cuts, and graphics, overlays, «красиво», «вау» | `--preset overlay` |
-| several takes or repeats, a long video for a channel, and graphics | `--preset youtube-graphics` |
+| no cuts, and graphics, overlays, «красиво», «вау» | `--preset overlay`, `params.recording=whole` |
+| only the edges trimmed, one whole take, and graphics | `--preset youtube-graphics`, `params.recording=trim` |
+| several takes or repeats, a long video for a channel, and graphics | `--preset youtube-graphics`, `params.recording=takes` |
 | no cuts, or a silent stretch that shows something («молча показываю»), and nothing about graphics | no `cut_spans`, no `graphics`: `steps=["loudnorm","write_srt"]` |
 | anything else | that format or `custom`; `graphics` added when they asked for graphics |
+
+The first round of `phases/interview.md` is decided here, in your list: what happens to the recording, the speed they named or none, and
+the recogniser. Their words and frames do not show takes: with `youtube-graphics` and no word about it, start from `takes`, read `words-lines.txt` of
+the recording, and with no repeat in it make the profile `trim`. `ae.py profile check` names what does not fit together, and `build-skill` refuses it.
 
 Then, for every format:
 
 | When | Add |
 |---|---|
+| `params.clean_speech` | nothing more: the check of its cuts is `recut.py joins` and reading `speech-text.txt`, by `takes-and-markers.md`, and what you chose goes into the list |
 | `cut_spans` is in the steps | `verify_words`: the second listening stands in for the person's ear, with a local `params.verify_asr` when the main recogniser is paid or a second local model is at hand: the same model does not catch its own mishearings. Cuts of pauses are safe on any recogniser; cuts inside speech need exact word times, so on local whisper leave `params.wordless` out, keep `params.editor` to what you check by hearing the result again, and say so in the list |
 | a screen is visible, on any path but `reedit` | `find_secrets`, `blur_regions`. Local and free; a secret left open cannot be taken back. `reedit` has neither, and refuses them, because the pipeline makes no picture there: secrets are kept out by the crop of each screen and the choice of scenes, by «Screens» in `overlay-kit/vertical.md`, and looked for in the sheets |
 | the frame is not 16:9 and they asked for graphics | no `graphics`; a line in the list |
@@ -120,7 +126,8 @@ python "<skillDir>/tools/ae.py" build-skill .aiediting-work/<skill>/profile.json
 python .aiediting-work/build/<skill>/tools/run.py edit "<video>" --topic "<тема из их сообщения или имени файла>"
 ```
 
-Add `--no-questions` when the profile's `approval` is not `auto`. A refinement with no video: skip the run, and say the
+Add `--no-questions` when the profile's `approval` is not `auto`. A format with `params.clean_speech`: first its «Clean speech», by the built
+`SKILL.md`, and `<video>` here is that `clean-speech.mov`. A refinement with no video: skip the run, and say the
 change has not been tried. Exit code 3 is for you: the built `SKILL.md`, «Without questions», says how to decide, and
 what it says to look at after a run holds at any exit code. A failed check of the cut is fixed in the profile, and
 the skill is built and run again.
@@ -153,7 +160,7 @@ Then one message, in their language, from `решения.md`, in this order:
   in the sheets;
 - the pages you opened and the seconds of the video that show them, and that their address stays in that browser's
   history; logos added, with «check the brand's rules before publishing»;
-- tools installed; Remotion's licence when used: free for individuals and teams up to three, paid beyond that, check
+- tools installed; Remotion's licence when used: free for individuals, companies of up to three employees and non-profits, paid beyond that, check
   before commercial use; the working folder with its size, kept until they accept;
 - what is missing, as one numbered list;
 - how to repeat it («смонтируй как <слово> <путь>» in a new session). With `approval: auto`: this format now runs

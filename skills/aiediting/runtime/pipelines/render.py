@@ -107,7 +107,8 @@ def render_piece(ctx, piece: Dict) -> Dict:
         pngs += layers(ctx, piece, moving, frame, tmp / "анимации") if moving else []
         cur = media.overlay_png(cur, pngs, tmp / "5-плашки.mp4") if pngs else cur
     rate = rate_of(ctx.p("speed", 1.0))
-    if rate != 1.0:  # after the pictures, so they speed up with the voice; before the music, which stays as it is
+    ctx.before_speed = cur if rate != 1.0 else None  # what a recogniser hears: sped-up speech it hears worse
+    if rate != 1.0:  # the one place `params.speed` is applied: after the pictures, so they speed up with the voice; before the music, which stays as it is
         cur = media.speed_up(cur, rate, tmp / "5-скорость.mp4")
     lufs = float(ctx.p("lufs", -16))
     if ctx.has("music") and ctx.music and media.probe(cur)["has_audio"]:
@@ -128,4 +129,15 @@ def render_piece(ctx, piece: Dict) -> Dict:
     else:
         shutil.move(str(cur), str(final))
     done.update(video=final, duration=round(media.probe(final)["duration"], 3))
+    _check_length(ctx, keep, rate, done["duration"])
     return after(ctx, piece, final, done)
+
+
+def _check_length(ctx, keep, rate: float, got: float) -> None:
+    """Kept seconds ÷ speed is the length of the result. A speed already in the source is not seen here, it is in `keep` too: that
+    is why the kit's clean speech never carries one, and the report says both lengths."""
+    wanted = sum(b - a for a, b in keep) / rate
+    if rate != 1.0:
+        ctx.note("Скорость {:g} применена на этом шаге: {:.1f} с записи → {:.1f} с ролика".format(rate, wanted * rate, got))
+    if abs(got - wanted) > max(0.5, wanted * 0.005):
+        ctx.note("ДЛИНА НЕ СХОДИТСЯ: ждали {:.1f} с, вышло {:.1f} с. Это дефект шага, ролик в работу не отдавать".format(wanted, got))

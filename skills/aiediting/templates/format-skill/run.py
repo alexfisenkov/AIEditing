@@ -7,7 +7,8 @@
                        [--screen FILE]              the screen recording when camera and screen are separate
                        [--no-questions]             the person asked for none, in this run or in the profile
     python tools/run.py note <issue folder> "text"  a remark for the next refinement, into отчёт.md
-    python tools/run.py hear <video>                what the format's recogniser hears in it: seconds and words
+    python tools/run.py hear <video> [--from S --to E]  what the format's recogniser hears, in seconds of that file
+    python tools/run.py subtitles <issue folder> [--answers F]  the corrections of ответы.json again on the .srt and the words file, no render
 """
 import argparse
 import os
@@ -70,6 +71,46 @@ def edit(profile, opt):
     return 0
 
 
+def subtitles(profile, opt):
+    import json
+    from runtime.pipelines.subtitles import rewrite
+
+    issue = Path(opt.issue).expanduser().resolve()
+    answers = Path(opt.answers).expanduser().resolve() if opt.answers else issue / "ответы.json"
+    if not answers.is_file():
+        print("Нет файла с правками: {}".format(answers))
+        return 2
+    try:
+        answer = json.loads(answers.read_text(encoding="utf-8")).get("srt")
+        ok = answer.get("ok", True) if isinstance(answer, dict) else False
+        done = rewrite(issue, (profile.get("params") or {}).get("glossary") or {}, (answer.get("payload") if ok else None) or {})
+    except (FileNotFoundError, ValueError) as e:
+        print(str(e))
+        return 2
+    said = "Субтитры{} переписаны: правок {}".format(" и слова" if done["words_file"] else "", len(done["fixes"]))
+    print(said)
+    add_note(issue, "run.py subtitles: {}, не применились: {}".format(said, len([r for r in done["missed"] if not r.get("soft")])), profile["skill_name"])
+    for row in done["missed"]:
+        print("{}: «{}» → «{}»{}".format("Проверьте" if row.get("soft") else "Не применилась", row["from"], row["to"], ": " + row["why"] if row["why"] else ""))
+    return 1 if any(not r.get("soft") for r in done["missed"]) else 0
+
+
+def hear(profile, opt):
+    import tempfile
+    from runtime import asr, media
+
+    cfg = dict(profile["asr"], language=profile["asr"].get("language") or profile.get("language") or "")
+    video, start = Path(opt.video).expanduser().resolve(), 0.0
+    with tempfile.TemporaryDirectory(prefix="aiediting-") as tmp:
+        if opt.start is not None or opt.end is not None:  # a narrow piece, to hear a doubtful place at the speed of the recording
+            start = opt.start or 0.0
+            video = media.cut_spans(video, [(start, opt.end if opt.end is not None else media.probe(video)["duration"])], Path(tmp) / "кусок.mp4")
+        for word in asr.transcribe(video, cfg).get("words", []):
+            if str(word.get("text", "")).strip():
+                print("{:7.2f} {}".format(word["start"] + start, str(word["text"]).strip()))
+    return 0
+
+
 def main(argv):
     ap = argparse.ArgumentParser(prog="run.py")
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -86,6 +127,11 @@ def main(argv):
     n.add_argument("text")
     h = sub.add_parser("hear")
     h.add_argument("video")
+    h.add_argument("--from", dest="start", type=float)
+    h.add_argument("--to", dest="end", type=float)
+    s = sub.add_parser("subtitles")
+    s.add_argument("issue")
+    s.add_argument("--answers")
     opt = ap.parse_args(argv)
     profile = load_profile(SKILL / "profile.json")
     if opt.cmd == "check":
@@ -95,13 +141,9 @@ def main(argv):
         print(add_note(Path(opt.issue), opt.text, profile["skill_name"]))
         return 0
     if opt.cmd == "hear":
-        from runtime import asr
-
-        cfg = dict(profile["asr"], language=profile["asr"].get("language") or profile.get("language") or "")
-        for word in asr.transcribe(Path(opt.video).expanduser().resolve(), cfg).get("words", []):
-            if str(word.get("text", "")).strip():
-                print("{:7.2f} {}".format(word["start"], str(word["text"]).strip()))
-        return 0
+        return hear(profile, opt)
+    if opt.cmd == "subtitles":
+        return subtitles(profile, opt)
     return edit(profile, opt)
 
 

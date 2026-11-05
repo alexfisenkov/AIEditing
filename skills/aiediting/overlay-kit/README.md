@@ -77,7 +77,8 @@ A design system named for this video replaces the tokens and the mark for this r
 ## Rules of the frame
 
 - Captions are in the first person: it is the speaker's own address ("I take part", not "the author takes part").
-- A caption says only what was said or what a real screen shows. No numbers or promises of your own. A recogniser makes mistakes: a strange word does not go on screen. A key, a password, an address or a phone number said aloud does not go on screen either.
+- A caption says only what was said or what a real screen shows. No numbers or promises of your own. A condition in the speech stays in the caption: «в настроенном проекте», «могу» does not become a ready fact. A recogniser makes mistakes: a strange word does not go on screen. A key, a password, an address or a phone number said aloud does not go on screen either.
+- A graphic on a stage takes most of the free width and height and stands in the middle of it, with a headline from 60 px and a block's text from 32 px, and the stage is filled by the time a layout change ends. `empties` finds what was missed, but only after a draft.
 - The face is never covered: take its coordinates in `full` from `src/data/face.json` and from a frame.
 - Meaningful text must read on a phone: a pill from 26 px, a caption from 22 px. Anything smaller is only the decoration of a real screen or the kit's chapter label. (`Pill` enforces 26.)
 - A design's rules about calm and air hold inside one scene. The pace of the whole video comes from this file.
@@ -98,7 +99,7 @@ Lessons from a 73-marker review of a finished video. Each one is a rule now:
 
 ## Clean speech and edits by markers
 
-A video cut from several takes, and any cuts by the person's markers: `takes-and-markers.md`. A format where the recording stays whole does not cut; it can still read picture remarks with `tools/markers.py`.
+A video cut from several takes, a whole recording with only its edges trimmed, and any cuts by the person's markers: `takes-and-markers.md`. A format where the file stays as it is does not use it; it can still read picture remarks with `tools/markers.py`.
 
 ## Layouts and the language of motion
 
@@ -164,7 +165,7 @@ The video is a dark stage: `muted`, `faint`, `white` are light on dark (the ordi
 | Sounds `pop-soft`, `riser-1s`, `tick`, `whoosh-soft` | CC0, synthesised for this project. Other sounds: only from sources with a licence you have checked (CC0), then `--sfx` |
 | Logos | none shipped: a brand mark is a trademark and a licence for each icon is not confirmed. `add-logos.mjs` fetches a path from the `simple-icons` package (CC0 for the project, "not necessarily for every icon", see its DISCLAIMER) on request: read the brand's guidelines before publishing |
 | Music | none shipped; `--music` is yours to license |
-| Playwright (`capture-*`) | Apache-2.0, pinned to 1.56.1; real Chrome through `channel: "chrome"`, no browser download |
+| Playwright (`capture-*`) | Apache-2.0, pinned to 1.64.1; real Chrome through `channel: "chrome"`, no browser download |
 
 ## When the person says "no questions"
 

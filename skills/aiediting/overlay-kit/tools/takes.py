@@ -1,20 +1,33 @@
 #!/usr/bin/env python3
-"""Clean speech from several takes. Run in the AIEditing environment (numpy).
-  takes.py words <config.json>   word times of every recording: out/words.json, out/words-lines.txt to choose takes from
-  takes.py plan  <config.json>   the chosen takes become pieces: out/pieces.json, out/speech-text.txt
+"""Clean speech from a recording: several takes, or a whole recording with its edges trimmed. Run in the AIEditing environment (numpy).
+  takes.py init <video> <config.json> --out <dir> [--speed S] --model <ggml file> --language ru [--prompt P] [--force]
+                                 config.json for this recording: its sound as mono 48 kHz, spans for the recogniser
+  takes.py words <config.json>   word times of every recording, at its own speed: out/words.json, out/words-lines.txt to choose takes from
+  takes.py plan  <config.json>   the chosen takes become pieces, pauses out: out/pieces.json, out/speech-text.txt
+  takes.py trim  <config.json>   the recording stays whole, only its edges go: the same two files
 Then `recut.py build` makes the video. config.json:
 {"out": "<dir>", "speed": 1.07, "language": "ru", "whisper_model": "<ggml file>", "prompt": "names the recogniser mishears",
- "recordings": {"A": {"video": "<file>", "audio": "<mono wav>"}},
+ "recordings": {"A": {"video": "<file>", "audio": "<mono 48 kHz wav>"}},
  "segments": {"A": [[0, 438]]},                  // spans with speech, recognised in pieces: a long file makes the recogniser loop
  "takes": [["A", 0, "first words", "last words"]],  // in the order of the video; seconds = search from there
- "exclude": [["A", 28.4, 43.0]]}                 // something else inside a take, seconds of the recording
+ "exclude": [["A", 28.4, 43.0]],                 // something else inside a take, seconds of the recording
+ "trim": {"A": [1.2, 890.5]}}                    // `trim` only, optional: the edges by hand, seconds of the recording
+`speed` is `params.speed`, the rate of the finished video: pieces.json and every marker are in its seconds. Nothing here plays
+faster: the speed goes on once, in `run.py edit`.
 """
+import argparse
 import json
 import re
 import subprocess
 import sys
 import wave
 from pathlib import Path
+
+for _stream in (sys.stdout, sys.stderr):  # Windows: Russian lines must not stop a run before its file is written
+    try:
+        _stream.reconfigure(encoding="utf-8")
+    except (AttributeError, ValueError):
+        pass
 
 VAD_DB = -44
 PAD_START, PAD_INNER, PAD_LAST = 0.05, 0.08, 0.15
@@ -31,7 +44,7 @@ def load(path):
 
 
 def norm(text):
-    return re.sub(r"[^a-zа-яё0-9-]", "", text.lower().replace("ё", "е"))
+    return re.sub(r"[^\w-]", "", text.lower().replace("ё", "е"))
 
 
 def words(cfg, out):
@@ -97,6 +110,7 @@ def settled(vad, a, b, prev_end, next_start):
 
 def plan(cfg, out):
     raw = json.loads((out / "words.json").read_text(encoding="utf-8"))
+    (out / "time-map.json").unlink(missing_ok=True)  # mutes of an earlier plan must not land on this speech
     by_rec = {}
     for rec, item in cfg["recordings"].items():
         vad = loudness(item["audio"])
@@ -170,8 +184,32 @@ def plan(cfg, out):
     print("короткие куски, прослушать каждый:", [(p["from"], round(p["to"] - p["from"], 2)) for p in pieces if p["to"] - p["from"] < SHORT])
 
 
+def _init(argv):
+    import takes_whole
+
+    ap = argparse.ArgumentParser(prog="takes.py init")
+    ap.add_argument("video")
+    ap.add_argument("config")
+    ap.add_argument("--out", required=True)
+    ap.add_argument("--speed", type=float, default=1.0)
+    ap.add_argument("--model", required=True)
+    ap.add_argument("--language", required=True)
+    ap.add_argument("--prompt", default="")
+    ap.add_argument("--force", action="store_true")
+    opt = ap.parse_args(argv)
+    takes_whole.init(opt.video, opt.config, opt.out, opt.speed, opt.model, opt.language, opt.prompt, opt.force)
+
+
 if __name__ == "__main__":
-    if len(sys.argv) != 3 or sys.argv[1] not in ("words", "plan"):
+    if len(sys.argv) > 1 and sys.argv[1] == "init":
+        _init(sys.argv[2:])
+        raise SystemExit(0)
+    if len(sys.argv) != 3 or sys.argv[1] not in ("words", "plan", "trim"):
         raise SystemExit(__doc__)
     config, folder = load(sys.argv[2])
-    {"words": words, "plan": plan}[sys.argv[1]](config, folder)
+    if sys.argv[1] == "trim":
+        import takes_whole
+
+        takes_whole.trim(config, folder)
+    else:
+        {"words": words, "plan": plan}[sys.argv[1]](config, folder)

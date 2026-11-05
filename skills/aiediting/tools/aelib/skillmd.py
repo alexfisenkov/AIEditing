@@ -30,6 +30,7 @@ KIT_APPROVAL = {
 }
 LATER_WORDS = {"Graphics": ", besides the working folder «Graphics» names",
                "Re-edit": ", besides the working folder «Re-edit» names, which may be the long video's own"}
+RECORDING = {"takes": "«takes»: the best takes, pauses out", "trim": "«trim»: the recording whole, only its edges go"}
 ASR = {"whispercpp": "none — local whisper.cpp", "scribe": "ElevenLabs Scribe",
        "openai_compat": "the OpenAI-compatible address in profile.json", "command": "whatever your own command does"}
 
@@ -52,8 +53,12 @@ def _lines(items, empty: str) -> str:
 
 def _for_steps(text: str, profile: dict) -> str:
     """A method file may hold lines for some steps only: `<!-- if step -->…<!-- end -->`, `<!-- unless step -->…<!-- end -->`."""
+    steps = set(profile["steps"])
+    if not {"blur_regions", "reedit"} & steps:  # not a step: `reedit` keeps secrets out in its own way, and says so
+        steps.add("no_blur")
+
     def keep(found):
-        wanted = (found.group(2) in profile["steps"]) == (found.group(1) == "if")
+        wanted = (found.group(2) in steps) == (found.group(1) == "if")
         return found.group(3) if wanted else ""
 
     return GUARD.sub(keep, text)
@@ -67,6 +72,10 @@ def _method(profile: dict) -> str:
 
 def _kit_section(profile: dict) -> str:
     return next((name for step, name in KIT_SECTIONS if step in profile["steps"]), "")
+
+
+def _clean_speech(profile: dict) -> bool:
+    return bool((profile.get("params") or {}).get("clean_speech"))
 
 
 def _approval(profile: dict, section: str) -> str:
@@ -94,7 +103,10 @@ def render(profile: dict, need: dict, steps: dict, tools: dict, version: str, ow
         "taste": _lines(taste, "(none yet)"), "tools": _lines(tool_lines, "- nothing beyond Python"),
         "asr": ASR.get(profile["asr"]["provider"], profile["asr"]["provider"])
         + ("; and what «{}» names".format(section) if section else ""),
-        "writes": LATER_WORDS.get(section, ""),
+        "writes": LATER_WORDS.get(section, "") + (" and the folder of its clean speech" if _clean_speech(profile) else ""),
+        "video_first": ("**First make the clean speech: see «Clean speech». `<video>` here is its `clean-speech.mov`.** "
+                        if _clean_speech(profile) else ""),
+        "recording": RECORDING.get((profile.get("params") or {}).get("recording"), RECORDING["takes"]),  # after `method`, which holds it
     }
     text = (FORMAT_TEMPLATE / "SKILL.md.tmpl").read_text(encoding="utf-8")
     for key, value in values.items():

@@ -7,7 +7,7 @@ import sys
 import tempfile
 from pathlib import Path
 
-from . import catalog, profiles, skillmd
+from . import catalog, coherence, profiles, skillmd
 from .assemble import copy_design, copy_own, copy_runtime, copy_tools, write_pins
 from .paths import agents_skills, claude_skills
 from .variants import unchosen
@@ -21,7 +21,8 @@ def _errors(profile: dict):
     from runtime.profile import check_profile
 
     no_path = unchosen(profile) if isinstance(profile, dict) else None
-    return check_profile(profile) + catalog.check_steps(profile.get("steps") or []) + ([no_path] if no_path else [])
+    return (check_profile(profile) + catalog.check_steps(profile.get("steps") or []) + coherence.problems(profile)
+            + ([no_path] if no_path else []))
 
 
 def _imports(folder: Path):
@@ -53,7 +54,9 @@ def build_skill(profile_path, dest, replace: bool = False) -> Path:
         raise BuildError("Профиль {} не готов к сборке:\n- {}".format(profile_path, "\n- ".join(errors)))
     final = _target(dest, profile["skill_name"], replace)
     verify = (profile.get("params") or {}).get("verify_asr") or {}
-    need = catalog.needs(profile["steps"], profile["asr"]["provider"], verify_provider=verify.get("provider"))
+    # clean speech chooses takes on local whisper, whatever writes the `.srt`
+    second = verify.get("provider") or ("whispercpp" if (profile.get("params") or {}).get("clean_speech") else None)
+    need = catalog.needs(profile["steps"], profile["asr"]["provider"], verify_provider=second)
     dest.mkdir(parents=True, exist_ok=True)
     stage = Path(tempfile.mkdtemp(prefix=".build-", dir=str(dest)))
     try:

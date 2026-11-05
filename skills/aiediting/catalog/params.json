@@ -1,0 +1,22 @@
+{
+  "_comment": "Who applies a parameter that more than one step or file could touch. One owner each: everything else reads the parameter and does not apply it. A new step, method or kit file that needs one of these reads it here first (phases/refine.md, «One parameter, one place»), and a test on the whole path keeps it so (tests/test_recording_ways.py).",
+  "params": {
+    "speed": {
+      "owner": "runtime/pipelines/render.py, render_piece",
+      "others": "takes.py and recut.py read it only for seconds of the finished video; clean-speech.mov stays at the speed of the recording. The kit's `reedit` adds its own rate on top of a finished file, `source_speed` says how much is already there.",
+      "hears": "A recogniser hears before this step, in every format: sped-up speech is heard worse and comes back with made-up repeats."
+    },
+    "lufs": {
+      "owner": "the step `loudnorm`, or `overlay.py final --lufs` in a format with `graphics`: never both",
+      "others": "A format with graphics does not have `loudnorm`: tools/aelib/coherence.py refuses the pair."
+    },
+    "glossary": {
+      "owner": "runtime/media/srt.py and srt_fixes.py, on one list of words",
+      "others": "The `.srt` and слова-таймкоды.txt come from the same words. Neither file is edited by hand: corrections go into ответы.json, `run.py subtitles` puts them on both."
+    },
+    "recording": {
+      "owner": "the person, in the first question of the interview; takes.py carries it out",
+      "others": "`cut_spans` does not run on a recording decided as `trim` or `whole`, and on `takes` it would cut twice."
+    }
+  }
+}

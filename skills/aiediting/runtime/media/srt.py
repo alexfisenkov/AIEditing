@@ -1,10 +1,11 @@
-"""A sidecar `.srt` from a Transcript, with brand and term fixes from the profile glossary."""
+"""A sidecar `.srt` from a Transcript: one list of words, with the profile glossary and the person's corrections on it."""
 from __future__ import annotations
 
 import re
 from pathlib import Path
-from typing import Dict, List
+from typing import Dict, List, Tuple
 
+from .srt_fixes import corrected, glossed
 from .srt_lines import BREAK_GAP, MAX_CHARS, MAX_SECONDS, lines  # noqa: F401 (limits are re-exported)
 from .srt_words import capital_after
 
@@ -34,26 +35,32 @@ def _tokens(words: List[dict]) -> List[dict]:
 
 
 def _cues(words: List[dict], glossary: Dict[str, str] = None) -> List[dict]:
-    return lines(_tokens(words), glossary)
+    return lines(glossed(_tokens(words), glossary)[0], glossary)
 
 
-def _apply(text: str, glossary: Dict[str, str], index: int, start: float, fixes: List[dict]) -> str:
-    for wrong, right in glossary.items():
-        pattern = re.compile(r"(?<!\w){}(?!\w)".format(re.escape(wrong)), re.IGNORECASE)
-        for m in pattern.finditer(text):
-            if m.group(0) != right:
-                fixes.append({"index": index, "start": start, "from": m.group(0), "to": right})
-        text = pattern.sub(lambda _m: right, text)
-    return text
+def _final(words: List[dict], glossary: Dict[str, str] = None, corrections: Dict = None) -> Tuple[List[dict], List[dict], List[dict]]:
+    """(the words as they go out, what changed, what to look at). The person corrects what they see, so the glossary goes first."""
+    tokens, by_glossary = glossed(_tokens(words), glossary)
+    tokens, by_person, missed = corrected(tokens, corrections)
+    return tokens, by_glossary + by_person, missed
 
 
-def write_srt(transcript: dict, out, glossary: Dict[str, str] = None) -> List[dict]:
+def final_tokens(words: List[dict], glossary: Dict[str, str] = None, corrections: Dict = None) -> List[dict]:
+    """What is said as it goes to the person: the words file beside the `.srt` says the same as the `.srt`."""
+    return _final(words, glossary, corrections)[0]
+
+
+def missed_corrections(words: List[dict], glossary: Dict[str, str] = None, corrections: Dict = None) -> List[dict]:
+    return _final(words, glossary, corrections)[2]
+
+
+def write_srt(transcript: dict, out, glossary: Dict[str, str] = None, corrections: Dict = None) -> List[dict]:
     """Writes `out` (UTF-8 .srt) and returns the fixes: [{index, start, from, to}]."""
-    fixes: List[dict] = []
-    blocks = []
-    for i, cue in enumerate(_cues(transcript.get("words", []), glossary), start=1):
-        text = _apply(cue["text"], glossary or {}, i, cue["start"], fixes)
-        blocks.append("{}\n{} --> {}\n{}\n".format(i, _stamp(cue["start"]), _stamp(cue["end"]), text))
+    tokens, changed, _ = _final(transcript.get("words", []), glossary, corrections)
+    cues = lines(tokens, glossary)
+    blocks = ["{}\n{} --> {}\n{}\n".format(i, _stamp(c["start"]), _stamp(c["end"]), c["text"]) for i, c in enumerate(cues, start=1)]
+    fixes = [dict(row, index=next((i for i, c in enumerate(cues, start=1) if row["start"] < c["end"]), len(cues)))
+             for row in sorted(changed, key=lambda c: c["start"])]
     out = Path(out)
     out.parent.mkdir(parents=True, exist_ok=True)
     with open(str(out), "w", encoding="utf-8", newline="\n") as f:  # Path.write_text(newline=) needs 3.10

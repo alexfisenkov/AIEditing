@@ -1,10 +1,11 @@
-"""Second listening: the finished video is recognised again and compared with the words meant to stay."""
+"""Second listening: the video, before any speed-up, is recognised again and compared with the words meant to stay."""
 from __future__ import annotations
 
 from difflib import SequenceMatcher
 from pathlib import Path
 from typing import Dict, List
 
+from .speed import rate_of
 from .words import mapped, norm, recognise, spoken
 
 HEARD_ALIKE = 0.6
@@ -27,4 +28,5 @@ def check_words(ctx, video: Path, keep) -> List[Dict]:
     """Words that survived the plan (hesitations aside) but are not heard in `video`."""
     expected = [w for w in mapped(spoken(ctx.transcript()), keep) if w.get("type") != "filler"]
     heard = [w for w in spoken(recognise(ctx, video, ctx.p("verify_asr"))) if w.get("type") != "filler"]
-    return lost_words(expected, heard)
+    rate = rate_of(ctx.p("speed", 1.0))  # the report speaks in seconds of the finished video
+    return [dict(w, at=w["at"] / rate) for w in lost_words(expected, heard)]

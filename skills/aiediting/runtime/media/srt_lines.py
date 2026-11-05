@@ -25,7 +25,7 @@ _SOFT = re.compile(r"[,;:—–)»]$")
 def glosser(glossary: Dict[str, str]) -> Callable[[str], str]:
     """The text as the glossary will make it (the same rule as srt._apply), to measure a line by."""
     rules = [(re.compile(r"(?<!\w){}(?!\w)".format(re.escape(k)), re.IGNORECASE), v)
-             for k, v in (glossary or {}).items() if k]
+             for k, v in sorted((glossary or {}).items(), key=lambda kv: -len(kv[0].split())) if k]
 
     def apply(text: str) -> str:
         for pattern, right in rules:

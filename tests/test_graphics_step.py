@@ -39,8 +39,9 @@ class Words(TempDirCase):
     @needs_ffmpeg
     def test_whole_recording_keeps_the_seconds_and_is_not_stored_twice(self):
         video, issue, report = self.run_it(["write_srt", "graphics"])
-        self.assertEqual(len(said(issue)), len(LESSON))  # the fake recogniser tells words by their length only
-        self.assertAlmostEqual(said(issue)[3][0], LESSON[3][0], delta=0.05)
+        # the fake recogniser tells words by their length only; a hesitation is in neither the .srt nor the words file
+        self.assertEqual(len(said(issue)), len(LESSON) - 1)
+        self.assertAlmostEqual(said(issue)[2][0], LESSON[3][0], delta=0.05)
         self.assertEqual((issue / "запись.mp4").stat().st_ino, video.stat().st_ino)
         text = (issue / "отчёт.md").read_text(encoding="utf-8")
         self.assertIn("## Решено без вопросов", text)

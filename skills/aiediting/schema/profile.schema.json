@@ -21,6 +21,8 @@
       "properties": {
         "animations": {"$ref": "#/definitions/animations"},
         "verify_asr": {"$ref": "#/definitions/asr"},
+        "recording": {"enum": ["takes", "trim", "whole"],
+                      "description": "What happens to the recording: `takes`: clean speech from takes, pauses out; `trim`: whole, only its edges go; `whole`: as it is."},
         "source_speed": {"type": ["number", "null"], "minimum": 0.5, "maximum": 2.0,
                          "description": "How much the source was already sped up; `speed` is what is added to the file."},
         "cta": {"type": ["string", "null"]},

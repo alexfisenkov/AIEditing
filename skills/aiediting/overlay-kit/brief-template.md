@@ -1,8 +1,8 @@
 # Brief for the scene executor: overlays on top of a whole recording
 
-(Orchestrator: fill the quotes and the "Segments" section, save as `<W>/scenes-brief.md`, give it to every executor unchanged except for the segment.)
+(Orchestrator: fill every `<…>`, the quotes and the "Segments" section, save as `<W>/scenes-brief.md`, give it to every executor unchanged except for the segment.)
 
-The person's words: "<their request for this video, word for word>". No cuts: the speech and its timing are untouched; only graphics on top and the speaker's layouts.
+The person's words: "<their request for this video, word for word>". The speech is final: its timing is not touched here; only graphics on top and the speaker's layouts.
 
 ## How it works
 
@@ -22,17 +22,18 @@ Frames of real work: `public/frames/<name>.jpg`, `<WorkFrame name= w h crop=[x,y
 ## Quality rules
 
 1. **The design system**: only the tokens of `src/kit/tokens.ts`, only the design's fonts, colour only `C.ok` for "done". No emoji, no stock icons, no coloured plates. Icons are thin SVG lines, stroke 1.6-2, silver.
-2. **Density and "wow"**: a new event every 6-10 s, each one readable, not a mess. Alternate `full`/`close` with corner cards, then `right`/`left` with graphics, then `pip` with a full-screen diagram or a real screen. The speaker fills the frame at least a quarter of the segment. A layout changes at the start of a phrase. A scene never empties before the layout changes.
+2. **Density and "wow"**: a new event every 6-10 s, each one readable, not a mess. Alternate `full`/`close` with corner cards, then `right`/`left` with graphics, then `pip` with a full-screen diagram or a real screen. The speaker fills the frame at least a quarter of the segment. A layout changes at the start of a phrase. A scene never empties before the layout changes, and never starts late: on a layout other than `full`/`close` the stage holds something by the time the change ends, 0.85 s after its second. When the word that causes the graphic comes later than that, the layout change moves to the phrase of that word; a lasting element can also stand from the start and take its details on the word. The empty stage after a layout change is the commonest defect of a first draft.
+   **Scale**: on a layout with a stage the graphic is the point of the frame. It takes most of the free width and most of the free height, and it stands in the middle of the free stage, not pressed to its top. A headline there is from 60 px, a block's text from 32 px; the 22 and 26 px of rule 5 are for corner cards. A small card on a big empty stage is the second commonest defect.
 3. **Do not cover the face**: in `full` the face is about x=<...>, y=<...> (of the frame; read `src/data/face.json`). In `close` only the bottom strip is free.
 4. **Zones**: the corner x<300, y<90 is the mark; below y=1000 is the chapter strip. Content lives in 60...1860 x 96...990.
 5. **Text**: in the speaker's language, short, headline up to ~26 characters, a bullet up to ~36. A caption from 22 px, a pill from 26 px. In the first person, in their words.
-6. **Facts**: only what they say in this segment or what a real screen shows. No numbers of your own. A strange word from the transcript does not go on screen.
+6. **Facts**: only what they say in this segment or what a real screen shows. No numbers of your own. A strange word from the transcript does not go on screen. A condition stays: «в настроенном проекте», «могу», «если подключить» does not become a ready fact on screen. A short headline keeps the condition or stays out.
 7. **Performance**: `filter: blur` only on short appearances and never on the whole frame.
 8. Scenes of neighbouring segments do not overlap; return the last layout to `full` by the end of your segment.
 
 ## Checking your work
 
-Work and check only in `<W>`, with absolute paths. Types: `npx --prefix "<W>" tsc -p "<W>" --noEmit`. Frames: `python "<kit>/tools/overlay.py" frame "<W>" 61 72.5` writes `<W>/out/frames/<second>.jpg`: look at two frames per scene with the Read tool (the appearance and the filled state). Fix overlaps, clipped text, a covered face and empty stretches at once. Someone else's unfinished file may break the build: wait a minute and repeat.
+Work and check only in `<W>`, with absolute paths. Types: `npx --prefix "<W>" tsc -p "<W>" --noEmit`. Frames: `python "<kit>/tools/overlay.py" frame "<W>" 61 72.5` writes `<W>/out/frames/<second>.jpg`: look at two frames per scene with the Read tool (the appearance and the filled state), and one frame 1 s after every layout change: the stage must already hold the graphic, at its size. Fix overlaps, clipped text, a covered face and empty stretches at once; the draft's `empties` comes too late to be the first to find them. Someone else's unfinished file may break the build: wait a minute and repeat.
 
 ## Segments
 

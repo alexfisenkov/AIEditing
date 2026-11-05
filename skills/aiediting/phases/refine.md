@@ -62,6 +62,7 @@ A remark teaches the skills only if it lands in the right place. Decide for each
 | The remark is about | It goes to | And then |
 |---|---|---|
 | a technical or tool defect: a bug, a wrong measure, a step that breaks | the workshop itself, the same day | fix it in every skill that has the code and in this workshop, its installed copy included, without asking; a kit copied by the workshop renews at build, a kit a format made its own takes the same fix by hand |
+| two steps that do not fit: a parameter applied twice, a method that says what the pipeline already does | `catalog/params.json` and the owner in code, `tools/aelib/coherence.py` when a profile can name the pair, and, with the repository at hand, a test of the whole path in `tests/test_recording_ways.py` | «One parameter, one place» below; a rule in a method file alone does not hold |
 | something true of every video with graphics | `overlay-kit/README.md`, «Rules of the frame» | every format renews at its next build |
 | something true of every re-edit under 9:16 | `overlay-kit/vertical.md` | every format with `reedit` renews at its next build |
 | cutting, takes, markers | `overlay-kit/takes-and-markers.md` | formats that do not cut do not read it |
@@ -71,13 +72,24 @@ A remark teaches the skills only if it lands in the right place. Decide for each
 
 A rule that names the person's own paths, accounts or materials goes to `design/sources.md` of their format, never to this workshop.
 
+## One parameter, one place
+
+A format is steps from the pipeline, methods the model follows and a kit it runs, written at different times. They agree only when
+someone checks. So before a new step, method or kit tool: read `catalog/params.json`, and walk the path of one video from the recording
+to the finished file, asking of each number who applies it and in whose seconds it is. A method never says to apply what the pipeline
+applies. Whoever cannot name the owner has found the defect. The first such defect was `params.speed`: a method set it on the clean
+speech, the pipeline applied it again, and the video ran at 1.145 instead of 1.07 with every check green, because each part was right
+by itself. Only a test of the whole path shows it.
+
 ## A new way
 
 This workshop is the base of how a video can be edited, so a way found while working with one person belongs to the next one too.
 When it works and the catalog does not have it: a row in `catalog/formats.json`, under `variants` of the format it belongs to, or a
 new format; a preset in `templates/profiles/`; a method in `templates/format-skill/method/` when the model does part of it, with its
 line in `tools/aelib/skillmd.py`. A row and a preset are enough for a path: no code. The catalog holds the way, never this person's
-paths, materials or design. A new step is more work: its row in `catalog/steps.json`, its function in `runtime/pipelines/`.
+paths, materials or design. A new step is more work: its row in `catalog/steps.json`, its function in `runtime/pipelines/`. A way that
+takes a decision from the person gets its question in `phases/interview.md`, in the order the answers depend on each other, and a
+refusal in `tools/aelib/coherence.py` while it stays open.
 
 **Where it lives.** In the source of this workshop: `skills/aiediting/` of the repository it is installed from, or the person's fork.
 Not in `~/.agents/skills/aiediting`: `npx skills update aiediting -g` overwrites that copy, so a way written only there is gone at the next

@@ -50,6 +50,7 @@ def build_parser() -> argparse.ArgumentParser:
     sp.add_argument("--sfx", help="папка со своими звуками (имена как в src/kit/Sound.tsx)")
     sp.add_argument("--music", help="файл тихой музыки-подложки; без него фона нет")
     sp.add_argument("--speech", help="чистая речь WAV той же длины, что видео: она станет public/clips/speech.wav вместо звука видео")
+    sp.add_argument("--keep-face", action="store_true", help="после правок маркерами: трек лица остаётся в секундах принятого ролика, в них живут сцены")
     sp.add_argument("--no-install", action="store_true", help="не ставить npm-пакеты (тесты)")
 
     sp = add("frame", commands.cmd_frame, "контрольные кадры: out/frames/<секунда>.jpg", "work")

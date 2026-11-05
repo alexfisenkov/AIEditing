@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
 """Edit a clean-speech cut by markers without moving the scenes. Run in the AIEditing environment (numpy).
   recut.py plan   <config.json>   applies the edits to out/pieces.json: new pieces and src/data/time-map.json contents
-  recut.py build  <config.json>   the speech as a video: batches of frames, audio with micro-fades, mutes, speed
+  recut.py build  <config.json>   the speech as a video at the speed of the recording: batches of frames, audio with micro-fades, mutes
   recut.py joins  <config.json>   recognises the audio around every join: what is heard after the edit
+  recut.py old    <config.json> <second>...   a second of the video after the edits → the second of the accepted video
+`speed` is `params.speed`, the rate of the finished video: pieces, cuts and mutes are in its seconds. `build` does not apply it:
+`run.py edit` does, once, on clean-speech.mov. A recogniser hears normal speech better, and the speed goes on in one place.
 config.json:
 {"out": "<dir>", "speed": 1.07, "whisper_model": "<ggml file>", "language": "ru",
  "recordings": {"A": {"video": "<file>", "audio": "<mono 48 kHz wav>"}},
@@ -16,6 +19,12 @@ import sys
 import tempfile
 import wave
 from pathlib import Path
+
+for _stream in (sys.stdout, sys.stderr):  # Windows: Russian lines must not stop a run
+    try:
+        _stream.reconfigure(encoding="utf-8")
+    except (AttributeError, ValueError):
+        pass
 
 SHORT = 0.6
 MIN_PIECE = 0.04
@@ -82,9 +91,24 @@ def edit_pieces(pieces, cuts, ends, starts, mutes, speed):
     return out, {"rows": rows, "duration": round(at, 4), "mute": muted, "cuts": cuts}
 
 
+def at_speed(pieces, speed):
+    """Pieces in seconds of a video at `speed`: a pieces.json written at another rate, by hand or by an earlier version, is
+    moved to it, because a marker is a second of the finished video."""
+    at, out, moved = 0.0, [], False
+    for p in pieces:
+        d = (p["b"] - p["a"]) / speed
+        moved = moved or abs((p["to"] - p["from"]) - d) > 0.002
+        out.append(dict(p, **{"from": round(at, 4), "to": round(at + d, 4)}))
+        at += d
+    return out, moved
+
+
 def plan(cfg, out):
-    pieces = json.loads(Path(cfg["pieces"]).read_text(encoding="utf-8"))
-    new, meta = edit_pieces(pieces, cfg.get("cuts", []), cfg.get("end", []), cfg.get("start", []), cfg.get("mute", []), cfg.get("speed", 1.0))
+    speed = cfg.get("speed", 1.0)
+    pieces, moved = at_speed(json.loads(Path(cfg["pieces"]).read_text(encoding="utf-8")), speed)
+    if moved:
+        print("pieces.json был в секундах другой скорости: пересчитан на {:g}".format(speed))
+    new, meta = edit_pieces(pieces, cfg.get("cuts", []), cfg.get("end", []), cfg.get("start", []), cfg.get("mute", []), speed)
     (out / "pieces.json").write_text(json.dumps(new, ensure_ascii=False), encoding="utf-8")
     (out / "time-map.json").write_text(json.dumps(meta, ensure_ascii=False), encoding="utf-8")
     print("кусков", len(new), "длина", meta["duration"], "глушить", meta["mute"])
@@ -93,6 +117,7 @@ def plan(cfg, out):
 
 def build(cfg, out):
     import numpy as np
+    from takes_whole import check_wide
 
     speed = cfg.get("speed", 1.0)
     rows = json.loads((out / "pieces.json").read_text(encoding="utf-8"))
@@ -108,8 +133,11 @@ def build(cfg, out):
             groups.append((p["c"], [p]))
     audio = []
     for rec, part in groups:
+        check_wide(cfg["recordings"][rec]["video"])
         with wave.open(cfg["recordings"][rec]["audio"]) as f:
-            pcm = np.frombuffer(f.readframes(f.getnframes()), dtype=np.int16).astype(np.float32) / 32768
+            if (f.getframerate(), f.getnchannels(), f.getsampwidth()) != (rate, 1, 2):  # any other would change the pitch, with no error
+                raise SystemExit("Звук записи {} должен быть моно, 48 кГц, 16 бит: {}".format(rec, cfg["recordings"][rec]["audio"]))
+            pcm =np.frombuffer(f.readframes(f.getnframes()), dtype=np.int16).astype(np.float32) / 32768
         for s in part:
             x = pcm[int(round(s["a"] * rate)):int(round(s["b"] * rate))].copy()
             x[:fade] *= ramp
@@ -134,29 +162,48 @@ def build(cfg, out):
             ss = max(0, int(batch[0]["a"]) - 1)
             expr = "+".join(f"between(t,{s['a'] - ss - 1 / 120:.4f},{s['b'] - ss - 1 / 60:.4f})" for s in batch)
             script = out / f"select-{n}.txt"
-            script.write_text(f"select='{expr}',setpts=N/30/TB,scale=1920:1080", encoding="utf-8")
+            script.write_text(f"fps=30,select='{expr}',setpts=N/30/TB,scale=1920:1080", encoding="utf-8")  # fps first: frames count as seconds only at 30
             target = out / f"part-{n}.mp4"
-            subprocess.run(["ffmpeg", "-v", "error", "-y", "-ss", str(ss), "-to", str(int(batch[-1]["b"]) + 2), "-i", cfg["recordings"][rec]["video"], "-an", "-filter_script:v", str(script), "-c:v", "libx264", "-preset", "veryfast", "-crf", "14", "-pix_fmt", "yuv420p", str(target)], check=True)
+            subprocess.run(["ffmpeg", "-v", "error", "-y", "-ss", str(ss), "-to", str(int(batch[-1]["b"]) + 2), "-i", cfg["recordings"][rec]["video"], "-an", "-/filter:v", str(script), "-c:v", "libx264", "-preset", "veryfast", "-crf", "14", "-pix_fmt", "yuv420p", str(target)], check=True)
             chunks.append(target)
             n += 1
             print("партия", n, flush=True)
     listing = out / "parts.txt"
-    listing.write_text("".join(f"file '{c}'\n" for c in chunks), encoding="utf-8")
-    subprocess.run(["ffmpeg", "-v", "error", "-y", "-f", "concat", "-safe", "0", "-i", str(listing), "-i", str(speech), "-filter_complex", f"[0:v]setpts=PTS/{speed},fps=30[v];[1:a]atempo={speed}[a]", "-map", "[v]", "-map", "[a]", "-c:v", "libx264", "-preset", "medium", "-crf", "15", "-pix_fmt", "yuv420p", "-c:a", "pcm_s16le", "-shortest", str(out / "clean-speech.mov")], check=True)
+    listing.write_text("".join("file '{}'\n".format(str(c).replace("'", "'\\''")) for c in chunks), encoding="utf-8")
+    made = out / "clean-speech.mov"
+    made.unlink(missing_ok=True)  # with no speed a finished video can be a hard link to it: never written through
+    subprocess.run(["ffmpeg", "-v", "error", "-y", "-f", "concat", "-safe", "0", "-i", str(listing), "-i", str(speech), "-map", "0:v", "-map", "1:a", "-c:v", "libx264", "-preset", "medium", "-crf", "15", "-pix_fmt", "yuv420p", "-c:a", "pcm_s16le", "-shortest", str(made)], check=True)
     for c in chunks:
         c.unlink()
-    print("готово:", out / "clean-speech.mov")
+    seconds = len(joined) / rate
+    print("готово:", made, "длина {:.1f} с, скорость записи".format(seconds))
+    print("дальше run.py edit: ролик выйдет {:.1f} с, если params.speed = {:g}".format(seconds / speed, speed))
+
+
+def to_old(second, rows):
+    """A second of the video after the edits → the second of the accepted video the scenes live in (kit/time.ts, toOld)."""
+    if not rows:
+        return second
+    row = next((r for r in reversed(rows) if r[0] <= second), rows[0])
+    return min(row[3], row[2] + max(0.0, second - row[0] - row[4]))
+
+
+def old_seconds(cfg, out, seconds):
+    rows = json.loads((out / "time-map.json").read_text(encoding="utf-8"))["rows"] if (out / "time-map.json").is_file() else []
+    for second in seconds:
+        print("{:.2f} → {:.2f}".format(second, to_old(second, rows)))
 
 
 def joins(cfg, out):
     rows = json.loads((out / "pieces.json").read_text(encoding="utf-8"))
+    speed = cfg.get("speed", 1.0)  # pieces are in seconds of the finished video, clean-speech.mov is not sped up
     with tempfile.TemporaryDirectory() as tmp:
         whole, clip = Path(tmp) / "all.wav", Path(tmp) / "x.wav"
         subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", str(out / "clean-speech.mov"), "-ar", "16000", "-ac", "1", str(whole)], check=True)
         with wave.open(str(whole)) as w:
             rate = w.getframerate()
             for p in rows[1:]:
-                w.setpos(int(max(0, p["from"] - 3) * rate))
+                w.setpos(int(max(0, p["from"] * speed - 3) * rate))
                 data = w.readframes(int(6 * rate))
                 with wave.open(str(clip), "wb") as f:
                     f.setnchannels(1)
@@ -168,6 +215,10 @@ def joins(cfg, out):
 
 
 if __name__ == "__main__":
+    if len(sys.argv) > 3 and sys.argv[1] == "old":
+        config, folder = load(sys.argv[2])
+        old_seconds(config, folder, [float(s) for s in sys.argv[3:]])
+        raise SystemExit(0)
     if len(sys.argv) != 3 or sys.argv[1] not in ("plan", "build", "joins"):
         raise SystemExit(__doc__)
     config, folder = load(sys.argv[2])

@@ -75,9 +75,13 @@ def run_prepare(args) -> int:
     words.check_words(Path(args.words).expanduser(), info["duration"])
 
     scaffold.deploy_template(work)
+    track = work / "src" / "data" / "face.json"
+    kept = track.read_bytes() if getattr(args, "keep_face", False) and track.is_file() else None
     replaced = media.make_copies(video, info, work, speech)
     n_words = words.install_words(Path(args.words).expanduser(), info["duration"], work)
-    face_note = face.build_track(work / "public" / "clips" / "source.mp4", work, again=replaced)
+    if kept is not None:  # after edits by markers the scenes stay in the seconds of the accepted video, and the face is read in them
+        track.write_bytes(kept)
+    face_note = face.build_track(work / "public" / "clips" / "source.mp4", work, again=replaced and kept is None)
     logo = scaffold.add_logo(work, args.logo)
     design_note = design_mod.build(Path(args.design), work, logo)
     copied = 0
