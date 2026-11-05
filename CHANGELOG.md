@@ -1,6 +1,6 @@
 # What's new in AIEditing
 
-## Unreleased
+## 0.2.0 — 2026-11-05
 
 - `params.speed` goes on once, in `run.py edit`. The clean speech stays at the speed of the recording, so its `speed` no longer doubles (1.145 instead of 1.07), and a recogniser hears normal speech: a whole video by its first hearing, a cut one by a second hearing before the speed-up, `verify_words` too. The report says the length, and a length that does not fit is named. `recut.py plan` moves a `pieces.json` of another rate to the rate of the finished video.
 - A whole recording is a way: `takes.py trim` keeps everything between the first and the last word, and `takes.py init` makes the config from the file. `params.recording`: `takes`, `trim` or `whole`. A clean speech built from a source that is not 30 fps no longer runs at the wrong speed.
