@@ -55,7 +55,7 @@ Everything else of a path, such as the number of covers or the teaser, is asked 
 
 ## The first round: the recording
 
-For a format where someone talks to the camera, before every other theme, in this order: the first answer decides which themes are
+For a format where someone talks to the camera, after the one question about the niche and before every other theme, in this order: the first answer decides which themes are
 asked at all. Not for a format made from a finished video: the edit has already decided these. One round, with a recommendation in each, as any
 round. `ae.py profile check` and `build-skill` refuse a format with clean speech and no answer to the first.
 
@@ -82,7 +82,7 @@ round. `ae.py profile check` and `build-skill` refuse a format with clean speech
 2. **Do we speed it up, by how much?** `params.speed`, or none. It is applied once, to the finished video, however the speech was made.
 3. **Where does the text of the speech come from, and who reads it?** The recogniser (the theme below). It hears the speech before the speed-up, and on local whisper
    a word that goes on screen is worth checking by ear: `run.py hear --from --to`. On б and в choosing takes always hears by local whisper, whatever writes the `.srt`, so with
-   another recogniser its model goes into `params.verify_asr.model`. Whether they read the `.srt` themselves is `approval`.
+   another recogniser its model goes into `params.verify_asr.model`. They read the `.srt` themselves: `approval` `plan`. They want the finished video and no questions: `auto`, and you read it.
 
 `catalog/params.json` holds who applies what, and it is what a new step or a new way reads first.
 
