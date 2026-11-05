@@ -114,7 +114,7 @@ files, steps or points, or name a number, a short animation in your design syste
 screen, in the corner opposite your face, at most once every 30–60 s (`params.animations.every`, 45 by default).
 
 - You approve the moments, the template («файлы», «шаги», «список», «число») and the text before anything is rendered. An empty answer means no animations.
-- The price: Node.js 22+ and HyperFrames with its own browser on disk (≈400 MB together) and about 5 seconds of rendering per insert.
+- The price: Node.js 22.12+ and HyperFrames with its own browser on disk (≈400 MB together) and about 5 seconds of rendering per insert.
 - They are installed by `ae.py doctor --install node --yes` and `--install hyperframes --yes`, only for a format that chose inserts, after your yes.
 - HyperFrames comes from a checked lockfile (`npm ci --ignore-scripts`) into `~/.aiediting/node` (Windows: `%LOCALAPPDATA%\AIEditing\node`). Its telemetry is off, and its project history is written into the issue's work folder and goes with it.
 
@@ -146,7 +146,7 @@ questions until a refinement turns that off.
 **Graphics over the video.** For anyone talking to the camera in 16:9: the model reads the whole speech and writes
 scenes on the words, with real screens and materials you named; the speaker's frame moves between layouts. The speech
 stays as it is, and with cuts the scenes go on the finished video. Scenes are checked by contact sheets, a search for
-empty stretches and a sound check against the base video. The price is Node.js 22+, Remotion with its browser in the working folder
+empty stretches and a sound check against the base video. The price is Node.js 22.12+, Remotion with its browser in the working folder
 (≈700 MB; see its licence below), and rendering about as long as the video.
 
 **YouTube with graphics.** The speech is assembled from your best takes, or a whole take keeps everything but its edges; the speed you set goes on once, graphics go on top. You mark
@@ -196,7 +196,7 @@ package manager at its current version, at least the minimum. AIEditing installs
 | Pillow, numpy, OpenCV | plates and captions as images, face and layout | MIT-CMU, BSD-3-Clause, Apache-2.0 | light |
 | YuNet model | finding the face for layouts, verticals and graphics | MIT | light |
 | Tesseract | text on frames when looking for secrets (Apple Vision on macOS) | Apache-2.0 | light |
-| Node.js 22+ + HyperFrames 0.9.15 | animated inserts in a lesson: files, steps, a list, a number — only when chosen | MIT, Apache-2.0 | Node ≈100 MB; HyperFrames with its own Chrome ≈300 MB |
+| Node.js 22.12+ + HyperFrames 0.9.16 | animated inserts in a lesson: files, steps, a list, a number — only when chosen | MIT, Apache-2.0 | Node ≈100 MB; HyperFrames with its own Chrome ≈300 MB |
 | Remotion 4.0.541 | graphics over the video — only when chosen; from the kit's lockfile into the working folder | Remotion License | ≈700 MB per working folder, with its browser |
 | Remotion + RobustVideoMatting | effects "behind the head" in a vertical — **not yet**: not offered, not installed | Remotion License, GPL-3.0 | heavy |
 

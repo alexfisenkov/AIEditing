@@ -82,13 +82,13 @@ const StepNode: React.FC<{ i: number }> = ({ i }) => {
       ? { background: `linear-gradient(165deg,${C.graphiteSoft},${C.deep})`, boxShadow: RIM, color: C.muted }
       : { boxShadow: `inset 0 1px 1px #fff, 0 10px 26px rgba(0,0,0,.5), 0 0 0 ${7 * lit}px rgba(255,255,255,${0.15 * lit}), 0 0 ${46 * lit}px rgba(255,255,255,${0.42 * lit})` };
   return (
-    <At x={s.x - 170} y={430} w={340} z={2}>
+    <At x={s.x - 170} y={400} w={340} z={2}>
       <Appear at={5.6 + i * 0.35} out={S1_END}>
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", transform: `scale(${pulse})` }}>
-          <Token size={96} style={face}>
-            {state === 2 ? <Ico g="check" size={48} color={C.ink} sw={2.4} /> : i + 1}
+          <Token size={128} style={face}>
+            {state === 2 ? <Ico g="check" size={64} color={C.ink} sw={2.4} /> : i + 1}
           </Token>
-          <Txt size={30} weight={state === 1 ? 700 : 600} color={state === 1 ? C.white : state === 2 ? C.muted : C.faint} style={{ marginTop: 20, textAlign: "center" }}>
+          <Txt size={40} weight={state === 1 ? 700 : 600} color={state === 1 ? C.white : state === 2 ? C.muted : C.faint} style={{ marginTop: 20, textAlign: "center" }}>
             {s.label}
           </Txt>
         </div>
@@ -110,22 +110,22 @@ const S1: React.FC = () => {
         </Appear>
       </At>
       {STEPS.slice(0, -1).map((s, i) => (
-        <Link key={i} at={5.9 + i * 0.35} out={S1_END} from={[s.x + 64, 478]} to={[STEPS[i + 1].x - 64, 478]} dur={0.7} pulse={t >= s.on} pulseEvery={2.2} />
+        <Link key={i} at={5.9 + i * 0.35} out={S1_END} from={[s.x + 80, 464]} to={[STEPS[i + 1].x - 80, 464]} dur={0.7} pulse={t >= s.on} pulseEvery={2.2} />
       ))}
       {STEPS.map((_, i) => (
         <StepNode key={i} i={i} />
       ))}
-      <At x={230 - 170} y={680} w={340}>
+      <At x={230 - 170} y={690} w={340}>
         <Appear at={8.44} out={S1_END} y={20}>
-          <Pill size={26}>
-            <Ico g="spark" size={28} />
+          <Pill size={32}>
+            <Ico g="spark" size={32} />
             one place
           </Pill>
         </Appear>
       </At>
-      <At x={740 - 150} y={680} w={300}>
+      <At x={740 - 150} y={690} w={300}>
         <Appear at={12.04} out={S1_END} y={20}>
-          <Pill size={26}>only three</Pill>
+          <Pill size={32}>only three</Pill>
         </Appear>
       </At>
     </>
@@ -133,37 +133,39 @@ const S1: React.FC = () => {
 };
 
 // ───────── Scene 2 · 13.7-18.6 · a card and a counter (speaker on the right) ─────────
+// The stage is full when the layout change ends and the graphic stands in its middle: what the words bring later is already in place,
+// and takes its detail on the word. A condition in the speech stays in the headline.
 
 const S2: React.FC = () => (
   <>
-    <At x={90} y={190} w={1000}>
+    <At x={90} y={150} w={1000}>
       <Appear at={13.9} out={18.4}>
-        <Glass at={13.9} pad={44} style={{ width: 960 }}>
+        <Glass at={13.9} pad={52} style={{ width: 1000 }}>
           <Eyebrow>Step 3</Eyebrow>
-          <H2 size={56} style={{ marginTop: 18 }}>
+          <H2 size={72} style={{ marginTop: 20 }}>
             Check what is done
           </H2>
-          <Lead size={32} style={{ marginTop: 18 }}>
+          <Lead size={42} style={{ marginTop: 22 }}>
             At the end of the week
           </Lead>
         </Glass>
       </Appear>
     </At>
-    <At x={90} y={640} w={1000}>
-      <Appear at={16.5} out={18.4} y={20}>
-        <div style={{ display: "flex", alignItems: "center", gap: 26 }}>
-          <Token size={120}>
+    <At x={90} y={530} w={1000}>
+      <Appear at={14.2} out={18.4} y={20}>
+        <div style={{ display: "flex", alignItems: "center", gap: 34 }}>
+          <Token size={170}>
             <Count at={16.7} to={3} dur={1.0} />
           </Token>
-          <Txt size={44} weight={700}>
+          <Txt size={64} weight={700}>
             of 3 done
           </Txt>
         </div>
       </Appear>
     </At>
-    <At x={90} y={820} w={600}>
+    <At x={90} y={760} w={600}>
       <Appear at={17.76} out={18.4} y={20}>
-        <Pill tone="ok" size={30}>
+        <Pill tone="ok" size={36}>
           <Ico g="check" size={32} color={C.white} sw={2.4} />
           Done
         </Pill>
@@ -195,13 +197,13 @@ const S3Screen: React.FC = () => {
 
 const S3: React.FC = () => (
   <>
-    <At x={800} y={92} w={1000}>
+    <At x={800} y={84} w={1000}>
       <Appear at={19.0} out={24.5}>
         <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
-          <Token size={60}>
-            <Ico g="board" size={32} color={C.ink} sw={2} />
+          <Token size={64}>
+            <Ico g="board" size={34} color={C.ink} sw={2} />
           </Token>
-          <H2 size={30}>The board</H2>
+          <H2 size={60}>The board</H2>
         </div>
       </Appear>
     </At>

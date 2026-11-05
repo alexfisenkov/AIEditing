@@ -1,7 +1,7 @@
 """The four insert templates of Chrome & Graphite: no script, no network, filled from the tokens.
 
 The real HyperFrames render runs only with AIEDITING_REAL_HYPERFRAMES=1 (needs Node 22+, HyperFrames
-0.9.15 from `ae.py doctor --install hyperframes --yes` and its browser).
+0.9.16 from `ae.py doctor --install hyperframes --yes` and its browser).
 """
 import os
 import re

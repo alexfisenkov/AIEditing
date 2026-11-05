@@ -160,7 +160,7 @@ The video is a dark stage: `muted`, `faint`, `white` are light on dark (the ordi
 | Part | Licence |
 |---|---|
 | `tools/`, `template/src`, `examples/` | MIT, like the repository |
-| Remotion (`remotion`, `@remotion/cli`) | Remotion's own licence, **not an open-source one**: free for individuals and small teams, a company licence is needed beyond that; read remotion.dev/license before you use the result commercially. It is installed from npm, not shipped here |
+| Remotion (`remotion`, `@remotion/cli`) | Remotion's own licence, **not an open-source one**: free for individuals, companies of up to three employees and non-profits, a company licence is needed beyond that; read remotion.dev/license before you use the result commercially. It is installed from npm, not shipped here |
 | Fonts Unbounded, Onest, JetBrains Mono (`template/public/fonts`) | SIL Open Font License 1.1, texts beside the files (`OFL-*.txt`; Unbounded's is from github.com/googlefonts/unbounded) |
 | Sounds `pop-soft`, `riser-1s`, `tick`, `whoosh-soft` | CC0, synthesised for this project. Other sounds: only from sources with a licence you have checked (CC0), then `--sfx` |
 | Logos | none shipped: a brand mark is a trademark and a licence for each icon is not confirmed. `add-logos.mjs` fetches a path from the `simple-icons` package (CC0 for the project, "not necessarily for every icon", see its DISCLAIMER) on request: read the brand's guidelines before publishing |

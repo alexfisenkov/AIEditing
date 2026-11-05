@@ -328,6 +328,19 @@ class Coherence(unittest.TestCase):
         self.addCleanup(self.tmp_dir.cleanup)
 
 
+class TheSample(unittest.TestCase):
+    def test_the_sample_shows_what_the_brief_asks_for_on_a_stage(self):
+        text = (KIT / "examples" / "seg-a.tsx").read_text(encoding="utf-8")
+        stage = text[text.index("// ───────── Scene 2"):text.index("// ───────── Scene 4")]  # the corner cards of a full frame have their own sizes
+        import re
+
+        for name, least in (("H2", 60), ("Lead", 32), ("Pill", 32), ("Txt", 32)):
+            for size in re.findall(r"<{} [^>]*size=\{{(\d+)\}}".format(name), stage):
+                self.assertGreaterEqual(int(size), least, name)
+        scene2 = stage[:stage.index("// ───────── Scene 3")]
+        self.assertTrue(all(float(a) < 13.7 + 0.85 for a in re.findall(r"<Appear at=\{([\d.]+)\}", scene2)[:2]), "the stage is full when the change ends")
+
+
 class TheMethodAndThePipelineAgree(unittest.TestCase):
     def read(self, *parts):
         return (SKILL.joinpath(*parts)).read_text(encoding="utf-8")
