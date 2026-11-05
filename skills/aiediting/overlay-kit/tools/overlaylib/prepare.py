@@ -12,7 +12,7 @@ from . import face, media, scaffold, sounds, words
 from .common import ToolError, need, run, say, fmt_secs
 
 MIN_FREE_GB = 8.0
-NODE_MIN = 18
+NODE_MIN = (22, 12)  # the bundler of Remotion 4.0.541 (rspack): ^20.19 or 22.12 and newer; HyperFrames: 22
 
 
 def icloud_roots() -> list:
@@ -45,9 +45,9 @@ def check_work_dir(arg: str) -> Path:
 def check_node() -> None:
     need("node", "npm")
     version = run(["node", "-v"], "Версия node").stdout.strip()
-    found = re.match(r"v(\d+)", version)
-    if found and int(found.group(1)) < NODE_MIN:
-        raise ToolError("Нужен Node {}+ (сейчас {}).".format(NODE_MIN, version))
+    found = re.match(r"v(\d+)\.(\d+)", version)
+    if found and (int(found.group(1)), int(found.group(2))) < NODE_MIN:
+        raise ToolError("Нужен Node {}.{}+ (сейчас {}).".format(NODE_MIN[0], NODE_MIN[1], version))
 
 
 def install_packages(work: Path) -> None:

@@ -56,7 +56,7 @@
                  "win": {"kind": "command", "argv": ["winget", "install", "--id", "UB-Mannheim.TesseractOCR", "-e"]}},
      "skills_section": "tesseract в PATH (необязательно на macOS)"},
     {"id": "node", "what": "среда для HyperFrames и Remotion", "license": "MIT",
-     "os": ["mac", "win"], "pin": "22", "pin_kind": "minimum", "heavy": true, "size": "≈100 МБ",
+     "os": ["mac", "win"], "pin": "22.12", "pin_kind": "minimum", "heavy": true, "size": "≈100 МБ",
      "check": {"command": ["node", "--version"], "version": "v(\\d+(?:\\.\\d+)*)"},
      "install": {"mac": {"kind": "command", "argv": ["brew", "install", "node"]},
                  "win": {"kind": "command", "argv": ["winget", "install", "--id", "OpenJS.NodeJS.LTS", "-e"]}},

@@ -86,6 +86,8 @@ def _marked(tokens: Sequence[dict], rows: Sequence[dict], missed: List[dict]) ->
         if not places or abs(tokens[places[0]]["start"] - row["t"]) > NEAR:
             why = "ближайшее на {:.1f} с".format(tokens[places[0]]["start"]) if places else _hint(tokens, words)
             missed.append({"from": row["from"], "to": row["to"], "at": row["t"], "why": why})
+        elif any(i <= places[0] < i + m[0] or places[0] <= i < places[0] + len(words) for i, m in marks.items()):
+            missed.append({"from": row["from"], "to": row["to"], "at": row["t"], "why": "это место уже занято другой правкой at"})
         else:
             marks[places[0]] = (len(words), row["to"], row["from"])
     return marks
@@ -129,7 +131,11 @@ def corrected(tokens: List[dict], corrections: Optional[Dict]) -> Tuple[List[dic
             tail = _tail(part[-1]["text"])
             if tail and out and not _tail(out[-1]["text"]):
                 out[-1] = dict(out[-1], text=out[-1]["text"] + tail)
-            capital = part[0]["text"][:1].isupper() and (not out or sentence_end(out[-1]["text"]))
+            capital = capital or (part[0]["text"][:1].isupper() and (not out or sentence_end(out[-1]["text"])))
+        else:
+            if capital and made[0]["text"][:1].islower():
+                made[0] = dict(made[0], text=made[0]["text"][:1].upper() + made[0]["text"][1:])
+            capital = False
         out += made
         i += n
     for words, right, wrong in wanted:

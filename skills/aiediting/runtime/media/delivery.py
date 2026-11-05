@@ -13,6 +13,8 @@ from .ffmpeg import MediaError, encoders, run
 from .probe import probe
 
 COLOR = ["-colorspace", "bt709", "-color_primaries", "bt709", "-color_trc", "bt709"]
+# ffmpeg 9 lets the output options above reach only the matrix: the frames carry the rest, with no change to a pixel
+FRAMES = "format=yuv420p,setparams=color_primaries=bt709:color_trc=bt709:colorspace=bt709"
 
 
 def _chain(available=None) -> List[str]:
@@ -40,7 +42,7 @@ def deliver(src, out, spec: Optional[Dict] = None) -> str:
     errors = []
     for name in _chain():
         try:
-            run(["-i", src, "-map", "0:v:0", "-map", "0:a:0?", "-vf", "format=yuv420p"] + COLOR + _args(name, kbps) +
+            run(["-i", src, "-map", "0:v:0", "-map", "0:a:0?", "-vf", FRAMES] + COLOR + _args(name, kbps) +
                 audio + ["-map_metadata", "-1", "-movflags", "+faststart", out])
             return str(out)
         except MediaError as exc:

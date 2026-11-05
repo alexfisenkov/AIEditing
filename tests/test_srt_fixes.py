@@ -102,6 +102,21 @@ class WhatYouSee(unittest.TestCase):
         tokens, _, _ = corrected(words("Так так работает."), {"at": [{"t": 0.0, "from": "Так", "to": ""}]})
         self.assertEqual(said(tokens), "Так работает.")
 
+    def test_the_capital_goes_to_the_next_word_whatever_comes(self):
+        from runtime.media.srt_fixes import corrected
+
+        tokens, _, _ = corrected(words("Ну ему хорошо."), {"replace": {"Ну": "", "ему": "им"}})
+        self.assertEqual(said(tokens), "Им хорошо.")
+        tokens, _, _ = corrected(words("Ну вот как."), {"replace": {"Ну": "", "вот": ""}})
+        self.assertEqual(said(tokens), "Как.")
+
+    def test_two_at_on_one_place_name_the_second(self):
+        from runtime.media.srt_fixes import corrected
+
+        tokens, _, missed = corrected(words("да нет"), {"at": [{"t": 0.0, "from": "да", "to": "ага"}, {"t": 1.0, "from": "да", "to": "угу"}]})
+        self.assertEqual(said(tokens), "ага нет")
+        self.assertIn("занято", missed[0]["why"])
+
     def test_a_wrong_shape_is_refused_before_a_render(self):
         from runtime.media.srt_fixes import checked
 

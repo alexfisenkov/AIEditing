@@ -115,6 +115,18 @@ def plan(cfg, out):
     print("короткие куски, прослушать каждый:", [(p["from"], round(p["to"] - p["from"], 2)) for p in new if p["to"] - p["from"] < SHORT])
 
 
+def batches(part, size=20):
+    """Pieces read in one pass of the file. `select` gives frames in the file's order, so a piece from earlier in the recording, a
+    retake, starts another pass: with it in the same one the picture would run against the sound."""
+    out = []
+    for piece in part:
+        if out and len(out[-1]) < size and piece["a"] >= out[-1][-1]["b"] - 0.001:
+            out[-1].append(piece)
+        else:
+            out.append([piece])
+    return out
+
+
 def build(cfg, out):
     import numpy as np
     from takes_whole import check_wide
@@ -147,8 +159,9 @@ def build(cfg, out):
     for lo, hi in mutes:
         i, j = int(lo * speed * rate), int(hi * speed * rate)
         joined[i:j] = 0
-        joined[i - fade:i] *= ramp[::-1]
-        joined[j:j + fade] *= ramp
+        before, after = joined[max(0, i - fade):i], joined[j:j + fade]  # shorter at the very start or end of the speech
+        before *= ramp[::-1][-len(before):] if len(before) else 1
+        after *= ramp[:len(after)]
     speech = out / "speech-joined.wav"
     with wave.open(str(speech), "wb") as f:
         f.setnchannels(1)
@@ -157,8 +170,7 @@ def build(cfg, out):
         f.writeframes((np.clip(joined, -1, 1) * 32767).astype(np.int16).tobytes())
     chunks, n = [], 0
     for rec, part in groups:
-        for i in range(0, len(part), 20):
-            batch = part[i:i + 20]
+        for batch in batches(part):
             ss = max(0, int(batch[0]["a"]) - 1)
             expr = "+".join(f"between(t,{s['a'] - ss - 1 / 120:.4f},{s['b'] - ss - 1 / 60:.4f})" for s in batch)
             script = out / f"select-{n}.txt"

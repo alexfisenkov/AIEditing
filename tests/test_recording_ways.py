@@ -200,6 +200,43 @@ class Init(TempDirCase):
             takes_whole.init(video, self.tmp / "к.json", self.tmp / "р", 1.0, "м", "ru", "")
 
 
+class Takes(unittest.TestCase):
+    def test_a_retake_from_earlier_in_the_recording_starts_another_pass(self):
+        part = [{"a": 200.0, "b": 210.0}, {"a": 100.0, "b": 110.0}, {"a": 120.0, "b": 130.0}]
+        self.assertEqual([len(b) for b in recut.batches(part)], [1, 2])
+
+
+@needs_ffmpeg
+class TakesOnARealFile(TempDirCase):
+    def test_a_later_take_placed_first_loses_nothing_and_the_picture_follows_the_sound(self):
+        from runtime.media import probe
+
+        video, audio = recording(self.tmp / "запись.mp4", speech=(0.5, 11.5))
+        out = self.tmp / "речь"
+        out.mkdir()
+        (out / "words.json").write_text(json.dumps(
+            [{"c": "A", "a": 1.0, "b": 2.0, "t": "раз"}, {"c": "A", "a": 2.1, "b": 3.0, "t": "два"},
+             {"c": "A", "a": 8.0, "b": 9.0, "t": "три"}, {"c": "A", "a": 9.1, "b": 10.0, "t": "четыре"}]), encoding="utf-8")
+        cfg = {"out": str(out), "speed": 1.0, "recordings": {"A": {"video": str(video), "audio": str(audio)}},
+               "takes": [["A", 8, "три", "четыре"], ["A", 1, "раз", "два"]]}
+        takes.plan(cfg, out)
+        pieces = json.loads((out / "pieces.json").read_text(encoding="utf-8"))
+        self.assertGreater(pieces[0]["a"], pieces[-1]["a"])
+        self.assertEqual({p["clip"] for p in pieces}, {0, 1})
+        recut.build(cfg, out)
+        made = probe(out / "clean-speech.mov")
+        self.assertAlmostEqual(made["duration"], sum(p["b"] - p["a"] for p in pieces), delta=0.15)
+
+    def test_a_mute_at_the_very_start_does_not_stop_the_build(self):
+        video, audio = recording(self.tmp / "запись.mp4", speech=(0.5, 11.5))
+        out = self.tmp / "речь"
+        out.mkdir()
+        (out / "pieces.json").write_text(json.dumps([{"c": "A", "a": 0.0, "b": 5.0, "from": 0.0, "to": 5.0, "clip": 0}]), encoding="utf-8")
+        (out / "time-map.json").write_text(json.dumps({"mute": [[0.0, 0.5], [4.9999, 5.0]]}), encoding="utf-8")
+        recut.build({"out": str(out), "speed": 1.0, "recordings": {"A": {"video": str(video), "audio": str(audio)}}}, out)
+        self.assertTrue((out / "clean-speech.mov").is_file())
+
+
 class Markers(unittest.TestCase):
     def test_a_second_of_the_latest_file_goes_back_to_the_accepted_video(self):
         rows = [[0.0, 4.0, 0.0, 4.0, 0.0], [4.0, 8.0, 6.0, 10.0, 0.0]]

@@ -82,6 +82,8 @@ def subtitles(profile, opt):
         return 2
     try:
         answer = json.loads(answers.read_text(encoding="utf-8")).get("srt")
+        if isinstance(answer, dict) and set(answer) - {"ok", "payload"}:
+            raise ValueError("Ответ srt: только ok и payload, правки — внутри payload")
         ok = answer.get("ok", True) if isinstance(answer, dict) else False
         done = rewrite(issue, (profile.get("params") or {}).get("glossary") or {}, (answer.get("payload") if ok else None) or {})
     except (FileNotFoundError, ValueError) as e:

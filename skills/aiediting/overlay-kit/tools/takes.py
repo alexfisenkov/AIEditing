@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Clean speech from a recording: several takes, or a whole recording with its edges trimmed. Run in the AIEditing environment (numpy).
-  takes.py init <video> <config.json> --out <dir> [--speed S] --model <ggml file> --language ru [--prompt P] [--force]
+  takes.py init <video> <config.json> --out <dir> --speed S --model <ggml file> --language ru [--prompt P] [--force]
                                  config.json for this recording: its sound as mono 48 kHz, spans for the recogniser
   takes.py words <config.json>   word times of every recording, at its own speed: out/words.json, out/words-lines.txt to choose takes from
   takes.py plan  <config.json>   the chosen takes become pieces, pauses out: out/pieces.json, out/speech-text.txt
@@ -166,10 +166,12 @@ def plan(cfg, out):
         for n, part in enumerate(parts):
             a = round(max(0, part[0] - (0 if n and parts[n - 1][2] else PAD_START)) * 30) / 30
             b = round((part[1] + (0 if part[2] else (PAD_LAST if n == len(parts) - 1 else PAD_INNER))) * 30) / 30
-            if pieces and pieces[-1]["c"] == rec and a < pieces[-1]["b"]:
+            if pieces and pieces[-1]["c"] == rec and pieces[-1]["a"] <= a < pieces[-1]["b"]:  # only a real overlap: a retake can come earlier
                 a = pieces[-1]["b"]
             if b - a >= 0.1:
                 pieces.append({"c": rec, "a": a, "b": b, "clip": idx})
+            else:
+                problems.append("кусок #{} {:.2f}–{:.2f} выпал: он уже внутри предыдущего".format(idx, a, b))
         script.append(f"#{idx} " + " ".join(w[3] for w in by_rec[rec][i:j + 1]))
     speed = cfg.get("speed", 1.0)
     at = 0.0
@@ -191,7 +193,7 @@ def _init(argv):
     ap.add_argument("video")
     ap.add_argument("config")
     ap.add_argument("--out", required=True)
-    ap.add_argument("--speed", type=float, default=1.0)
+    ap.add_argument("--speed", type=float, required=True)
     ap.add_argument("--model", required=True)
     ap.add_argument("--language", required=True)
     ap.add_argument("--prompt", default="")

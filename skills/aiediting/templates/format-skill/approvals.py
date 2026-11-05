@@ -35,6 +35,8 @@ class FileApprover:
         key = str((payload or {}).get("key") or kind)
         if key in self.answers:
             answer = self.answers[key]
+            if isinstance(answer, dict) and set(answer) - {"ok", "payload"}:  # its corrections would be lost in silence
+                raise NeedsApproval("Ответ {} в {}: только ok и payload, правки — внутри payload".format(key, ANSWERS))
             if isinstance(answer, dict):
                 if isinstance(payload, dict) and isinstance(answer.get("payload"), dict):
                     payload.update(answer["payload"])

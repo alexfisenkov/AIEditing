@@ -55,7 +55,8 @@ def _found_nowhere(final: Dict[str, List[Dict]], glossary: Dict[str, str], corre
     if not rows:
         return []
     soft = [r for row in rows for r in row if r.get("soft")]
-    hard = [r for r in rows[0] if not r.get("soft") and all(any(o["from"] == r["from"] for o in row) for row in rows)]
+    hard = [r for r in rows[0] if not r.get("soft")
+            and all(any(o["from"] == r["from"] and not o.get("soft") for o in row) for row in rows)]
     return hard + soft
 
 
@@ -68,7 +69,8 @@ def keep_final_words(ctx) -> None:
     folder.mkdir(parents=True, exist_ok=True)
     (folder / FINAL_WORDS).write_text(json.dumps(final, ensure_ascii=False), encoding="utf-8")
     for row in _found_nowhere(final, getattr(ctx, "srt_glossary", {}), getattr(ctx, "srt_corrections", None)):
-        ctx.note("Правка субтитров не применилась: «{}» → «{}»{}".format(row["from"], row["to"], ": " + row["why"] if row["why"] else ""))
+        head = "Правка субтитров: проверьте" if row.get("soft") else "Правка субтитров не применилась"
+        ctx.note("{}: «{}» → «{}»{}".format(head, row["from"], row["to"], ": " + row["why"] if row["why"] else ""))
 
 
 def rewrite(folder, glossary: Dict[str, str], corrections: Dict) -> Dict:

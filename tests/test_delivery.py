@@ -35,7 +35,7 @@ class Deliver(unittest.TestCase):
         audio = next(s for s in info["streams"] if s["codec_type"] == "audio")
         self.assertEqual((video["codec_name"], video["codec_tag_string"], video["pix_fmt"]), ("hevc", "hvc1", "yuv420p"))
         self.assertEqual(video["profile"], "Main")
-        self.assertEqual(video["color_space"], "bt709")
+        self.assertEqual((video["color_space"], video.get("color_primaries"), video.get("color_transfer")), ("bt709", "bt709", "bt709"))
         self.assertEqual((audio["codec_name"], audio["sample_rate"], audio["channels"]), ("aac", "48000", 2))
         self.assertAlmostEqual(float(info["format"]["duration"]), 2.0, delta=0.1)
 
