@@ -62,26 +62,27 @@ round. `ae.py profile check` and `build-skill` refuse a format with clean speech
 ```
 1. Что делаем с записью?
    а) паузы и «э-э» убирает монтаж, по порогу: так обычно для урока, если дублей нет;
-   б) вы пишете дублями и молчите, пока что-то работает: я собираю чистую речь из лучших дублей (только с графикой);
-   в) один дубль, ничего внутри не режем, подрезаю только края (только с графикой);
+   б) вы пишете дублями и молчите, пока что-то работает: я собираю чистую речь из лучших дублей;
+   в) один дубль, ничего внутри не режем, подрезаю только края;
+      б и в идут только с графикой поверх: Remotion ≈700 МБ на ролик, рендер не короче самого ролика, лицензия не открытая;
    г) файл как есть, без единой склейки.
 2. Ускоряем? Я бы оставил как есть, если вы не просите. Голос не меняется, субтитры и сцены идут следом.
 3. Откуда текст речи и кто его читает? Я бы взял локальный whisper: бесплатно и приватно. Слова для экрана проверяю на слух.
 ```
 
 1. **Do we cut the recording, or does it stay whole?**
-   - а) The pipeline cuts pauses: no `params.recording`, `cut_spans` in the steps, the theme «Pauses and cuts» follows.
+   - а) The pipeline cuts pauses: no `params.recording` and no `params.clean_speech`, `cut_spans` in the steps, the theme «Pauses and cuts» follows.
    - б) Takes and silences while something runs: `params.recording` `takes`, `params.clean_speech` true, `graphics` in the steps. «Pauses and cuts» is not
      asked: this speech has no pipeline cuts, and `cut_spans` would cut twice.
    - в) One take they do not want touched, only the edges: `trim`, the same.
    - г) The file exactly as it is: `whole`, no clean speech and no cuts.
 
-   б and в need the kit, so they go with `graphics` and a 16:9 frame; without them, а. A built skill switches between б and в, and to «как есть», by their word for a video;
+   б and в need the kit, so they go with `graphics` and a 16:9 frame, and the theme «Graphics over the video» is then already answered. Graphics turned down or another frame: б becomes а; в becomes г, and say that the edges are then not trimmed. A built skill switches between б and в, and to «как есть», by their word for a video;
    the answer here is its default. A format on а or г changes its way only through a refinement.
 2. **Do we speed it up, by how much?** `params.speed`, or none. It is applied once, to the finished video, however the speech was made.
 3. **Where does the text of the speech come from, and who reads it?** The recogniser (the theme below). It hears the speech before the speed-up, and on local whisper
-   a word that goes on screen is worth checking by ear: `run.py hear --from --to`. Choosing takes (б) always hears by local whisper, whatever writes the `.srt`, so
-   б needs its model too. Whether they read the `.srt` themselves is `approval`.
+   a word that goes on screen is worth checking by ear: `run.py hear --from --to`. On б and в choosing takes always hears by local whisper, whatever writes the `.srt`, so with
+   another recogniser its model goes into `params.verify_asr.model`. Whether they read the `.srt` themselves is `approval`.
 
 `catalog/params.json` holds who applies what, and it is what a new step or a new way reads first.
 

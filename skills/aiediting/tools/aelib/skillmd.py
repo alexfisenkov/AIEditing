@@ -82,6 +82,9 @@ def _approval(profile: dict, section: str) -> str:
     way = profile.get("approval", "plan")
     if not section or way == "auto":
         return APPROVAL.get(way, APPROVAL["plan"])
+    if (profile.get("params") or {}).get("recording") == "takes":
+        first = "First the person reads the text of the speech from the chosen takes, by «Clean speech». Then: "
+        return first + (KIT_APPROVAL[section] if way != "parts" else "«По частям» is not built yet, say so. " + KIT_APPROVAL[section])
     if way == "parts":
         return "«По частям» was chosen, but part-by-part approval is not built yet. Say so to the person before the first run. " + KIT_APPROVAL[section]
     return KIT_APPROVAL[section]

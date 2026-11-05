@@ -43,6 +43,11 @@ def duration(work: Path) -> float:
     return float(found.group(1))
 
 
+def color_args() -> List[str]:
+    """Without these the file comes out with no colour tags or full range, by version: a delivery pipeline refuses it."""
+    return ["--pixel-format=yuv420p", "--color-space=bt709"]
+
+
 def still(work: Path, second: str, out: Path) -> None:
     frame = min(int(round(float(second) * FPS)), int(round(duration(work) * FPS)) - 1)
     out.parent.mkdir(parents=True, exist_ok=True)
@@ -56,6 +61,6 @@ def render(work: Path, out: Path, draft: bool) -> None:
     tmp = out.with_name(out.stem + ".part" + out.suffix)
     quality = ["--scale=0.5", "--crf=28", "--jpeg-quality=70"] if draft else ["--crf=19", "--jpeg-quality=92", "--audio-codec=aac", "--audio-bitrate=192k"]
     run([_npx(), "remotion", "render", "src/index.ts", "Full", str(tmp), "--image-format=jpeg", "--log=error", "--timeout=120000",
-         *quality, *_browser_args()], "Рендер", cwd=work, capture=False)
+         *quality, *color_args(), *_browser_args()], "Рендер", cwd=work, capture=False)
     os.replace(str(tmp), str(out))
     say("Готово: " + str(out))

@@ -37,8 +37,8 @@ SHORT = 0.6
 
 
 def load(path):
-    cfg = json.loads(Path(path).read_text(encoding="utf-8"))
-    out = Path(cfg["out"])
+    cfg = json.loads(Path(path).expanduser().read_text(encoding="utf-8"))
+    out = Path(cfg["out"]).expanduser()
     out.mkdir(parents=True, exist_ok=True)
     return cfg, out
 

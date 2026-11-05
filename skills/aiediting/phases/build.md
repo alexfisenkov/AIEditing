@@ -17,7 +17,7 @@ A refusal names the problem → fix the draft, build again. A format with paths 
 ## 2. Tools — only the chosen ones, only on «да»
 
 `python "<skillDir>/tools/ae.py" doctor --steps <steps of the profile, comma-separated> --asr <provider>`
-shows what this format needs and what is missing. For each missing tool: one line of what it is, its
+shows what this format needs and what is missing; a format with `params.clean_speech` also `doctor --asr whispercpp`, because choosing takes hears by it. For each missing tool: one line of what it is, its
 licence, its size when heavy, the warning when it has one — and `ae.py ask action --note "поставить <id>"`.
 Only on «да»: `doctor --install <id> --yes`. «Ручная» installs (a model file, Windows releases) → give the
 link and wait. Remotion is different: `doctor` lists it as manual with a licence link, but nobody installs it by that link. The kit's

@@ -8,8 +8,8 @@ it**, with `python "<skillDir>/design/overlay-kit/tools/overlay.py"` as its comm
   plus `--logo` with `<skillDir>/design/logo.svg` or `logo.png` when it exists. A design system they named for this
   video replaces the `--design` folder, and that logo, for this run.
 - The working folder: `~/.local/share/overlay-kit/<skill name>/<issue folder name>`, an absolute path.
-- `final "<working folder>" "<issue folder>" "<video> - монтаж.mp4" --lufs <params.lufs of profile.json>`, then
-  `sync "<issue folder>/<video>.mp4" "<issue folder>/<video> - монтаж.mp4"`.
+- `final "<working folder>" "<issue folder>" "<name> - монтаж.mp4" --lufs <params.lufs of profile.json>`, then
+  `sync "<issue folder>/<video>.mp4" "<issue folder>/<name> - монтаж.mp4"`. `<name>` is `<video>`; with clean speech, the name of the recording.
 
 Another `run.py edit` into the same issue folder rewrites its report: run `prepare` and `final` again after it. The run
 is not finished until the file with graphics is in the issue folder and its sound is checked against the video

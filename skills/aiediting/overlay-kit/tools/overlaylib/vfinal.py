@@ -16,7 +16,7 @@ def render_silent(work: Path, cid: str) -> Path:
     out = work / "out" / "vertical" / "{}.silent.mp4".format(cid)
     tmp = out.with_name(out.stem + ".part.mp4")
     run([remotion._npx(), "remotion", "render", "src/vertical/index.ts", cid, str(tmp), "--crf=18", "--image-format=jpeg", "--jpeg-quality=92",
-         "--muted", "--log=error", "--timeout=120000", *remotion._browser_args()], "Рендер " + cid, cwd=work, capture=False)
+         "--muted", "--log=error", "--timeout=120000", *remotion.color_args(), *remotion._browser_args()], "Рендер " + cid, cwd=work, capture=False)
     os.replace(str(tmp), str(out))
     return out
 

@@ -24,8 +24,9 @@ their answer to `trials/NN/ответы.json` as `{"<key>": true}`, `{"<key>": f
 `{"<key>": {"ok": true, "payload": {...}}}` with what they changed. Then the same call with
 `--answers trials/NN/ответы.json`. Never approve on their behalf.
 
-A format with `params.clean_speech`: the piece must show its way, so a trial starts from the speech, not the raw recording. Make `clean-speech.mov` from
-the piece by `overlay-kit/takes-and-markers.md` in `trials/NN/речь`, then `ae.py trial <skill> "<that file>"`.
+A format with `params.clean_speech`: the piece must show its way, so a trial starts from the speech, not the raw recording. Cut the piece, `ffmpeg -ss <S> -t <D> -i "<source>"
+-c:v libx264 -crf 16 -pix_fmt yuv420p -c:a pcm_s16le ".aiediting-work/<skill>/trials/речь-<S>/кусок.mov"`, make `clean-speech.mov` from it by
+`overlay-kit/takes-and-markers.md` in that folder, which stands apart from the numbers of the trials, then `ae.py trial <skill> "<that file>"`, with no `--start`.
 
 A format with `graphics`: the trial is the base; put the graphics on it by `overlay-kit/README.md`, the
 working folder for this piece kept until the «да». The clip shown is the one with graphics:
@@ -44,7 +45,8 @@ The method is written for a built skill. In a trial its words mean this:
 | `<skillDir>/design` | the draft's `design/`, the example's when it has none yet |
 | the issue folder | `trials/NN/out` |
 | the working folder | one per trial: `~/.local/share/overlay-kit/<skill>/trials-NN`, an absolute path, or the long video's own folder |
-| `run.py hear "<clip>"` | `ae.py hear <skill> "<clip>"` |
+| `run.py hear "<clip>"` | `ae.py hear <skill> "<clip>"`; for a narrow piece, cut it first: `ffmpeg -ss S -to E -i "<clip>" "<piece>.mp4"` |
+| `run.py subtitles` | the corrections in `trials/NN/ответы.json`, and the same `ae.py trial` with `--answers` |
 | `run.py note` | `ae.py profile taste <skill> "<remark>"` |
 
 ## A format with paths
@@ -115,7 +117,7 @@ as taste: the format skill reads it.
 ## Checks before showing
 
 The trial is shown only after the pipeline's own report says the drift is under 40 ms and, for a format
-that cuts, no word was cut (the report's re-transcription check). A failed check is said as it is and
+that cuts, no word was cut (the report's re-transcription check; with `params.clean_speech` that check is `recut.py joins` and reading `speech-text.txt`). A failed check is said as it is and
 fixed in the profile — never hidden. A second look by a subagent is optional: `prompts/trial-check.md`.
 
 A clip made by `reedit` has no such report from the pipeline. Its checks are the method's, on a probe too: `vertical-check`, the review

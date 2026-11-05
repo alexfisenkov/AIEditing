@@ -40,7 +40,9 @@ def init(video, config_path, out, speed, model, language, prompt, force=False):
     """config.json for a recording: its sound as mono 48 kHz, spans for the recogniser, nothing chosen yet."""
     from takes import loudness
 
-    if Path(config_path).exists() and not force:
+    config_path = Path(config_path).expanduser()
+    config_path.parent.mkdir(parents=True, exist_ok=True)
+    if config_path.exists() and not force:
         raise SystemExit("Конфиг {} уже есть, в нём ваш выбор дублей и края: новый только с --force".format(config_path))
     video = Path(video).expanduser().resolve()
     check_wide(video)
@@ -52,7 +54,7 @@ def init(video, config_path, out, speed, model, language, prompt, force=False):
     config = {"out": str(out), "speed": speed, "language": language, "whisper_model": str(Path(model).expanduser()), "prompt": prompt,
               "recordings": {"A": {"video": str(video), "audio": str(audio)}},
               "segments": {"A": _segments(loudness(str(audio)))}, "takes": [], "exclude": [], "trim": {}}
-    Path(config_path).write_text(json.dumps(config, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    config_path.write_text(json.dumps(config, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     print("конфиг:", config_path, "кусков для распознавания:", len(config["segments"]["A"]))
 
 

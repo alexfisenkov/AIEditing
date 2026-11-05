@@ -65,7 +65,7 @@ A remark teaches the skills only if it lands in the right place. Decide for each
 | two steps that do not fit: a parameter applied twice, a method that says what the pipeline already does | `catalog/params.json` and the owner in code, `tools/aelib/coherence.py` when a profile can name the pair, and, with the repository at hand, a test of the whole path in `tests/test_recording_ways.py` | «One parameter, one place» below; a rule in a method file alone does not hold |
 | something true of every video with graphics | `overlay-kit/README.md`, «Rules of the frame» | every format renews at its next build |
 | something true of every re-edit under 9:16 | `overlay-kit/vertical.md` | every format with `reedit` renews at its next build |
-| cutting, takes, markers | `overlay-kit/takes-and-markers.md` | formats that do not cut do not read it |
+| clean speech, takes, trimming, markers | `overlay-kit/takes-and-markers.md` | only formats with `params.clean_speech` read it |
 | a way to edit the catalog does not have | `catalog/formats.json` and a preset, «A new way» below | the next person is offered it |
 | the taste of this one format | its `profile.json`, `ae.py profile taste`, in the person's own words | |
 | only this one video | its report | nowhere else |

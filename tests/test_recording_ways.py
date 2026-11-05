@@ -115,6 +115,34 @@ class TheMix(TempDirCase):
 
 
 @needs_ffmpeg
+class TheColour(TempDirCase):
+    def make(self, name, *args):
+        path = self.tmp / name
+        ffmpeg("-f", "lavfi", "-i", "testsrc=s=320x180:r=30:d=1", "-c:v", "libx264", "-preset", "ultrafast", *args, str(path))
+        return path
+
+    def test_a_full_range_file_without_tags_is_named_and_a_bt709_one_passes(self):
+        from overlaylib import verify
+
+        bad = verify.color_problems(self.make("плохо.mp4", "-pix_fmt", "yuvj420p"))
+        self.assertTrue(any("pix_fmt" in p for p in bad) and any("color_space" in p for p in bad))
+        good = self.make("хорошо.mp4", "-vf", "scale=out_color_matrix=bt709:out_range=tv,format=yuv420p", "-color_range", "tv",
+                         "-x264-params", "colorprim=bt709:transfer=bt709:colormatrix=bt709:range=tv")
+        self.assertEqual(verify.color_problems(good), [])
+
+    def test_both_renders_ask_for_it(self):
+        from unittest import mock
+        from overlaylib import remotion, vfinal
+
+        with mock.patch("overlaylib.remotion.run") as run, mock.patch("overlaylib.remotion.os.replace"), mock.patch("overlaylib.remotion.say"):
+            remotion.render(self.tmp, self.tmp / "а.mp4", draft=False)
+        self.assertIn("--color-space=bt709", run.call_args[0][0])
+        with mock.patch("overlaylib.vfinal.run") as run, mock.patch("overlaylib.vfinal.os.replace"):
+            vfinal.render_silent(self.tmp, "c1")
+        self.assertIn("--color-space=bt709", run.call_args[0][0])
+
+
+@needs_ffmpeg
 class CleanSpeechOverALink(TempDirCase):
     def test_a_build_does_not_write_through_a_finished_video_linked_to_it(self):
         import os
@@ -205,6 +233,12 @@ class Coherence(unittest.TestCase):
     def test_clean_speech_goes_only_with_graphics_because_of_its_kit(self):
         self.assertTrue(any("graphics" in p for p in self.problems(["write_srt"], clean_speech=True, recording="trim")))
 
+    def test_clean_speech_on_a_paid_recogniser_names_the_local_model_it_still_needs(self):
+        from aelib.coherence import problems
+
+        profile_ = {"steps": ["write_srt", "graphics"], "params": {"clean_speech": True, "recording": "trim"}, "asr": {"provider": "scribe"}}
+        self.assertTrue(any("verify_asr.model" in p for p in problems(profile_)))
+
     def test_clean_speech_needs_the_answer_about_the_recording(self):
         self.assertTrue(any("params.recording" in p for p in self.problems(["write_srt", "graphics"], clean_speech=True)))
         self.assertEqual(self.problems(["write_srt", "graphics"], clean_speech=True, recording="trim"), [])
@@ -237,7 +271,9 @@ class Coherence(unittest.TestCase):
         draft.mkdir()
         profile_ = {"format": "проба", "skill_name": "монтаж-проба", "language": "ru", "output_dir": "выпуски", "approval": "auto", "design": "design/",
                     "asr": {"provider": "scribe", "language": "ru", "model": None, "base_url": None, "api_key_env": "K", "command": None},
-                    "steps": ["write_srt", "graphics"], "params": {"clean_speech": True, "recording": "trim", "speed": 1.07}, "taste": []}
+                    "steps": ["write_srt", "graphics"], "taste": [],
+                    "params": {"clean_speech": True, "recording": "trim", "speed": 1.07,
+                               "verify_asr": {"provider": "whispercpp", "language": "ru", "model": "/модели/ggml.bin"}}}
         (draft / "profile.json").write_text(json.dumps(profile_), encoding="utf-8")
         done = subprocess.run([sys.executable, str(SKILL / "tools" / "ae.py"), "build-skill", str(draft / "profile.json"), str(draft.parent / "out")],
                               capture_output=True, text=True, encoding="utf-8", env=dict(os.environ, AIEDITING_WORK=str(draft.parent)))

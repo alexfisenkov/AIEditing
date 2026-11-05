@@ -7,7 +7,7 @@ The person's words: "<their request for this video, word for word>". The speech 
 ## How it works
 
 - Root: `<W>`. Before you start, read `src/kit/` in full and the sample in `<kit>/examples/` (the device and the level of quality).
-- Time is everywhere **seconds of the video in `public/clips/source.mp4`**. `useT()` gives the current second. Words with their seconds: `raw/words.txt`. Bind every appearance to the word that causes it: check it in that file, the numbers in this brief are approximate.
+- Time is everywhere **seconds of the video in `public/clips/source.mp4`**. `useT()` gives the current second. When `src/data/time-map.json` has rows, the video was edited by markers: scenes and `useT` stay in the seconds of the first accepted video, and a word's second from `raw/words.txt` goes through `toOld` from `src/kit/time.ts`. Words with their seconds: `raw/words.txt`. Bind every appearance to the word that causes it: check it in that file, the numbers in this brief are approximate.
 - A scene is an object `{from, to, C}` in `scenes` of your `src/scenes/seg-X.tsx`. Position in the 1920x1080 frame: `<At x y w h>`; an appearance: `<Appear at out>`.
 - Layouts live in `src/data/layouts-X.ts`, exported as `LAYOUTS_X`: `[second, "full"|"close"|"right"|"left"|"half"|"pip"|"pipL"|"pipTop"]`. The change takes 0.85 s. The graphite stage appears by itself for everything except `full`/`close`.
 - Sound is the `cues` array: `[second, "mouse-click"]`, the language of sounds is in `src/kit/Sound.tsx`. `whoosh-soft` on a layout change; no sound on leaving or zooming. `src/data/sfx.json` lists the files that exist; a missing one falls back or is skipped, never fails.

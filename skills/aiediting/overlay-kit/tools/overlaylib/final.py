@@ -10,6 +10,9 @@ from .media import duration_of
 
 MAX_SHIFT = 0.25  # a larger measured delay is a mismatch, not an encoder delay: do not "correct" it
 REPORT, PENDING, READY = "отчёт.md", "Графика ещё не наложена", "## Готовое"
+# Primaries and transfer only, and no pixel changes: older Remotion leaves them empty even with --color-space=bt709. Range and matrix
+# are what the pixels really are, so they are not written here: a wrong render is refused by verify.color_problems, not relabelled.
+COLOR_TAGS = "h264_metadata=colour_primaries=1:transfer_characteristics=1"
 
 
 def measure_shift(render: Path, speech: Path) -> float:
@@ -28,7 +31,7 @@ def measure_shift(render: Path, speech: Path) -> float:
 def mix(render: Path, out: Path, audio_filter: str, length: float) -> None:
     """The picture as it is, the sound levelled. ffmpeg 9's loudnorm flushes a tenth of a second more than it was given: the
     result lasts as long as the picture, or `sync` refuses it for its length."""
-    ffmpeg("-i", render, "-map", "0:v:0", "-map", "0:a:0", "-c:v", "copy", "-c:a", "aac", "-b:a", "192k", "-ar", "48000",
+    ffmpeg("-i", render, "-map", "0:v:0", "-map", "0:a:0", "-c:v", "copy", "-bsf:v", COLOR_TAGS, "-c:a", "aac", "-b:a", "192k", "-ar", "48000",
            "-af", audio_filter, "-t", "{:.3f}".format(length), "-movflags", "+faststart", out, what="Сведение звука")
 
 
@@ -59,6 +62,10 @@ def run_final(args) -> int:
     say(loudness.summary(tmp))
     ok, worst = verify.sync_report(speech, tmp, length=remotion.duration(work))
     say("Сверка звука: " + ("в допуске" if ok else "ВНЕ ДОПУСКА"))
+    color = verify.color_problems(tmp)
+    if color:
+        ok = False
+        say("Цвет не для доставки: {}. Рендер старой версии: сделайте final без --reuse-render".format("; ".join(color)))
     if not ok:  # an earlier good file stays under the final name
         say("Файл не выпущен, он лежит как {}".format(tmp))
         return 1

@@ -25,7 +25,7 @@ Everything is the Python standard library (3.9+, macOS and Windows). OpenCV is u
 | `empties <video> [--min 1]` | stretches where the stage is empty longer than the threshold |
 | `texts <W> <file>` | all text the scenes put on screen, for the critics |
 | `frames <video> <W> [--overview] [--label L] [--crop x,y,w,h] <sec...>` | an overview sheet and chosen seconds of any video, saved as `WorkFrame` pictures named `<label>-<second>`. `--crop` is in shares of the frame (0.1,0.2,0.5,0.5) |
-| `final <W> <release dir> <name> [--lufs -14] [--reuse-render]` | full render, AAC delay measured and removed, loudness set, atomic write, `sync` |
+| `final <W> <release dir> <name> [--lufs -14] [--reuse-render]` | full render in H.264 yuv420p, limited range, BT.709 with all its tags, so the file goes to delivery as it is; AAC delay measured and removed, loudness set, atomic write, `sync`; exit 1 when the sound or the colour tags are off |
 | `sync <base> <final>` | the speech of the result against the source; exit 1 outside 10 ms |
 | `index <W>` | rebuilds the scene and layout lists (frame/draft/final do it themselves) |
 | `vertical-init <W> [--spans F] [--renew]` | puts the vertical set `src/vertical/` into the folder; never overwrites scenes or your data |
@@ -99,7 +99,7 @@ Lessons from a 73-marker review of a finished video. Each one is a rule now:
 
 ## Clean speech and edits by markers
 
-A video cut from several takes, a whole recording with only its edges trimmed, and any cuts by the person's markers: `takes-and-markers.md`. A format where the file stays as it is does not use it; it can still read picture remarks with `tools/markers.py`.
+A video cut from several takes, a whole recording with only its edges trimmed, and cuts by the person's markers on them: `takes-and-markers.md`. Cuts by markers need its `pieces.json`, so a format without clean speech has them only through a refinement; it can still read picture remarks with `tools/markers.py`.
 
 ## Layouts and the language of motion
 

@@ -76,8 +76,7 @@ ask its questions. Set them: `ae.py profile set <skill> steps=[...] params.x=...
 | anything else | that format or `custom`; `graphics` added when they asked for graphics |
 
 The first round of `phases/interview.md` is decided here, in your list: what happens to the recording, the speed they named or none, and
-the recogniser. Their words and frames do not show takes: with `youtube-graphics` and no word about it, start from `takes`, read `words-lines.txt` of
-the recording, and with no repeat in it make the profile `trim`. `ae.py profile check` names what does not fit together, and `build-skill` refuses it.
+the recogniser. Their words and frames do not show takes: with `youtube-graphics` and no word about it, start from `takes`; §5 may change it. `ae.py profile check` names what does not fit together, and `build-skill` refuses it.
 
 Then, for every format:
 
@@ -112,7 +111,7 @@ cheap, and goes in words. `bands` is, and it needs three things a `reedit` draft
 
 ## 4. Tools
 
-`ae.py doctor --steps <steps> --asr <provider>`. Asking for no questions is the «да» to the tools of the
+`ae.py doctor --steps <steps> --asr <provider>`, and with `params.clean_speech` also `--asr whispercpp`: choosing takes hears by it. Asking for no questions is the «да» to the tools of the
 chosen steps, by their pins: `doctor --install <id> --yes`, each one written down, with its licence and its size
 when the catalog has one. A tool of an optional step that cannot be installed → the step goes out of the profile
 and into the list; the core is a blocker, above. Remotion has no `--install`: the kit's `prepare` installs it from
@@ -127,7 +126,8 @@ python .aiediting-work/build/<skill>/tools/run.py edit "<video>" --topic "<те�
 ```
 
 Add `--no-questions` when the profile's `approval` is not `auto`. A format with `params.clean_speech`: first its «Clean speech», by the built
-`SKILL.md`, and `<video>` here is that `clean-speech.mov`. A refinement with no video: skip the run, and say the
+`SKILL.md`, and `<video>` here is that `clean-speech.mov`. After its `takes.py words`, a format started from `takes` with no repeat in `words-lines.txt` becomes `trim`:
+`ae.py profile set <skill> params.recording='"trim"'`, `build-skill --replace` again, and `takes.py trim` on the same config, not a new `init`. A refinement with no video: skip the run, and say the
 change has not been tried. Exit code 3 is for you: the built `SKILL.md`, «Without questions», says how to decide, and
 what it says to look at after a run holds at any exit code. A failed check of the cut is fixed in the profile, and
 the skill is built and run again.
