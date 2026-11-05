@@ -106,7 +106,7 @@ The list offers seven formats, under these words; anything else you name becomes
 | youtube | an episode with chapters; you approve the plan once, part-by-part approval is not built yet |
 | вертикаль (vertical) | 9:16, speech without pauses, burned-in captions, export for three platforms, clips up to 60 s from a long recording |
 | наложения (overlays) | the speech stays whole, without a single cut; graphics and real screens on top |
-| ютуб (YouTube with graphics) | clean speech from your takes, graphics and real screens on top, remarks by Final Cut markers |
+| ютуб (YouTube with graphics) | clean speech from your takes, or one whole take with only its edges trimmed; graphics and real screens on top, remarks by Final Cut markers |
 | нарезка (clips from a finished video) | from an edited horizontal video: 9:16 clips, two ways to choose from after a probe (below) |
 
 For a lesson (and any format that shows a screen) you can choose **animated inserts**: where you list
@@ -149,7 +149,7 @@ stays as it is, and with cuts the scenes go on the finished video. Scenes are ch
 empty stretches and a sound check against the base video. The price is Node.js 22+, Remotion with its browser in the working folder
 (≈700 MB; see its licence below), and rendering about as long as the video.
 
-**YouTube with graphics.** The speech is assembled from your best takes at the speed you set, graphics go on top. You mark
+**YouTube with graphics.** The speech is assembled from your best takes, or a whole take keeps everything but its edges; the speed you set goes on once, graphics go on top. You mark
 remarks with Final Cut markers: cuts land on the finished video and the scenes keep their places. So far this format has
 been proven on one real video.
 
@@ -196,8 +196,8 @@ package manager at its current version, at least the minimum. AIEditing installs
 | Pillow, numpy, OpenCV | plates and captions as images, face and layout | MIT-CMU, BSD-3-Clause, Apache-2.0 | light |
 | YuNet model | finding the face for layouts, verticals and graphics | MIT | light |
 | Tesseract | text on frames when looking for secrets (Apple Vision on macOS) | Apache-2.0 | light |
-| Node.js 22+ + HyperFrames 0.8.201 | animated inserts in a lesson: files, steps, a list, a number — only when chosen | MIT, Apache-2.0 | Node ≈100 MB; HyperFrames with its own Chrome ≈300 MB |
-| Remotion 4.0.513 | graphics over the video — only when chosen; from the kit's lockfile into the working folder | Remotion License | ≈700 MB per working folder, with its browser |
+| Node.js 22+ + HyperFrames 0.9.15 | animated inserts in a lesson: files, steps, a list, a number — only when chosen | MIT, Apache-2.0 | Node ≈100 MB; HyperFrames with its own Chrome ≈300 MB |
+| Remotion 4.0.541 | graphics over the video — only when chosen; from the kit's lockfile into the working folder | Remotion License | ≈700 MB per working folder, with its browser |
 | Remotion + RobustVideoMatting | effects "behind the head" in a vertical — **not yet**: not offered, not installed | Remotion License, GPL-3.0 | heavy |
 
 Python packages are pinned by Python version; Python 3.9 is the minimum. On 3.12 and newer — Pillow 13.0.0,
@@ -205,7 +205,7 @@ numpy 2.5.4; on 3.10–3.11 — Pillow 12.3.0, numpy 2.2.6; on 3.9 — Pillow 11
 4.14.0.94 everywhere. CI installs the sets for Python 3.12 and 3.14 on macOS and Windows and the set for 3.9 on Windows;
 the set for 3.10–3.11 is not run in CI.
 
-> **Remotion is not open source.** It is free for individuals and companies of up to three people;
+> **Remotion is not open source.** It is free for individuals, companies of up to three employees and non-profits;
 > larger companies need a paid licence. Check the terms at remotion.pro before choosing graphics over the video.
 > Nothing is installed by default. Effects "behind the head" are not built yet, so the workshop does not offer them.
 

@@ -25,6 +25,13 @@ def measure_shift(render: Path, speech: Path) -> float:
     return shift
 
 
+def mix(render: Path, out: Path, audio_filter: str, length: float) -> None:
+    """The picture as it is, the sound levelled. ffmpeg 9's loudnorm flushes a tenth of a second more than it was given: the
+    result lasts as long as the picture, or `sync` refuses it for its length."""
+    ffmpeg("-i", render, "-map", "0:v:0", "-map", "0:a:0", "-c:v", "copy", "-c:a", "aac", "-b:a", "192k", "-ar", "48000",
+           "-af", audio_filter, "-t", "{:.3f}".format(length), "-movflags", "+faststart", out, what="Сведение звука")
+
+
 def run_final(args) -> int:
     work = work_dir(args.work)
     release = Path(args.release).expanduser()
@@ -46,8 +53,7 @@ def run_final(args) -> int:
     say("Громкость рендера до сведения: {} LUFS, пик {} dBFS".format(measured["input_i"], measured["input_tp"]))
     release.mkdir(parents=True, exist_ok=True)
     tmp = release / (".{}.part.mp4".format(Path(name).stem))
-    ffmpeg("-i", render, "-map", "0:v:0", "-map", "0:a:0", "-c:v", "copy", "-c:a", "aac", "-b:a", "192k", "-ar", "48000",
-           "-af", loudness.audio_filter(args.lufs, measured, shift), "-movflags", "+faststart", tmp, what="Сведение звука")
+    mix(render, tmp, loudness.audio_filter(args.lufs, measured, shift), remotion.duration(work))
     final = release / name
     say("Итог: {} ({:.2f} с, {:.1f} МБ)".format(final, duration_of(tmp), tmp.stat().st_size / 1e6))
     say(loudness.summary(tmp))
