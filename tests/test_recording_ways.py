@@ -16,6 +16,14 @@ import recut  # noqa: E402
 import takes  # noqa: E402
 import takes_whole  # noqa: E402
 
+try:
+    import numpy  # noqa: F401
+    HAS_NUMPY = True
+except ImportError:
+    HAS_NUMPY = False
+# The job «pins» of ci.yml installs numpy and runs this file on macOS and Windows
+needs_numpy = unittest.skipUnless(HAS_NUMPY, "numpy is not installed")
+
 RATE = 1.07
 SECONDS = 12.0
 SPEECH = (2.0, 10.0)  # the edges of the speech in the recording
@@ -33,6 +41,7 @@ def recording(path, rate=30, seconds=SECONDS, speech=SPEECH):
 
 
 @needs_ffmpeg
+@needs_numpy
 class WholeRecording(TempDirCase):
     def cfg(self, video, audio, speed=RATE, **more):
         out = self.tmp / "clean"
@@ -143,6 +152,7 @@ class TheColour(TempDirCase):
 
 
 @needs_ffmpeg
+@needs_numpy
 class CleanSpeechOverALink(TempDirCase):
     def test_a_build_does_not_write_through_a_finished_video_linked_to_it(self):
         import os
@@ -163,6 +173,7 @@ class CleanSpeechOverALink(TempDirCase):
         self.assertEqual(linked.read_bytes(), before)
 
 
+@needs_numpy
 class Init(TempDirCase):
     @needs_ffmpeg
     def test_the_config_has_a_real_model_path_and_a_flat_folder(self):
@@ -207,6 +218,7 @@ class Takes(unittest.TestCase):
 
 
 @needs_ffmpeg
+@needs_numpy
 class TakesOnARealFile(TempDirCase):
     def test_a_later_take_placed_first_loses_nothing_and_the_picture_follows_the_sound(self):
         from runtime.media import probe
