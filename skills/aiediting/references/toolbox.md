@@ -2,6 +2,7 @@
 
 Read when a requested montage operation is absent from a preset or `catalog/steps.json`.
 The catalog is the set of repeatable AIEditing steps, not a list of every edit an agent can make.
+Detailed methods and checked executable examples are indexed in [methods.md](methods.md).
 First inspect the source and the installed local tools. Use
 `python3 "<skillDir>/tools/ae.py" capabilities` (or add `--json`) to see this machine's
 actual FFmpeg filters and available tools; `setup --check` checks the complete maintained
@@ -19,7 +20,7 @@ filters and the chosen tool's own documentation before composing a method.
 |---|---|---|
 | Cuts, pauses, retakes | `speech_spans`, `cut_spans`, `verify_words`; format methods can select takes | PySceneDetect can identify scene boundaries for a source-time edit list; it does not choose the best take. Assemble with FFmpeg or the format kit. Hear each join and check that intended words remain. |
 | ASR and subtitles | Local whisper or the chosen ASR, `write_srt`, `overlay_png`, glossary and correction flow | pysubs2 can read or convert local SRT/ASS; compose word-level or animated captions in Remotion/another local renderer. Verify timing, spelling and safe areas on actual frames. |
-| Audio cleanup, mix and SFX | `loudnorm`, music from an authorized library, and the profile's noise-reduction control | SoundFile and librosa can measure PCM audio, rhythm and offset; they do not make a finished mix. Select available FFmpeg processing or another checked local tool, then listen to speech and transitions. Use sound assets only when their source and permission are known. |
+| Audio cleanup, mix and SFX | Native `loudnorm` and music from an authorized library; explicit cleanup recipes in [audio-processing.md](audio-processing.md) | The existing `params.denoise` flag alone does not perform noise reduction. Use a verified FFmpeg cleanup route. SoundFile/librosa measure PCM audio, rhythm and offset; listen to speech and transitions after processing. Use sound assets only from an authorized source. |
 | Color, matching and LUTs | No general color-grading step | Measure representative frames, use verified FFmpeg color tools or a locally available editor, compare shots and inspect skin, clipping and gamut. A LUT path and its rights must be known. |
 | Reframe, transforms and speed | `detect_layout`, `vertical`, `motion`, profile speed and `export_platforms` | Compose crop, scale, pad, rotation or time changes with available FFmpeg filters or Remotion. Check framing, audio pitch, sync and subtitle times. |
 | Stabilization and tracking | No general-purpose step | Check `capabilities` for a suitable installed filter or select a real local tracker/stabilizer; install checked requirements in an isolated environment. Test a short moving segment before processing the whole video. |

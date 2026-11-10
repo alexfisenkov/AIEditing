@@ -16,7 +16,7 @@ captions and chapter plates look like — watch a trial edit on **your** footage
 until it is right, and get a format skill named after your word, such as `монтаж-урок` ("lesson
 edit"). After that, in any folder, you just say "edit this like a lesson".
 
-> Status: early version (0.3.0).
+> Status: early version (0.3.1).
 
 <p align="center">
   <a href="assets/aiediting-dashboard.png"><img src="assets/dash-now.png" width="380" alt="The dashboard: the current stage, what it is waiting for, your formats and the frames of your source"></a>
@@ -98,7 +98,7 @@ does not prove an effect works on a given recording.
 | Windows | installation path and CI workflow provided; setup installs the checksum-verified official whisper.cpp CPU archive for x64 or ARM64 |
 | Linux | not tested |
 
-CI is configured to run unit tests and install the pinned Python packages. The new 0.3.0 changes have not yet completed hosted CI or physical Windows acceptance. Rendering of animated inserts and graphics is checked locally on macOS. Editing by markers needs a timeline exported from Final Cut, which runs only on a Mac.
+CI is configured to run unit tests and install the pinned Python packages. The new 0.3.x changes have not yet completed hosted CI or physical Windows acceptance. Rendering of animated inserts and graphics is checked locally on macOS. Editing by markers needs a timeline exported from Final Cut, which runs only on a Mac.
 
 ---
 
@@ -178,6 +178,14 @@ format makes one, and a short report. A remark after watching goes into that rep
 suggests running AIEditing to refine the format.
 
 ---
+
+## Tool methods
+
+The parent includes a [task-based handbook](skills/aiediting/references/methods.md), with source
+selection, tuned recipes, failure signs and output checks for the maintained toolbox. It adapts the
+supplied editing skills to the local runtime and distinguishes measurements from editorial decisions.
+`python3 <skillDir>/tools/recipes.py --help` lists seven checked scene/audio/subtitle/stabilization/quality
+examples. These do not change an installed format profile or add native pipeline step names.
 
 ## What it does and what it never does
 

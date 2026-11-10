@@ -1,5 +1,11 @@
 # What's new in AIEditing
 
+## 0.3.1 — 2026-11-10
+
+- The parent now carries task-specific tool methods: scenes, audio measurements/sync/processing, subtitles, colour/stabilization, background/alpha, vision/OCR/transcription, graphics, editorial choices and technical QA. Each method names source-time ownership, parameter choices, failure signs and acceptance checks.
+- `tools/recipes.py` provides checked, local scene/audio reports, recorder-offset analysis, subtitle conversion/burn-in, one-cut stabilization and aligned same-content VMAF. It selects the private tool environment and protects sources. Validated results use atomic no-clobber placement where available, or an exclusive copy on other volumes; command success is the completion receipt. These examples do not add native pipeline steps or change a format profile.
+- Supplied motion/editing skills are adapted to the existing runtime and linked to a source/coverage ledger; unavailable editor APIs and personal assets are not bundled. Four installed montage formats are outside this update's write scope.
+
 ## 0.3.0 — 2026-11-10
 
 - `ae.py setup` prepares the complete local editing toolkit; `setup --check` verifies it without installing, and selected steps can repair their own dependencies. Failed installs and unusable binaries now fail the command. Checks cover package versions, model hashes, ffprobe, renderer CLIs and renderer browsers.

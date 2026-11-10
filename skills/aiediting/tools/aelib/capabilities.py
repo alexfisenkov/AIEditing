@@ -59,7 +59,9 @@ def inspect_capabilities() -> dict:
                              "missing_tools": missing_tools, "missing_filters": missing_filters})
     from .checks import argv_of
 
-    executables = {name: argv_of([name])[0] for name in ("ffmpeg", "ffprobe", "node")}
+    from .paths import venv_python
+    executables = {name: argv_of([name])[0] for name in ("ffmpeg", "ffprobe", "node", "whisper-cli", "tesseract")}
+    executables["python"] = str(venv_python())
     return {"verification": "tool-readiness; output must be checked separately", "executables": executables,
             "ffmpeg_filters": sorted(available),
             "tools": states, "capabilities": capabilities}

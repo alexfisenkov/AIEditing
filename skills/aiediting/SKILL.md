@@ -4,7 +4,7 @@ description: Workshop that builds your own video-editing skills. Interviews you 
 disable-model-invocation: true
 argument-hint: "[new|refine] format name or path to a source video"
 metadata:
-  version: "0.3.0"
+  version: "0.3.1"
 ---
 
 # AIEditing
@@ -53,6 +53,10 @@ For a request to remove or replace a human video background, read
 also supply a foreground layer for an edit's "behind the head" composition.
 For another editing request outside the catalog or a format's chosen steps, read
 `references/toolbox.md` and inspect `ae.py capabilities` before selecting a local route.
+For detailed tool use, read `references/methods.md` and only the task's linked method pages.
+They explain tool selection, source-time ownership, tuned recipes and output acceptance. Checked
+analysis/finishing examples run through `tools/recipes.py`; its commands are not native pipeline
+step names. Do not change an existing format merely to apply or learn a one-off method.
 
 **Their words choose the path.** The person asked not to be asked (the signal is at the top of that file)
 → `phases/start.md`, §1, then `phases/no-questions.md`, in place of every phase but the ones it names.
@@ -74,7 +78,7 @@ in another one. One word per stage, on the dashboard and in the chat: Старт
 
 Every event is one call: `python "<skillDir>/tools/ae.py" <command>` — `init`, `no-questions`, `stage`, `ask`,
 `answered`, `formats`, `profile`, `variant`, `frames`, `layout`, `design-example`, `samples`, `choose`, `trial`, `show`, `hear`, `kit`,
-`verdict`, `build-skill`, `install-skill`, `list-skills`, `backup-skill`, `restore-skill`, `doctor`, `setup`, `capabilities`, `background`,
+`verdict`, `build-skill`, `install-skill`, `list-skills`, `backup-skill`, `restore-skill`, `doctor`, `setup`, `capabilities`, `background`, `image-cutout`,
 `finish`. The command list with arguments is at the top of `tools/ae.py`. `phases/start.md` says how to
 find `<skillDir>`. You never edit `state.js` or the dashboard by hand. Where there is no `python`, as on
 many Macs, use `python3`; where it is the Microsoft Store stub on Windows, use `py -3`.
