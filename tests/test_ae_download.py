@@ -38,7 +38,7 @@ class Download(TempDirCase):
         self.dest = self.tmp / "models" / "face_detection_yunet_2023mar.onnx"
         step = {"kind": "download", "url": URL, "sha256": hashlib.sha256(BODY).hexdigest(),
                 "save_to": str(self.dest)}
-        self.row = dict(ROW, install={current_os(): step})
+        self.row = dict(ROW, install={current_os(): step}, check={"file": str(self.dest)})
         self.calls = []
 
     def install(self, body):

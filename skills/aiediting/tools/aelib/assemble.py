@@ -14,6 +14,8 @@ from .paths import DESIGN_DIR, FORMAT_TEMPLATE, OVERLAY_KIT, RUNTIME_DIR, SCHEMA
 
 SKIP = shutil.ignore_patterns("__pycache__", "*.pyc", ".DS_Store")
 TOOL_FILES = ("run.py", "approvals.py", "issue.py", "notes.py")
+SETUP_FILES = ("setup.py", "checks.py", "installers.py", "downloads.py", "archives.py",
+               "npm.py", "bootstrap.py", "paths.py")
 KIT_MARK = ".from-aiediting"
 KIT_STEPS = {"graphics", "reedit"}  # the steps the model does with the overlay kit
 KIT_LEAVE = ("__pycache__", ".DS_Store", "node_modules")
@@ -113,6 +115,54 @@ def copy_tools(stage: Path) -> None:
         shutil.copy2(str(FORMAT_TEMPLATE / name), str(stage / "tools" / name))
 
 
+def copy_toolkit_support(stage: Path, need: dict, tools: dict) -> None:
+    """Package selected installers and pinned locks so the built skill repairs itself without AIEditing."""
+    support = stage / "tools" / "aelib"
+    support.mkdir()
+    (support / "__init__.py").write_text("", encoding="utf-8")
+    source = Path(__file__).resolve().parent
+    for name in SETUP_FILES:
+        shutil.copy2(str(source / name), str(support / name))
+    # The workshop session module imports its dashboard state. A built format needs only its error type.
+    (support / "session.py").write_text("class CliError(Exception):\n    pass\n", encoding="utf-8")
+    # A built format needs only tool rows. The workshop's catalog also loads presets and steps.
+    (support / "catalog.py").write_text(
+        "import json\nfrom pathlib import Path\n"
+        "from .paths import CATALOG_DIR\n"
+        "def tools(base=None):\n"
+        "    return {r['id']: r for r in json.loads(((base or CATALOG_DIR) / 'tools.json').read_text(encoding='utf-8'))['tools']}\n",
+        encoding="utf-8",
+    )
+    wanted = set(need["tools"])
+    pending = list(wanted)
+    while pending:
+        dependency = tools[pending.pop()].get("needs") or []
+        for name in ([dependency] if isinstance(dependency, str) else dependency):
+            if name not in tools:
+                raise ValueError("Неизвестная зависимость инструмента: {}".format(name))
+            if name not in wanted:
+                wanted.add(name)
+                pending.append(name)
+    catalog = stage / "catalog"
+    catalog.mkdir()
+    rows = []
+    for name in tools:
+        if name not in wanted:
+            continue
+        row = json.loads(json.dumps(tools[name]))
+        for spec in row.get("install", {}).values():
+            if spec.get("kind") == "npm" and spec.get("lock"):
+                lock_source = (source.parent.parent / "catalog" / spec["lock"]).resolve()
+                lock_target = catalog / "locks" / name
+                lock_target.mkdir(parents=True, exist_ok=True)
+                for file in ("package.json", "package-lock.json"):
+                    shutil.copy2(str(lock_source / file), str(lock_target / file))
+                spec["lock"] = "locks/" + name
+        rows.append(row)
+    (catalog / "tools.json").write_text(json.dumps({"tools": rows}, ensure_ascii=False, indent=2) + "\n",
+                                        encoding="utf-8")
+
+
 def copy_own(stage: Path, draft: Path) -> None:
     """Files of the skill no profile describes come back from the draft's `own/` as they were; they never replace a built part."""
     source = draft / OWN
@@ -131,6 +181,7 @@ def text_hash(text: str) -> str:
 
 
 def write_pins(stage: Path, profile: dict, need: dict, tools: dict, version: str, skill_md: str = "") -> None:
+    copy_toolkit_support(stage, need, tools)
     pins = {
         "aiediting": version, "runtime": version,
         "built_at": dt.datetime.now().astimezone().replace(microsecond=0).isoformat(),

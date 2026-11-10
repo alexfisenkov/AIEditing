@@ -2,6 +2,8 @@
 """One command of a format skill built by AIEditing.
 
     python tools/run.py check                       profile and copy are intact
+    python tools/run.py check --tools               verify selected local dependencies, no install
+    python tools/run.py setup                       repair selected local dependencies and verify
     python tools/run.py edit <video> [--topic T]    edit by the profile into <output_dir>/<date>-<topic>/
                        [--out DIR] [--answers F]    exit 3: a decision is needed, see вопросы.json
                        [--screen FILE]              the screen recording when camera and screen are separate
@@ -18,14 +20,18 @@ from pathlib import Path
 
 
 def _private_python() -> Path:
-    """AIEditing's own venv with Pillow/OpenCV (`ae.py doctor` puts them there)."""
+    """Prefer the modern private toolkit; keep the legacy environment for older installs."""
     if os.name == "nt" and os.environ.get("LOCALAPPDATA"):
-        return Path(os.environ["LOCALAPPDATA"]) / "AIEditing" / "venv" / "Scripts" / "python.exe"
-    return Path.home() / ".aiediting" / "venv" / ("Scripts/python.exe" if os.name == "nt" else "bin/python")
+        root = Path(os.environ["LOCALAPPDATA"]) / "AIEditing"
+    else:
+        root = Path.home() / ".aiediting"
+    tail = "Scripts/python.exe" if os.name == "nt" else "bin/python"
+    modern, legacy = root / "toolkit-venv" / tail, root / "venv" / tail
+    return modern if modern.is_file() and (root / "toolkit-venv" / "toolkit.ready").is_file() else legacy
 
 
-if (__name__ == "__main__" and not os.environ.get("AIEDITING_IN_VENV") and sys.prefix == sys.base_prefix
-        and _private_python().is_file()):
+if (__name__ == "__main__" and not os.environ.get("AIEDITING_IN_VENV") and _private_python().is_file()
+        and Path(sys.prefix).resolve() != _private_python().parent.parent.resolve()):
     sys.exit(subprocess.call([str(_private_python()), str(Path(__file__).resolve()), *sys.argv[1:]],
                              env=dict(os.environ, AIEDITING_IN_VENV="1")))
 
@@ -34,6 +40,9 @@ SKILL = HERE.parent
 for _p in (str(SKILL), str(HERE)):
     if _p not in sys.path:
         sys.path.insert(0, _p)
+from aelib.checks import refresh_path
+
+refresh_path()
 for _s in (sys.stdout, sys.stderr):
     try:
         _s.reconfigure(encoding="utf-8")
@@ -44,6 +53,46 @@ from approvals import QUESTIONS, NeedsApproval, approver_for  # noqa: E402
 from issue import issue_folder  # noqa: E402
 from notes import add_note  # noqa: E402
 from runtime.profile import load_profile  # noqa: E402
+
+
+def toolkit(profile, argv, check_only=False):
+    """Use only this built skill's pinned tool rows and installers, never a parent skill path."""
+    import json
+    from aelib import catalog, setup
+    from aelib.checks import current_os
+    from aelib.session import CliError
+
+    try:
+        pins = json.loads((SKILL / "pins.json").read_text(encoding="utf-8"))
+        rows = catalog.tools()
+        ids = list(pins["tools"])
+    except (OSError, ValueError, KeyError) as exc:
+        print("Не готово: повреждён комплект установки: {}".format(exc))
+        return 1
+    if pins.get("steps") != profile["steps"]:
+        print("Профиль и pins.json расходятся по шагам; пересоберите скилл через AIEditing")
+        return 2
+    if not check_only:
+        # The bundled catalog contains only selected tools and their prerequisites.
+        pip_needed = any((row.get("install", {}).get(current_os()) or {}).get("kind") == "pip"
+                         for row in rows.values())
+        if pip_needed:
+            from aelib.bootstrap import ensure_python
+
+            try:
+                python = ensure_python()
+            except CliError as exc:
+                print("Не готово: {}".format(exc))
+                return 1
+            if Path(sys.prefix).resolve() != python.parent.parent.resolve():
+                return subprocess.call([str(python), "-B", str(Path(__file__).resolve()), *argv],
+                                       env=dict(os.environ, AIEDITING_IN_VENV="1"))
+    try:
+        print(setup.ensure_tools(ids, check_only=check_only))
+    except (CliError, OSError, KeyError, ValueError) as exc:
+        print("Не готово: {}".format(exc))
+        return 1
+    return 0
 
 
 def edit(profile, opt):
@@ -116,7 +165,9 @@ def hear(profile, opt):
 def main(argv):
     ap = argparse.ArgumentParser(prog="run.py")
     sub = ap.add_subparsers(dest="cmd", required=True)
-    sub.add_parser("check")
+    c = sub.add_parser("check")
+    c.add_argument("--tools", action="store_true")
+    sub.add_parser("setup")
     e = sub.add_parser("edit")
     e.add_argument("video")
     e.add_argument("--topic")
@@ -137,8 +188,12 @@ def main(argv):
     opt = ap.parse_args(argv)
     profile = load_profile(SKILL / "profile.json")
     if opt.cmd == "check":
+        if opt.tools:
+            return toolkit(profile, argv, check_only=True)
         print("{}: профиль в порядке, шаги: {}".format(profile["skill_name"], ", ".join(profile["steps"])))
         return 0
+    if opt.cmd == "setup":
+        return toolkit(profile, argv)
     if opt.cmd == "note":
         print(add_note(Path(opt.issue), opt.text, profile["skill_name"]))
         return 0

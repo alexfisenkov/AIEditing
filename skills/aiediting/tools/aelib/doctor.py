@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+import sys
 
 from . import catalog
 from .checks import current_os, status
@@ -33,16 +34,19 @@ def _line(row) -> str:
 
 
 def _npm_plan(step) -> str:
-    from runtime.render.hyperframes import node_prefix
+    from .npm import prefix_for
 
+    package = step["package"].rsplit("@", 1)[0]
     if step.get("lock"):
         how = "npm ci --ignore-scripts --prefix {} по проверенному lock-файлу catalog/{} ({})".format(
-            node_prefix(), step["lock"], step["package"])
+            prefix_for(package), step["lock"], step["package"])
     else:
-        how = "npm install --ignore-scripts --prefix {} {}".format(node_prefix(), step["package"])
-    after = (" и `{} {}`: браузер рендера ляжет в ~/.cache/hyperframes/chrome (≈200 МБ) — он общий с другими "
-             "установками HyperFrames и не удаляется вместе с префиксом".format(
-                 step["package"].rsplit("@", 1)[0], " ".join(step["after"])) if step.get("after") else "")
+        how = "npm install --ignore-scripts --prefix {} {}".format(prefix_for(package), step["package"])
+    browser_note = ("браузер рендера ляжет в ~/.cache/hyperframes/chrome (≈200 МБ) — он общий с другими "
+                    "установками HyperFrames и не удаляется вместе с префиксом" if package == "hyperframes" else
+                    "браузер рендера ляжет в node_modules/.remotion внутри префикса Remotion")
+    after = (" и `{} {}`: {}".format(package, " ".join(step["after"]), browser_note)
+             if step.get("after") else "")
     return how + " — не глобально" + after
 
 
@@ -52,14 +56,21 @@ def plan(row) -> str:
         return "{}: на этой системе не ставится".format(row["id"])
     what = {"command": lambda: " ".join(step["argv"]), "pip": lambda: "pip install " + pip_package(step),
             "npm": lambda: _npm_plan(step),
-            "download": lambda: "скачать " + step["url"] + " → " + step["save_to"], "manual": lambda: "вручную: " + step["url"] + (" → " + step["save_to"] if step.get("save_to") else "")}
+            "download": lambda: "скачать " + step["url"] + " → " + step["save_to"],
+            "zip": lambda: "скачать проверенный архив CPU x64/ARM64 → " + step["save_to"],
+            "manual": lambda: "вручную: " + step["url"] + (" → " + step["save_to"] if step.get("save_to") else "")}
     return "{} {}: {}{}".format(row["id"], row["pin"], what[step["kind"]](),
                                 " ({})".format(row["size"]) if row.get("size") else "")
 
 
 def requirements(rows) -> str:
     """Pinned pip requirements of the rows for this Python and system, one per line (CI installs them)."""
-    steps = [r["install"].get(current_os()) for r in rows]
+    steps = []
+    for row in rows:
+        floor = row.get("min_python")
+        if floor and sys.version_info[:2] < tuple(int(x) for x in floor.split(".")):
+            continue
+        steps.append(row["install"].get(current_os()))
     return "\n".join(pip_package(s) for s in steps if s and s.get("kind") == "pip")
 
 
@@ -76,4 +87,10 @@ def cmd_doctor(opt) -> str:
     head = "План установки — " + plan(row) + ("\n! " + row["warning"] if row.get("warning") else "")
     if not opt.yes:
         return head + "\nНичего не поставлено: нужно «да» человека, затем тот же вызов с --yes."
-    return head + "\n" + run_install(row)
+    result = run_install(row)
+    if row["install"].get(current_os(), {}).get("kind") == "manual":
+        return head + "\n" + result
+    checked = status(row)
+    if checked["ok"] is not True:
+        raise CliError("{}: установка завершилась, но проверка не прошла: {}".format(row["id"], checked["note"]))
+    return head + "\n" + result + "\nПроверено: " + checked["note"]

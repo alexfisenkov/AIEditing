@@ -830,7 +830,6 @@ class Texts(unittest.TestCase):
         self.assertIn("One answer to `clips` serves every probe", text)
         self.assertIn("A clip made by `reedit` has no such report", text)
         self.assertIn("ae.py hear", text)
-        self.assertIn("nobody installs it by that link", " ".join(self.read("phases/build.md").split()))
         self.assertIn("A format whose path is not chosen yet", self.read("phases/design.md"))
 
 

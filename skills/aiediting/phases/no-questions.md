@@ -6,9 +6,10 @@ on**, or `approval: auto` of a skill being refined. A wish for speed or a short 
 and «сам реши» in answer to one question is an answer to that question. Their one message is the brief. They
 see the finished video and one list: what you decided and what you could not know.
 
-Not one question until then, in the chat or on the dashboard: no `ae.py ask`. A real blocker is said once
-and the run stops: no video when a new format was asked for, an unreadable video, no Python, no ffmpeg, no
-recogniser that can run here, or a disk too full for what the format needs.
+Not one question until then, in the chat or on the dashboard: no `ae.py ask`. Repair missing local
+dependencies with `ae.py setup` before declaring a blocker. A real blocker is said once and the run
+stops: no video when a new format was asked for, an unreadable video, a failed local setup with its
+exact error, no recogniser that can run here after repair, or insufficient disk for the required files.
 
 ## Stays closed in this mode
 
@@ -56,7 +57,7 @@ the speech names come later, by the kit's order of work, because the speech is n
 | Remarks on a skill being refined | «Замечания для доработки» in `отчёт.md` of its latest issue folder | |
 | Output folder | a sibling of another installed format skill's `output_dir` | `Монтаж/<слово>` beside the source |
 | Speech recogniser | what they named; otherwise local whisper | |
-| Whisper's model file | `asr.model` and `params.verify_asr.model` of other format skills; `~/.aiediting/models/`. Two models → the larger for `asr` | `ae.py doctor --install whisper-model --yes` (≈3 GB, in the background), then `asr.model` |
+| Whisper's model file | `asr.model` and `params.verify_asr.model` of other format skills; `~/.aiediting/models/`. Two models → the larger for `asr` | `ae.py setup --steps speech_spans --asr whispercpp` (model ≈3 GB), then `asr.model` |
 | Brand names, terms | the project's texts; what they said | what is heard, marked in the list |
 | What they mean by the style | a video or frame they pointed to; earlier work they named | your judgement, stated in the list |
 
@@ -85,6 +86,8 @@ Then, for every format:
 | `params.clean_speech` | nothing more: the check of its cuts is `recut.py joins` and reading `speech-text.txt`, by `takes-and-markers.md`, and what you chose goes into the list |
 | `cut_spans` is in the steps | `verify_words`: the second listening stands in for the person's ear, with a local `params.verify_asr` when the main recogniser is paid or a second local model is at hand: the same model does not catch its own mishearings. Cuts of pauses are safe on any recogniser; cuts inside speech need exact word times, so on local whisper leave `params.wordless` out, keep `params.editor` to what you check by hearing the result again, and say so in the list |
 | a screen is visible, on any path but `reedit` | `find_secrets`, `blur_regions`. Local and free; a secret left open cannot be taken back. `reedit` has neither, and refuses them, because the pipeline makes no picture there: secrets are kept out by the crop of each screen and the choice of scenes, by «Screens» in `overlay-kit/vertical.md`, and looked for in the sheets |
+| they asked to remove, replace or blur the background behind a person | set `params.background.mode` to `remove`, `solid`, `image`, `video` or `blur` from their words; use `params.background.value` only for their named colour or local file. Check a representative preview for edges and flicker before the full render |
+| they asked for a plate, caption or animation behind the person's head | add `behind_head` with the chosen overlay step; use a representative preview and inspect the matte around hair and motion |
 | the frame is not 16:9 and they asked for graphics | no `graphics`; a line in the list |
 
 The design: the system you found goes into `.aiediting-work/<skill>/design/tokens.json`, in the shape of
@@ -111,11 +114,13 @@ cheap, and goes in words. `bands` is, and it needs three things a `reedit` draft
 
 ## 4. Tools
 
-`ae.py doctor --steps <steps> --asr <provider>`, and with `params.clean_speech` also `--asr whispercpp`: choosing takes hears by it. Asking for no questions is the «да» to the tools of the
-chosen steps, by their pins: `doctor --install <id> --yes`, each one written down, with its licence and its size
-when the catalog has one. A tool of an optional step that cannot be installed → the step goes out of the profile
-and into the list; the core is a blocker, above. Remotion has no `--install`: the kit's `prepare` installs it from
-its lockfile, with the renderer's browser (≈700 MB per working folder).
+`ae.py setup --check`, then `ae.py setup --steps <steps> --asr <provider>`; with
+`params.clean_speech`, also repair `--asr whispercpp`: choosing takes hears by it.
+The request authorizes local dependencies. Announce total heavy downloads once, install without
+per-tool questions, and list what was installed. Remotion and its browser are part of the supported
+toolkit; the kit still prepares its own working folder. If a tool cannot be installed, inspect the
+source and requirements, try a viable isolated local route, and record the exact failure. Do not
+silently remove an optional step from the profile. A real blocker is reported as such.
 
 ## 5. Make the video through the skill itself
 

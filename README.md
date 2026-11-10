@@ -16,7 +16,7 @@ captions and chapter plates look like — watch a trial edit on **your** footage
 until it is right, and get a format skill named after your word, such as `монтаж-урок` ("lesson
 edit"). After that, in any folder, you just say "edit this like a lesson".
 
-> Status: early version (0.1).
+> Status: early version (0.3.0).
 
 <p align="center">
   <a href="assets/aiediting-dashboard.png"><img src="assets/dash-now.png" width="380" alt="The dashboard: the current stage, what it is waiting for, your formats and the frames of your source"></a>
@@ -41,9 +41,13 @@ Install the AIEditing skill for me. Run in the terminal:
 
 npx skills add alexfisenkov/AIEditing --skill aiediting -g -y -a <put yourself here: claude-code, cursor, codex>
 
-If npx is not found, give me a link to download Node.js and wait.
-Don't install anything else.
-When you're done, tell me in one line that it's ready and that the session needs a restart.
+Find the installed aiediting folder (the one containing tools/ae.py). Then run:
+python3 "<installed aiediting folder>/tools/ae.py" setup
+Run the same command with setup --check and report its result. npx only copies the skill files.
+Tell me the combined size of heavy downloads once and continue without asking per tool.
+If npx, Python or a system package manager is missing, install it where supported and
+report the exact blocker if that fails. Do not upload media or use a paid API.
+When setup --check passes, tell me that installation is ready and the session needs a restart.
 ```
 
 The agent does the rest. Then restart it — skills are loaded at startup.
@@ -54,13 +58,19 @@ The agent does the rest. Then restart it — skills are loaded at startup.
 npx skills add alexfisenkov/AIEditing -g
 ```
 
-The installer asks for which agents to install — just confirm.
+The installer asks for which agents to install — confirm, locate the installed `aiediting`
+folder, and then run `python3 "<skillDir>/tools/ae.py" setup`. Verify with
+`python3 "<skillDir>/tools/ae.py" setup --check`. `npx skills add` alone does not install
+the editing dependencies.
 
 <details>
-<summary>One-line install, no questions</summary>
+<summary>Unattended install and setup</summary>
 
 ```bash
 npx skills add alexfisenkov/AIEditing --skill aiediting -a claude-code -g -y
+# Then locate the installed aiediting folder:
+python3 "<skillDir>/tools/ae.py" setup
+python3 "<skillDir>/tools/ae.py" setup --check
 ```
 
 | Flag | What it does |
@@ -72,15 +82,23 @@ npx skills add alexfisenkov/AIEditing --skill aiediting -a claude-code -g -y
 
 </details>
 
-**Requires:** [Node.js](https://nodejs.org) 22.20+ (for `npx`), Python 3.9+ and ffmpeg in `PATH`. Everything else is installed later, only if your formats need it, and only after you say yes.
+**Bootstrap requirements:** [Node.js](https://nodejs.org) 22.20+ for `npx` and Python
+3.9+ to start `ae.py`. The maintained toolkit pins Node.js 26.13.0 or newer.
+`setup` prepares a private Python 3.12–3.14 environment when the host Python is older,
+then installs and checks the complete maintained local toolbox (19 catalog tools on
+supported systems), including models and render browsers. It reports a concrete failure
+if a required component cannot be installed. `setup --steps a,b --asr whispercpp`
+repairs only the dependencies of a requested format. `ae.py capabilities [--json]`
+inspects the available tools and FFmpeg filters on this machine; availability alone
+does not prove an effect works on a given recording.
 
 | System | State |
 |---|---|
-| macOS | supported, checked in CI |
-| Windows | supported, checked in CI; whisper.cpp is installed by hand |
+| macOS | locally checked on Apple Silicon; CI workflow provided |
+| Windows | installation path and CI workflow provided; setup installs the checksum-verified official whisper.cpp CPU archive for x64 or ARM64 |
 | Linux | not tested |
 
-CI runs the unit tests and installs the pinned Python packages. Rendering of animated inserts and graphics is checked by hand and only on macOS. Editing by markers needs a timeline exported from Final Cut, which runs only on a Mac.
+CI is configured to run unit tests and install the pinned Python packages. The new 0.3.0 changes have not yet completed hosted CI or physical Windows acceptance. Rendering of animated inserts and graphics is checked locally on macOS. Editing by markers needs a timeline exported from Final Cut, which runs only on a Mac.
 
 ---
 
@@ -114,20 +132,22 @@ files, steps or points, or name a number, a short animation in your design syste
 screen, in the corner opposite your face, at most once every 30–60 s (`params.animations.every`, 45 by default).
 
 - You approve the moments, the template («файлы», «шаги», «список», «число») and the text before anything is rendered. An empty answer means no animations.
-- The price: Node.js 22.12+ and HyperFrames with its own browser on disk (≈400 MB together) and about 5 seconds of rendering per insert.
-- They are installed by `ae.py doctor --install node --yes` and `--install hyperframes --yes`, only for a format that chose inserts, after your yes.
+- The first setup includes Node.js 26.13.0+, HyperFrames 0.9.28 and its browser (roughly 400 MB for Node and HyperFrames together); an insert takes about 5 seconds to render.
+- The full supported toolkit is prepared by `ae.py setup` at installation. If needed later,
+  `ae.py setup --steps animations` repairs these dependencies.
 - HyperFrames comes from a checked lockfile (`npm ci --ignore-scripts`) into `~/.aiediting/node` (Windows: `%LOCALAPPDATA%\AIEditing\node`). Its telemetry is off, and its project history is written into the issue's work folder and goes with it.
 
 **Clips from a finished video** go one of two ways, and you choose after seeing both on one stretch of your own video: the
 picture whole in the centre, with a headline and a call to action on the fields and a short teaser; or a real re-edit for 9:16,
 where the speaker moves between bottom, top and a circle, the same graphics are rebuilt, and text keeps to the platform's safe
-zones. The re-edit is made by the model with the Remotion kit and costs what graphics over the video cost: ≈700 MB and the render
+zones. The re-edit is made by the model with the Remotion kit; the initial shared renderer and browser download is about 700 MB, plus the render
 time. As a way of editing it has been accepted on one real video; the built skill has passed its tests but has not yet made a
 video end to end.
 
 **An open workshop.** AIEditing is a base of ways to edit: narrow skills come out of it for a niche, a task, your own design system,
 under your word and with the paths of the format they start from. A
-way the catalog lacks is added there with one row and a preset. Any installed `монтаж-*` can be refined later, even one written by
+way the catalog lacks is investigated against the source, built and validated on a real output before
+it becomes a catalog step with runtime and tests. Any installed `монтаж-*` can be refined later, even one written by
 hand: what a profile does not describe stays with the skill and is changed together with you.
 
 **Without questions.** Say «без вопросов» in your first message and give a recording:
@@ -146,8 +166,8 @@ questions until a refinement turns that off.
 **Graphics over the video.** For anyone talking to the camera in 16:9: the model reads the whole speech and writes
 scenes on the words, with real screens and materials you named; the speaker's frame moves between layouts. The speech
 stays as it is, and with cuts the scenes go on the finished video. Scenes are checked by contact sheets, a search for
-empty stretches and a sound check against the base video. The price is Node.js 22.12+, Remotion with its browser in the working folder
-(≈700 MB; see its licence below), and rendering about as long as the video.
+empty stretches and a sound check against the base video. The shared toolkit includes Node.js 26.13.0+ and Remotion
+4.0.542 with its browser (about 700 MB for initial setup; see its licence below); rendering takes about as long as the video.
 
 **YouTube with graphics.** The speech is assembled from your best takes, or a whole take keeps everything but its edges; the speed you set goes on once, graphics go on top. You mark
 remarks with Final Cut markers: cuts land on the finished video and the scenes keep their places. So far this format has
@@ -165,7 +185,7 @@ suggests running AIEditing to refine the format.
 |---|---|
 | interviews you and builds a format skill from your answers, or takes one message if you ask for no questions | publishes, uploads or sends anything |
 | edits **a trial piece** of your source to show you; where a format has several paths, a short probe of each and then the chosen one in full; without questions, the whole recording | voices, generates video, music or images |
-| installs only the tools your formats need, at an exact version or a tested minimum, after your yes (asking for no questions is that yes, and each is named at the end) | asks for a key or prints one |
+| installs its full supported local toolkit with `ae.py setup`; repairs a task's subset on demand without per-tool questions | asks for a key or prints one |
 | keeps the previous version of a skill and restores it in one command | puts into a skill anything you did not choose |
 
 ---
@@ -185,29 +205,62 @@ Changing the provider is one answer in the interview or a refinement.
 
 ## Tools and licences
 
-The catalog (`skills/aiediting/catalog/tools.json`) holds tools with open licences, plus Remotion, whose licence is not
-open and is named below. Each has an exact version or a tested minimum: ffmpeg, whisper.cpp, Tesseract and Node.js come from your
-package manager at its current version, at least the minimum. AIEditing installs them only when chosen.
+The maintained toolkit is defined by `skills/aiediting/catalog/tools.json` and
+`catalog/extra-tools.json`. Each entry has a pinned version or verified minimum,
+source and licence. `ae.py setup` installs the complete supported set after an
+installation request and announces heavy download sizes together. Its packages and
+models are reusable across formats; a working folder still holds each video's media
+and render outputs. Format skills remain limited to their chosen steps and dependencies.
+The maintained set is finite: inspect `ae.py capabilities` and validate a real local
+route for an effect outside the catalog. No command guarantees every conceivable edit.
 
 | Tool | What for | Licence | Weight |
 |---|---|---|---|
-| ffmpeg | cutting, joining, loudness, blur, export | LGPL-2.1+ (GPL-2.0+ for GPL builds) | light |
-| whisper.cpp + model | local speech recognition | MIT | the model is ≈3 GB (large-v3) |
-| Pillow, numpy, OpenCV | plates and captions as images, face and layout | MIT-CMU, BSD-3-Clause, Apache-2.0 | light |
+| FFmpeg Full 9.0.2+ | cuts, joining, audio, ASS subtitles, stabilization, Rubber Band, VMAF and export | GPL-3.0-or-later for the selected full builds | build and shared dependencies |
+| whisper.cpp 1.9.5+ + large-v3 model | local speech recognition | MIT | the model is ≈3 GB |
+| Pillow 13.0.0, numpy 2.5.4, OpenCV 5.0.0.93 | plates and captions as images, face and layout | MIT-CMU, BSD-3-Clause, Apache-2.0 | Python packages |
 | YuNet model | finding the face for layouts, verticals and graphics | MIT | light |
-| Tesseract | text on frames when looking for secrets (Apple Vision on macOS) | Apache-2.0 | light |
-| Node.js 22.12+ + HyperFrames 0.9.16 | animated inserts in a lesson: files, steps, a list, a number — only when chosen | MIT, Apache-2.0 | Node ≈100 MB; HyperFrames with its own Chrome ≈300 MB |
-| Remotion 4.0.541 | graphics over the video — only when chosen; from the kit's lockfile into the working folder | Remotion License | ≈700 MB per working folder, with its browser |
-| Remotion + RobustVideoMatting | effects "behind the head" in a vertical — **not yet**: not offered, not installed | Remotion License, GPL-3.0 | heavy |
+| Tesseract 5.5.4+ | text on frames when looking for secrets (Apple Vision on macOS) | Apache-2.0 | light |
+| Node.js 26.13.0+ + HyperFrames 0.9.28 | animated inserts in a lesson: files, steps, a list, a number | MIT, Apache-2.0 | Node ≈100 MB; HyperFrames with its browser ≈300 MB |
+| Remotion 4.0.542 + renderer browser | graphics over video from a lockfile; reusable toolkit installation | Remotion License | ≈700 MB for the initial shared renderer and browser |
+| Playwright 1.65.0 | capture reference screens through an available local Chrome | Apache-2.0 | no separate Playwright browser download |
+| ONNX Runtime 1.31.1 + RVM MobileNetV3 | local human foreground matte for removing or replacing a video background, including "behind the head" compositing | MIT, GPL-3.0 model project | model and runtime download |
+| PySceneDetect 0.7.3, SoundFile 0.14.0, librosa 1.0.0, pysubs2 1.9.1 | local scene, audio and subtitle analysis; these libraries do not edit a complete video by themselves | BSD-3-Clause, BSD-3-Clause, ISC, MIT | librosa has larger Python dependencies |
+| rembg 2.0.87 + BiRefNet General Lite | local still-image background removal with an explicitly selected model; separate from human video matting | MIT code and MIT model | pinned model: 213.63 MiB; no default BRIA model |
 
-Python packages are pinned by Python version; Python 3.9 is the minimum. On 3.12 and newer — Pillow 13.0.0,
-numpy 2.5.4; on 3.10–3.11 — Pillow 12.3.0, numpy 2.2.6; on 3.9 — Pillow 11.3.0, numpy 2.0.2; OpenCV
-4.14.0.94 everywhere. CI installs the sets for Python 3.12 and 3.14 on macOS and Windows and the set for 3.9 on Windows;
-the set for 3.10–3.11 is not run in CI.
+The current private Python set includes Pillow 13.0.0, numpy 2.5.4, OpenCV
+5.0.0.93 and ONNX Runtime 1.31.1 on a compatible Python. An older host Python
+can start the installer; AIEditing selects or bootstraps a private Python 3.12–3.14
+without replacing the system interpreter. The catalog records compatible older
+pins for legacy environments.
 
 > **Remotion is not open source.** It is free for individuals, companies of up to three employees and non-profits;
 > larger companies need a paid licence. Check the terms at remotion.pro before choosing graphics over the video.
-> Nothing is installed by default. Effects "behind the head" are not built yet, so the workshop does not offer them.
+> `setup` downloads the supported local toolkit after an installation request. It does
+> not install arbitrary third-party packages; a specialist request is checked against
+> its source and requirements and validated on an actual output.
+
+For a person in video:
+
+```bash
+python3 "<skillDir>/tools/ae.py" background input.mp4 output.mov --mode remove
+```
+
+This produces transparent ProRes 4444 by default. `--mode solid|image|video|blur`
+replaces the background; `--value` supplies a colour or image/video path where needed.
+The matting runs locally on Apple Silicon, including M1, without an upload or paid inference.
+Inspect a short preview and edges before a full export. It is designed for humans, not arbitrary
+objects, and a difficult shot may need cleanup.
+
+For a **still image** containing a person or object, use the separate local route:
+
+```bash
+python3 "<skillDir>/tools/ae.py" image-cutout input.png cutout.png
+```
+
+It uses rembg with the explicitly pinned MIT BiRefNet General Lite model and writes a
+transparent PNG. It does not select rembg's default BRIA model or turn a still-image
+segmenter into a video tracker. Inspect the alpha edge on the actual image.
 
 [OpenMontage](https://github.com/calesthio/OpenMontage) (AGPL-3.0) is a full production pipeline from
 script to generation; AIEditing does not include it — only this link.

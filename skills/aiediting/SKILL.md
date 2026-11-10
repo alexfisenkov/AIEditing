@@ -4,7 +4,7 @@ description: Workshop that builds your own video-editing skills. Interviews you 
 disable-model-invocation: true
 argument-hint: "[new|refine] format name or path to a source video"
 metadata:
-  version: "0.2.0"
+  version: "0.3.0"
 ---
 
 # AIEditing
@@ -43,10 +43,16 @@ the rest of the session.
 | `interview` | `phases/interview.md` + `prompts/question-round.md` | the profile answered, round by round; the paths of the format offered |
 | `design` | `phases/design.md` | `design/` of the skill, chosen variants |
 | `trial` | `phases/trial.md` | a probe of each path and their choice, where the format has paths; a trial clip the person said «да» to; every remark in the profile |
-| `build` | `phases/build.md` | `монтаж-<слово>` built, its tools installed on «да», installed globally |
+| `build` | `phases/build.md` | `монтаж-<слово>` built, its dependencies checked and repaired, installed globally |
 | — | `phases/refine.md` — instead of formats and sources, when refining | |
 | — | `phases/resume.md` — instead of start, when `.aiediting-work/state.js` is unfinished | |
 | — | `phases/no-questions.md` — instead of all of them, when the person asked not to be asked | a finished video and the skill installed |
+
+For a request to remove or replace a human video background, read
+`references/background.md` when that capability is needed. It is a local media operation and may
+also supply a foreground layer for an edit's "behind the head" composition.
+For another editing request outside the catalog or a format's chosen steps, read
+`references/toolbox.md` and inspect `ae.py capabilities` before selecting a local route.
 
 **Their words choose the path.** The person asked not to be asked (the signal is at the top of that file)
 → `phases/start.md`, §1, then `phases/no-questions.md`, in place of every phase but the ones it names.
@@ -68,7 +74,7 @@ in another one. One word per stage, on the dashboard and in the chat: Старт
 
 Every event is one call: `python "<skillDir>/tools/ae.py" <command>` — `init`, `no-questions`, `stage`, `ask`,
 `answered`, `formats`, `profile`, `variant`, `frames`, `layout`, `design-example`, `samples`, `choose`, `trial`, `show`, `hear`, `kit`,
-`verdict`, `build-skill`, `install-skill`, `list-skills`, `backup-skill`, `restore-skill`, `doctor`,
+`verdict`, `build-skill`, `install-skill`, `list-skills`, `backup-skill`, `restore-skill`, `doctor`, `setup`, `capabilities`, `background`,
 `finish`. The command list with arguments is at the top of `tools/ae.py`. `phases/start.md` says how to
 find `<skillDir>`. You never edit `state.js` or the dashboard by hand. Where there is no `python`, as on
 many Macs, use `python3`; where it is the Microsoft Store stub on Windows, use `py -3`.
@@ -79,10 +85,13 @@ many Macs, use `python3`; where it is the Microsoft Store stub on Windows, use `
    The key itself — never: the person puts it into their environment or `.env` by the variable name.
 2. **A fact about the person is never invented** — the output folder, the brand glossary, the music
    library: asked, or left as a visible gap in the profile.
-3. **Nothing is installed without «да».** `doctor --install <id> --yes` only after the person agreed to that
-   tool, by its pin from `catalog/tools.json`. Only tools the interview chose; heavy ones (the whisper
-   model) are offered with their size. Steps marked `not_built` in `catalog/steps.json` are not offered.
-   Asking for no questions is that «да» for the chosen steps' tools, and each is named at the end.
+3. **Installation is part of the requested capability.** After the person asks to install AIEditing, run
+   `python3 <skillDir>/tools/ae.py setup` for its full supported local toolkit; `npx skills add` only copies
+   the skill bundle. Announce the total heavy downloads once, then proceed. Do not ask again for each tool.
+   At the start of a task, `setup --check` reports missing dependencies; `setup --steps a,b --asr whispercpp`
+   repairs the subset needed for that task. A request to use a capability authorizes its local dependencies.
+   Paid APIs, uploads, publication and keys keep their separate limits. Do not install arbitrary packages
+   without checking their source, requirements and a real output.
 4. **Examples are always on the person's own video.** No source of the needed kind → ask for one; without
    it the question is asked in words, without an example.
 5. **Every remark on the format goes into the profile** (`ae.py profile taste`), and only AIEditing changes a profile —
@@ -92,6 +101,11 @@ many Macs, use `python3`; where it is the Microsoft Store stub on Windows, use `
 7. **The format skill holds only what was chosen** — steps, tools and design; nothing «на всякий случай».
 8. **A format with paths is never built without a choice.** The person chooses after seeing the probes on their own video;
    asking for no questions makes it your choice, named in the last message.
+9. **A missing catalog row is not a refusal.** Inspect the requested effect and source, choose a real local
+   tool, install it in an isolated environment, and validate an output on the person's media. Add a recurring
+   capability to the catalog, runtime and tests. Name a concrete blocker only after trying the viable path.
+   For a person in video, `ae.py background` uses local ONNX Runtime and RVM MobileNetV3 on Apple Silicon;
+   inspect a preview for edge quality. It does not promise arbitrary object segmentation or flawless mattes.
 
 ## Files
 

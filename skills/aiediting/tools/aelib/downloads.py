@@ -7,6 +7,7 @@ from __future__ import annotations
 import hashlib
 import http.client
 import os
+import tempfile
 from pathlib import Path
 from typing import Iterator
 from urllib import request
@@ -41,20 +42,21 @@ def _sha256(path: Path) -> str:
 def download(step: dict) -> str:
     """Installs one `download` step; raises CliError («!! …») when it cannot, leaving no half-file behind."""
     dest = _target(step)
-    part = dest.with_name(dest.name + ".part")
+    part = None
     want = step["sha256"].lower()
     try:
         if dest.is_file() and _sha256(dest) == want:
             return "уже на месте: {}".format(dest)
         dest.parent.mkdir(parents=True, exist_ok=True)
-        digest = hashlib.sha256()
+        fd, name = tempfile.mkstemp(prefix=dest.name + ".", suffix=".part", dir=str(dest.parent))
+        os.close(fd)
+        part = Path(name)
         with part.open("wb") as out:
             for n, piece in enumerate(fetch(step["url"]), 1):
-                digest.update(piece)
                 out.write(piece)
                 if n % SAY_EVERY == 0:
                     print("скачано {} МБ".format(n), flush=True)
-        got = digest.hexdigest()
+        got = _sha256(part)
         if got != want:
             raise CliError("!! Сумма sha256 файла с {} не совпала (ждали {}…, пришло {}…): файл не сохранён, "
                            "ничего не поставлено.".format(step["url"], want[:12], got[:12]))
@@ -62,6 +64,6 @@ def download(step: dict) -> str:
     except (OSError, http.client.HTTPException) as e:
         raise CliError("!! Не получилось скачать {}: {}. Проверьте сеть и повторите.".format(step["url"], e))
     finally:
-        if part.exists():
+        if part is not None and part.exists():
             part.unlink()
     return "поставлено: {}".format(dest)

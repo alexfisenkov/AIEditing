@@ -1,0 +1,98 @@
+{
+  "_comment": "Optional local editing toolkit beyond the original format-step catalog. setup can install these as a finite bundle; doctor may inspect or install individual rows. The model row is opt-in and never selects rembg's default BRIA model. Python pins below 3.12 keep older, compatible package releases; rembg requires Python 3.11+.",
+  "tools": [
+    {
+      "id": "scenedetect",
+      "what": "поиск границ сцен и резких смен плана в видео",
+      "license": "BSD-3-Clause",
+      "source": "https://pypi.org/project/scenedetect/0.7.3/",
+      "os": ["mac", "win"],
+      "pin": "0.7.3", "pin_kind": "exact", "heavy": false,
+      "pin_note": "Python 3.10+; на Python 3.9 — 0.6.7.1",
+      "check": {"python": "scenedetect"},
+      "install": {
+        "mac": {"kind": "pip", "package": "scenedetect==0.7.3", "older_python": [{"below": "3.10", "package": "scenedetect==0.6.7.1"}]},
+        "win": {"kind": "pip", "package": "scenedetect==0.7.3", "older_python": [{"below": "3.10", "package": "scenedetect==0.6.7.1"}]}
+      },
+      "skills_section": "PySceneDetect — локальный анализ границ сцен; сам не выбирает лучший дубль"
+    },
+    {
+      "id": "soundfile",
+      "what": "чтение и запись PCM-аудио для измерений и синхронизации",
+      "license": "BSD-3-Clause",
+      "source": "https://pypi.org/project/soundfile/0.14.0/",
+      "os": ["mac", "win"],
+      "pin": "0.14.0", "pin_kind": "exact", "heavy": false,
+      "pin_note": "Python 3.10+; на Python 3.9 — 0.13.1",
+      "check": {"python": "soundfile"},
+      "install": {
+        "mac": {"kind": "pip", "package": "soundfile==0.14.0", "older_python": [{"below": "3.10", "package": "soundfile==0.13.1"}]},
+        "win": {"kind": "pip", "package": "soundfile==0.14.0", "older_python": [{"below": "3.10", "package": "soundfile==0.13.1"}]}
+      },
+      "skills_section": "SoundFile — локальное PCM-аудио; не заменяет ffmpeg для видео"
+    },
+    {
+      "id": "librosa",
+      "what": "анализ ритма, аудиособытий и временного сдвига дорожек",
+      "license": "ISC",
+      "source": "https://pypi.org/project/librosa/1.0.0/",
+      "os": ["mac", "win"],
+      "pin": "1.0.0", "pin_kind": "exact", "heavy": true,
+      "pin_note": "Python 3.12+; на Python 3.9–3.11 — 0.11.0; включает scipy, numba и scikit-learn",
+      "needs": "soundfile",
+      "check": {"python": "librosa", "timeout": 120},
+      "install": {
+        "mac": {"kind": "pip", "package": "librosa==1.0.0", "older_python": [{"below": "3.12", "package": "librosa==0.11.0"}]},
+        "win": {"kind": "pip", "package": "librosa==1.0.0", "older_python": [{"below": "3.12", "package": "librosa==0.11.0"}]}
+      },
+      "skills_section": "librosa — анализ звука; не является готовым многокамерным монтажёром"
+    },
+    {
+      "id": "pysubs2",
+      "what": "чтение, правка и конвертация SRT, ASS и других файлов субтитров",
+      "license": "MIT",
+      "source": "https://pypi.org/project/pysubs2/1.9.1/",
+      "os": ["mac", "win"],
+      "pin": "1.9.1", "pin_kind": "exact", "heavy": false,
+      "pin_note": "Python 3.12+; на Python 3.9–3.11 — 1.8.0",
+      "check": {"python": "pysubs2"},
+      "install": {
+        "mac": {"kind": "pip", "package": "pysubs2==1.9.1", "older_python": [{"below": "3.12", "package": "pysubs2==1.8.0"}]},
+        "win": {"kind": "pip", "package": "pysubs2==1.9.1", "older_python": [{"below": "3.12", "package": "pysubs2==1.8.0"}]}
+      },
+      "skills_section": "pysubs2 — работа с локальными субтитрами"
+    },
+    {
+      "id": "rembg",
+      "what": "локальное удаление фона на изображениях; выбирать модель явно, не использовать BRIA по умолчанию",
+      "license": "MIT (код); модель BiRefNet Lite — MIT",
+      "source": "https://pypi.org/project/rembg/2.0.87/",
+      "os": ["mac", "win"],
+      "pin": "2.0.87", "pin_kind": "exact", "heavy": true,
+      "min_python": "3.11",
+      "pin_note": "Python 3.11+; модель указывать явно: birefnet-general-lite. Стандартная модель bria-rmbg имеет отдельные коммерческие условия.",
+      "needs": "onnxruntime",
+      "check": {"python": "rembg", "timeout": 180},
+      "install": {
+        "mac": {"kind": "pip", "package": "rembg==2.0.87"},
+        "win": {"kind": "pip", "package": "rembg==2.0.87"}
+      },
+      "skills_section": "rembg 2.0.87 с явно выбранной моделью BiRefNet Lite; локальная обработка изображений"
+    },
+    {
+      "id": "birefnet-lite-model",
+      "what": "BiRefNet General Lite для отделения предметов и людей на изображениях",
+      "license": "MIT",
+      "source": "https://github.com/ZhengPeng7/BiRefNet/issues/316",
+      "os": ["mac", "win"],
+      "pin": "general-lite-epoch-232", "pin_kind": "exact", "heavy": true, "size": "213,63 МиБ", "size_bytes": 224005088,
+      "needs": "rembg",
+      "check": {"file": "~/.rembg/models/birefnet-general-lite/birefnet-general-lite.onnx"},
+      "install": {
+        "mac": {"kind": "download", "url": "https://github.com/danielgatis/rembg/releases/download/v0.0.0/BiRefNet-general-bb_swin_v1_tiny-epoch_232.onnx", "sha256": "5600024376f572a557870a5eb0afb1e5961636bef4e1e22132025467d0f03333", "save_to": "~/.rembg/models/birefnet-general-lite/birefnet-general-lite.onnx"},
+        "win": {"kind": "download", "url": "https://github.com/danielgatis/rembg/releases/download/v0.0.0/BiRefNet-general-bb_swin_v1_tiny-epoch_232.onnx", "sha256": "5600024376f572a557870a5eb0afb1e5961636bef4e1e22132025467d0f03333", "save_to": "~/.rembg/models/birefnet-general-lite/birefnet-general-lite.onnx"}
+      },
+      "skills_section": "BiRefNet General Lite, проверенный SHA-256, без сетевого API"
+    }
+  ]
+}

@@ -9,11 +9,11 @@
     "render": "remotion render src/index.ts Full out/render.mp4"
   },
   "dependencies": {
-    "@remotion/cli": "4.0.541",
-    "playwright": "1.64.1",
+    "@remotion/cli": "4.0.542",
+    "playwright": "1.65.0",
     "react": "19.3.1",
     "react-dom": "19.3.1",
-    "remotion": "4.0.541"
+    "remotion": "4.0.542"
   },
   "devDependencies": {
     "@types/react": "19.3.0",

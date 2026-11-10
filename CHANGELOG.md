@@ -1,5 +1,13 @@
 # What's new in AIEditing
 
+## 0.3.0 — 2026-11-10
+
+- `ae.py setup` prepares the complete local editing toolkit; `setup --check` verifies it without installing, and selected steps can repair their own dependencies. Failed installs and unusable binaries now fail the command. Checks cover package versions, model hashes, ffprobe, renderer CLIs and renderer browsers.
+- The agent treats an editing request as permission to prepare its local tools. A missing catalog preset leads to a real tool choice and a tested editing method, rather than a categorical refusal. `capabilities --json` reports actual tool and FFmpeg-filter readiness across editing families; it does not certify the quality of an unrendered video.
+- RVM ONNX performs local human-video background removal to transparent ProRes 4444 MOV, replacement with a colour/image/video or blur, and foreground placement over graphics. Chroma key uses FFmpeg. Source files stay intact, output is staged atomically, audio and duration are checked. Image/object cutout uses the explicitly selected BiRefNet Lite model; no implicit default model is downloaded.
+- Additional local tools cover shot detection, audio analysis and subtitle formats. Dependencies and render lockfiles are updated against current stable upstream releases, with compatible Python pins and a separate managed interpreter when the host is too old. Windows whisper.cpp uses a checksum-verified official build from the stable source commit.
+- Generated format skills carry a small standalone toolkit installer and selected dependency locks. Their setup can repair the chosen tools even after the parent skill is removed. Existing installed formats are not silently rebuilt.
+
 ## 0.2.0 — 2026-11-05
 
 - `params.speed` goes on once, in `run.py edit`. The clean speech stays at the speed of the recording, so its `speed` no longer doubles (1.145 instead of 1.07), and a recogniser hears normal speech: a whole video by its first hearing, a cut one by a second hearing before the speed-up, `verify_words` too. The report says the length, and a length that does not fit is named. `recut.py plan` moves a `pieces.json` of another rate to the rate of the finished video.

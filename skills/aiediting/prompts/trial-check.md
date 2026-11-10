@@ -18,6 +18,9 @@ report what you found.
    captions in a `.srt` format, a zoom where `zoom_screen` is false.
 5. **Secrets.** Every region in the report's blur list was approved in `ответы.json`; nothing was blurred
    without it.
+6. **Human matte, when requested.** Check representative frames and motion for holes, hair edges,
+   fingers, flicker and foreground layers crossing in front of the person. A local render completing
+   is not proof of a visually acceptable mask. Report times and frames with defects.
 
 **Answer:** `PASS` or `FAIL`, then one line per finding: what, where (time or file), the command that shows
 it. No more than 15 lines.

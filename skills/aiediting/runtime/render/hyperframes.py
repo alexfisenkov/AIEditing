@@ -14,8 +14,8 @@ from typing import List, Optional
 
 from .errors import RenderError
 
-PIN = "0.9.16"
-NODE_MAJOR = 22  # HyperFrames 0.9.16: "engines": {"node": ">=22"}
+PIN = "0.9.28"
+NODE_MAJOR = 22  # Minimum runtime; setup installs the current supported LTS.
 QUIET = {"HYPERFRAMES_NO_TELEMETRY": "1", "DO_NOT_TRACK": "1", "HYPERFRAMES_NO_UPDATE_CHECK": "1",
          "HYPERFRAMES_NO_AUTO_INSTALL": "1", "HYPERFRAMES_NO_OPTIONAL_INSTALL": "1"}
 TIMEOUT = 900

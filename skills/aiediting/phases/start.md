@@ -13,8 +13,9 @@ echo "$AE"
 ```
 
 `<skillDir>` is the folder two levels above `ae.py`. Keep the full path in mind for the whole session;
-on Windows (Git Bash) pass it through `cygpath -m`. No Python 3.9+ → say so in one line: the workshop
-cannot run without it; name how to install Python for their system and stop.
+on Windows (Git Bash) pass it through `cygpath -m`. If Python 3.9+ is missing, install a supported
+version through the system's normal package manager, then retry. If installation fails, name the
+actual platform or permission error.
 
 ## 2. Open the workshop
 
@@ -55,9 +56,11 @@ first thing to find out about it is where it came from (`phases/sources.md`, «A
 - **New** → `ae.py stage formats`, read `phases/formats.md`.
 - **Refine** → `ae.py init --mode refine --fresh --title "Доработка <name>"`, read `phases/refine.md`.
 
-## 4. The environment, once
+## 4. Check the environment
 
-`ae.py doctor --steps speech_spans,cut_spans` — ffmpeg is the one thing every format needs. Missing →
-tell the person in one line what it is and how it is installed; install only on their «да»
-(`doctor --install ffmpeg --yes`). Everything else is installed later, for the steps the interview
-chooses (`phases/build.md`).
+`python3 "<skillDir>/tools/ae.py" setup --check` verifies the full supported toolkit. If the person
+already asked to install AIEditing, finish installation with `setup` before the workshop; copying the
+skill with `npx skills add` did not install its dependencies. For a requested capability with a missing
+dependency, use `setup --steps <steps> --asr <provider>` to repair that subset and verify again.
+Announce total heavy downloads once. The request to install or use the capability is enough for its
+local dependencies; no separate question per tool.

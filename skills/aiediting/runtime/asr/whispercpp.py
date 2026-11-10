@@ -11,6 +11,7 @@ import os
 import re
 import shutil
 import subprocess
+import sys
 import tempfile
 from pathlib import Path
 
@@ -44,17 +45,38 @@ def drop_phantoms(words: list) -> list:
 def _program(cfg: dict) -> list:
     if cfg.get("command"):
         return [str(p) for p in cfg["command"]]
-    found = os.environ.get("AIEDITING_WHISPER_CLI") or shutil.which("whisper-cli")
+    found = os.environ.get("AIEDITING_WHISPER_CLI")
+    if not found:
+        base = (Path(os.environ["LOCALAPPDATA"]) / "AIEditing"
+                if sys.platform == "win32" and os.environ.get("LOCALAPPDATA") else Path.home() / ".aiediting")
+        private = base / "bin" / "whisper-cpp" / ("whisper-cli.exe" if sys.platform == "win32" else "whisper-cli")
+        if private.is_file():
+            found = str(private)
+    if not found:
+        found = shutil.which("whisper-cli")
     if not found:
         raise AsrError("Не найден whisper-cli. Поставьте whisper.cpp (macOS: brew install whisper-cpp; "
                        "Windows: сборка с github.com/ggml-org/whisper.cpp/releases) или выберите другой распознаватель.")
     return [found]
 
 
+def model_file(cfg: dict) -> Path:
+    """An explicit profile path wins; otherwise use setup's shared local model."""
+    explicit = cfg.get("model") or os.environ.get("AIEDITING_WHISPER_MODEL")
+    if explicit:
+        model = Path(os.path.expandvars(os.path.expanduser(str(explicit))))
+    else:
+        base = (Path(os.environ["LOCALAPPDATA"]) / "AIEditing"
+                if os.name == "nt" and os.environ.get("LOCALAPPDATA") else Path.home() / ".aiediting")
+        model = base / "models" / "ggml-large-v3.bin"
+    if not model.is_file():
+        raise AsrError("Не найден файл модели whisper: {}. Запустите AIEditing setup: он скачает модель; "
+                       "свой файл можно задать в asr.model или AIEDITING_WHISPER_MODEL.".format(model))
+    return model
+
+
 def transcribe(media: Path, cfg: dict) -> dict:
-    model = Path(os.path.expanduser(str(cfg.get("model") or "")))
-    if not cfg.get("model") or not model.is_file():
-        raise AsrError("Не найден файл модели whisper: {}".format(model))
+    model = model_file(cfg)
     language = cfg.get("language") or "auto"
     with tempfile.TemporaryDirectory(prefix="aiediting-asr-") as tmp:
         try:

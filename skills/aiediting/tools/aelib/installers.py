@@ -5,16 +5,17 @@ import os
 import subprocess
 import sys
 
-from .checks import argv_of, current_os
+from .checks import argv_of, current_os, refresh_path
 from .paths import venv_dir, venv_python
+from .session import CliError
 
 
-def _run(argv, env=None) -> str:
+def _run(argv, env=None, cwd=None) -> str:
     proc = subprocess.run(argv, capture_output=True, text=True, encoding="utf-8", errors="replace",
-                          env=dict(os.environ, **env) if env else None)
+                          env=dict(os.environ, **env) if env else None, cwd=cwd)
     tail = "\n".join(((proc.stdout or "") + (proc.stderr or "")).strip().splitlines()[-5:])
     if proc.returncode != 0:
-        return "не получилось (код {}):\n{}".format(proc.returncode, tail)
+        raise CliError("не получилось (код {}):\n{}".format(proc.returncode, tail))
     return "поставлено" + ("\n" + tail if tail else "")
 
 
@@ -46,12 +47,16 @@ def run_install(row: dict) -> str:
         from .downloads import download
 
         return download(step)
+    if kind == "zip":
+        from .archives import install_archive
+
+        return install_archive(step)
     if kind == "command":
-        return _run(argv_of(step["argv"]))
+        done = _run(argv_of(step["argv"]))
+        refresh_path()
+        return done
     if kind == "pip":
-        made = _venv()
-        if made.startswith("не получилось"):
-            return made
+        _venv()
         return _run([str(venv_python()), "-m", "pip", "install", "--disable-pip-version-check", pip_package(step)])
     if kind == "npm":
         from .npm import install_npm

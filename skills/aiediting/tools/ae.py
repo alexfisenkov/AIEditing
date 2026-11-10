@@ -37,13 +37,64 @@ from aelib.paths import venv_python  # noqa: E402
 
 def _in_private_env() -> bool:
     """Pillow/OpenCV live in AIEditing's own venv (doctor puts them there): run inside it when it exists."""
-    if os.environ.get("AIEDITING_IN_VENV") or sys.prefix != sys.base_prefix or not venv_python().is_file():
+    private = venv_python()
+    if (os.environ.get("AIEDITING_IN_VENV") or not private.is_file()
+            or Path(sys.prefix).resolve() == private.parent.parent.resolve()):
         return False
     env = dict(os.environ, AIEDITING_IN_VENV="1")
-    sys.exit(subprocess.call([str(venv_python()), str(Path(__file__).resolve()), *sys.argv[1:]], env=env))
+    sys.exit(subprocess.call([str(private), str(Path(__file__).resolve()), *sys.argv[1:]], env=env))
+
+
+def _flag(argv, name):
+    key = "--" + name
+    for i, arg in enumerate(argv):
+        if arg.startswith(key + "="):
+            return arg.split("=", 1)[1]
+        if arg == key and i + 1 < len(argv):
+            return argv[i + 1]
+    return None
+
+
+def _prepare_python_for_requested_tools() -> None:
+    """Before command imports: a repair that needs modern Python gets a private interpreter first."""
+    argv = sys.argv[1:]
+    if not argv or (argv[0] == "setup" and "--check" in argv):
+        return
+    from aelib.cli import parser
+
+    parser().parse_args(argv)
+    from aelib import catalog
+    from aelib.checks import current_os
+    from aelib.setup import selected_tools
+
+    if argv[0] == "setup":
+        ids = selected_tools(_flag(argv, "steps"), _flag(argv, "asr"))
+    elif argv[0] == "background":
+        ids = [] if _flag(argv, "mode") == "chromakey" else ["numpy", "onnxruntime"]
+    elif argv[0] == "image-cutout":
+        ids = ["rembg", "onnxruntime"]
+    elif argv[0] == "doctor" and _flag(argv, "install") and "--yes" in argv:
+        ids = [_flag(argv, "install")]
+    else:
+        return
+    rows = catalog.tools()
+    if any(rows.get(name, {}).get("install", {}).get(current_os(), {}).get("kind") == "pip" for name in ids):
+        from aelib.bootstrap import ensure_python
+
+        ensure_python()
 
 
 if __name__ == "__main__":
+    from aelib.checks import refresh_path
+
+    refresh_path()
+    from aelib.session import CliError
+
+    try:
+        _prepare_python_for_requested_tools()
+    except (CliError, ValueError, OSError) as exc:
+        print("ошибка: {}".format(exc))
+        sys.exit(1)
     _in_private_env()
     from aelib.cli import main
 

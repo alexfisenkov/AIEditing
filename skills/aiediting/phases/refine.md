@@ -49,8 +49,10 @@ version in the reserve. To move it to a profile instead, that is a new format, a
 ```
 
 Each answer becomes a question round of `phases/interview.md` where it opens a theme, a parameter
-(`ae.py profile set`) and a taste line (`ae.py profile taste`). A wish the runtime does not do yet (a step
-marked `not_built` in `catalog/steps.json`) is answered «пока нет» and written as a taste line, not as a step.
+(`ae.py profile set`) and a taste line (`ae.py profile taste`). A wish the runtime does not do yet,
+including a missing catalog row or a legacy `not_built` marker, calls for investigation: inspect the source, choose a viable
+local tool, install checked requirements in an isolated environment and validate actual output. Add a
+repeatable capability to the catalog, runtime and tests. Only a concrete failed route is a blocker.
 
 Design changes → `phases/design.md` for the elements they named. Need a source to show on → ask for one
 (`phases/sources.md`, `ae.py frames`).

@@ -14,16 +14,16 @@ their pins) and `SKILL.md` from `templates/format-skill/`, and checks that the c
 A refusal names the problem → fix the draft, build again. A format with paths and none chosen is refused: go back to
 `phases/trial.md`, «A format with paths», rather than setting `variant` to get past it.
 
-## 2. Tools — only the chosen ones, only on «да»
+## 2. Tools — verify and repair
 
-`python "<skillDir>/tools/ae.py" doctor --steps <steps of the profile, comma-separated> --asr <provider>`
-shows what this format needs and what is missing; a format with `params.clean_speech` also `doctor --asr whispercpp`, because choosing takes hears by it. For each missing tool: one line of what it is, its
-licence, its size when heavy, the warning when it has one — and `ae.py ask action --note "поставить <id>"`.
-Only on «да»: `doctor --install <id> --yes`. «Ручная» installs (a model file, Windows releases) → give the
-link and wait. Remotion is different: `doctor` lists it as manual with a licence link, but nobody installs it by that link. The kit's
-`prepare` puts it into the working folder from its lockfile, with the renderer's browser (≈700 MB). So its «да» is to the licence and
-the size, and there is nothing to wait for. A refused tool → the step that needs it goes out of the profile, and the skill is built
-again; never leave a step whose tool is not there. The same goes for a probe, by the steps of the path being tried.
+`python3 "<skillDir>/tools/ae.py" setup --check` checks the installed toolkit. For this format, run
+`setup --steps <steps of the profile, comma-separated> --asr <provider>`; with `params.clean_speech`,
+also repair local `whispercpp`, because choosing takes hears by it. The requested format authorizes
+its local dependencies: announce total heavy downloads once and proceed without per-tool approval.
+Check the resulting tools and a trial render. Remotion's licence and render-browser size still need to
+be stated; its kit prepares the working folder from the lockfile. If setup cannot satisfy a dependency,
+name the concrete failure and investigate the source and requirements before dropping the capability.
+Do not silently leave a step whose dependency is absent.
 
 ## 3. Install globally
 

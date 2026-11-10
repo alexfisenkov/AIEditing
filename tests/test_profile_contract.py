@@ -11,7 +11,6 @@ sys.path.insert(0, str(SKILL / "tools"))
 
 CATALOG = json.loads((SKILL / "catalog" / "steps.json").read_text(encoding="utf-8"))
 PRESETS = SKILL / "templates" / "profiles"
-NOT_BUILT = ("behind_head",)  # named in the step vocabulary, not done by the runtime yet
 
 
 def read(path):
@@ -54,26 +53,12 @@ class StepVocabulary(unittest.TestCase):
         for step in ("detect_layout", "motion"):
             self.assertIn("`{}`".format(step), row)
 
-    def test_steps_not_built_install_nothing_and_are_not_offered(self):
+    def test_subject_effects_have_an_executable_model_and_engine(self):
         from aelib import catalog
 
-        self.assertEqual(catalog.needs(list(NOT_BUILT), "command")["tools"], [])
-        for step in NOT_BUILT:
-            self.assertTrue(CATALOG["steps"][step].get("not_built"), step)
-        for name in ("interview.md", "refine.md"):
-            text = read(SKILL / "phases" / name)
-            for word in ("«за головой»",) + tuple("`{}`".format(s) for s in NOT_BUILT):
-                self.assertNotIn(word, text, "{} offers {}".format(name, word))
-
-    def test_readmes_say_the_heavy_layers_are_not_there_yet(self):
-        """Effects behind the head are not built; HyperFrames is, for animated inserts only (F6)."""
-        for name, mark, used in (("README.md", "not yet", "animated inserts"),
-                                 ("README.ru.md", "пока нет", "анимированные вставки")):
-            for line in read(ROOT / name).splitlines():
-                if "Remotion + " in line:
-                    self.assertIn(mark, line, "{}: {}".format(name, line))
-                if "HyperFrames" in line and line.startswith("|"):
-                    self.assertIn(used, line, "{}: {}".format(name, line))
+        for step in ("background", "behind_head"):
+            self.assertFalse(CATALOG["steps"][step].get("not_built"))
+            self.assertTrue({"ffmpeg", "onnxruntime", "rvm-model"}.issubset(catalog.needs([step], "command")["tools"]))
 
 
 class ProfileKeys(unittest.TestCase):

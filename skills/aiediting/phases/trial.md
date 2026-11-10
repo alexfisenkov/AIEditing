@@ -56,8 +56,8 @@ built without their choice, and `ae.py trial` without `--variant` refuses until 
 
 1. **A short probe of each path, on their video.** One clip, not the whole set, and the same stretch in every path, so they compare
    ways and not stretches. What a probe needs was asked in `phases/interview.md`. The tools of a path come first:
-   `ae.py doctor --steps <the steps of the path being tried> --asr <provider>`, on their «да» (`phases/build.md`, §2); a path whose
-   tools they refuse is said to be out, in one line.
+   `ae.py setup --steps <the steps of the path being tried> --asr <provider>` (`phases/build.md`, §2).
+   Check actual output. If a dependency fails, investigate and name the concrete blocker.
 
    ```bash
    python "<skillDir>/tools/ae.py" trial <skill> "<source>" --variant <id>

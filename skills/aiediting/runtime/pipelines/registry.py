@@ -15,10 +15,6 @@ def _lazy(module: str, name: str) -> Callable:
     return call
 
 
-def _heavy(ctx) -> None:
-    ctx.note("Шаг «behind_head» в этой версии не делается (тяжёлый слой Remotion) — пропущен")
-
-
 # name -> planning function or None (a step that only renders, see render.py)
 PLAN: Dict[str, Optional[Callable]] = {
     "reedit": _lazy("reedit", "plan_reedit"),  # first: it refuses a wrong set of steps before anything is asked
@@ -30,6 +26,7 @@ PLAN: Dict[str, Optional[Callable]] = {
     "speech_spans": _lazy("cutplan", "plan_speech"),
     "cut_spans": _lazy("cutplan", "plan_cut"),
     "motion": _lazy("motion", "plan_motion"),
+    "background": _lazy("background", "plan_background"),
     "vertical": _lazy("vertical_plan", "plan_vertical"),
     "teaser": _lazy("teaser", "plan_teaser"),
     "plate": _lazy("plates", "plan_plates"),
@@ -41,7 +38,7 @@ PLAN: Dict[str, Optional[Callable]] = {
     "drift_ms": None,
     "verify_words": None,
     "export_platforms": None,
-    "behind_head": _heavy,
+    "behind_head": _lazy("background", "plan_behind_head"),
 }
 
 STEPS: List[str] = list(PLAN)

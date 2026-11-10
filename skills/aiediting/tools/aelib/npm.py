@@ -8,7 +8,10 @@ dependency at the locked version and hash, no install scripts run. Node itself i
 from __future__ import annotations
 
 import json
+import os
+import platform
 import shutil
+from pathlib import Path
 from typing import Callable, List, Optional
 
 from runtime.render.hf_ready import node_major
@@ -20,14 +23,60 @@ NPM_FLAGS = ["--no-fund", "--no-audit", "--ignore-scripts"]
 
 
 def npm_status(package: str, row: dict) -> dict:
-    meta = node_prefix() / "node_modules" / package / "package.json"
+    prefix = prefix_for(package)
+    meta = prefix / "node_modules" / package / "package.json"
     try:
         version = json.loads(meta.read_text(encoding="utf-8")).get("version")
     except (OSError, ValueError):
-        return {"ok": False, "version": None, "note": "не установлено в {}".format(node_prefix())}
+        return {"ok": False, "version": None, "note": "не установлено в {}".format(prefix)}
     if row.get("pin_kind") == "exact" and version != row["pin"]:
         return {"ok": False, "version": version, "note": "версия {} вместо пина {}".format(version, row["pin"])}
-    return {"ok": True, "version": version, "note": "версия {} в {}".format(version, node_prefix())}
+    hint = node_hint()
+    if hint:
+        return {"ok": False, "version": version, "note": hint}
+    from . import catalog
+    from .checks import status
+
+    node = catalog.tools().get("node")
+    if node and status(node)["ok"] is not True:
+        return {"ok": False, "version": version, "note": "нужна версия Node.js из каталога"}
+    try:
+        entry = _bin(package)
+    except (OSError, ValueError, TypeError, KeyError):
+        return {"ok": False, "version": version, "note": "нет CLI пакета"}
+    if not entry.is_file():
+        return {"ok": False, "version": version, "note": "нет CLI {}".format(entry)}
+    if package == "remotion":
+        cli_meta = prefix / "node_modules" / "@remotion" / "cli" / "package.json"
+        if json.loads(cli_meta.read_text(encoding="utf-8")).get("version") != row["pin"]:
+            return {"ok": False, "version": version, "note": "версия CLI Remotion отличается от пина"}
+    browser = _browser(package)
+    if browser is None or not browser.is_file():
+        return {"ok": False, "version": version, "note": "нет браузера рендера"}
+    return {"ok": True, "version": version, "note": "версия {} и браузер в {}".format(version, prefix)}
+
+
+def prefix_for(package: str) -> Path:
+    if package == "remotion":
+        return Path(os.environ["AIEDITING_REMOTION_PREFIX"]).expanduser() if os.environ.get("AIEDITING_REMOTION_PREFIX") else Path.home() / ".aiediting" / "remotion"
+    return node_prefix()
+
+
+def _browser(package: str) -> Optional[Path]:
+    if package == "hyperframes":
+        from runtime.render.hf_ready import browser
+
+        return browser()
+    if os.environ.get("OVERLAY_BROWSER"):
+        return Path(os.environ["OVERLAY_BROWSER"])
+    machine = platform.machine().lower()
+    system = platform.system().lower()
+    target = ("mac-arm64" if machine == "arm64" else "mac-x64") if system == "darwin" else (
+        "win64" if system == "windows" else "linux-arm64" if machine == "arm64" else "linux64")
+    folder = prefix_for(package) / "node_modules" / ".remotion" / "chrome-headless-shell" / target / (
+        "chrome-headless-shell-" + target)
+    candidates = ("headless_shell", "chrome-headless-shell.exe", "chrome-headless-shell")
+    return next((folder / name for name in candidates if (folder / name).is_file()), None)
 
 
 def node_hint() -> Optional[str]:
@@ -44,15 +93,19 @@ def node_hint() -> Optional[str]:
 
 
 def _bin(name: str):
-    meta = json.loads((node_prefix() / "node_modules" / name / "package.json").read_text(encoding="utf-8"))
+    pkg = "@remotion/cli" if name == "remotion" else name
+    meta = json.loads((prefix_for(name) / "node_modules" / pkg / "package.json").read_text(encoding="utf-8"))
     entry = meta.get("bin", {})
     entry = entry.get(name) if isinstance(entry, dict) else entry
-    return node_prefix() / "node_modules" / name / entry
+    if not entry:
+        raise ValueError("package has no CLI")
+    return prefix_for(name) / "node_modules" / pkg / entry
 
 
 def _npm_argv(step: dict) -> List[str]:
     """`npm ci` from the catalog's lockfile (copied into the prefix first), else a pinned `npm install`."""
-    prefix, npm = node_prefix(), shutil.which("npm") or "npm"
+    package = step["package"].rsplit("@", 1)[0]
+    prefix, npm = prefix_for(package), shutil.which("npm") or "npm"
     prefix.mkdir(parents=True, exist_ok=True)
     if not step.get("lock"):
         return [npm, "install", "--prefix", str(prefix), "--save-exact"] + NPM_FLAGS + [step["package"]]
@@ -71,4 +124,5 @@ def install_npm(step: dict, run: Callable) -> str:
     if done.startswith("не получилось") or not step.get("after"):
         return done
     name = step["package"].rsplit("@", 1)[0]
-    return done + "\n" + run([shutil.which("node") or "node", str(_bin(name))] + list(step["after"]), QUIET)
+    return done + "\n" + run([shutil.which("node") or "node", str(_bin(name))] + list(step["after"]), QUIET,
+                             cwd=str(prefix_for(name)))

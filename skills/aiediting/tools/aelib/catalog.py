@@ -17,7 +17,16 @@ def _load(name: str, base: Optional[Path] = None) -> dict:
 
 
 def tools(base: Optional[Path] = None) -> Dict[str, dict]:
-    return {row["id"]: row for row in _load("tools.json", base)["tools"]}
+    rows = list(_load("tools.json", base)["tools"])
+    extra = (base or CATALOG_DIR) / "extra-tools.json"
+    if extra.is_file():
+        rows += json.loads(extra.read_text(encoding="utf-8"))["tools"]
+    found = {}
+    for row in rows:
+        if row["id"] in found:
+            raise ValueError("Повторяется id инструмента: " + row["id"])
+        found[row["id"]] = row
+    return found
 
 
 def steps(base: Optional[Path] = None) -> dict:
@@ -41,6 +50,8 @@ def needs(chosen: List[str], asr_provider: Optional[str], base: Optional[Path] =
         runtime.update(step.get("runtime", []))
         wanted.update(step.get("tools", []))
     for provider in (asr_provider, verify_provider):
+        if provider and provider not in data["asr_tools"]:
+            raise ValueError("Неизвестный распознаватель {!r}; доступны: {}".format(provider, ", ".join(data["asr_tools"])))
         wanted.update(data["asr_tools"].get(provider or "", []))
     order = list(tools(base))
     return {"runtime": sorted(runtime), "tools": [t for t in order if t in wanted]}

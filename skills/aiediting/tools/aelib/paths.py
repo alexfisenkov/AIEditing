@@ -45,12 +45,28 @@ def backups_dir() -> Path:
     return agents_skills() / BACKUPS_NAME
 
 
-def venv_dir() -> Path:
-    """Private Python environment for Pillow/OpenCV/numpy; never the system Python."""
+def _python_at(folder: Path) -> Path:
+    return folder / ("Scripts/python.exe" if WIN else "bin/python")
+
+
+def legacy_venv_dir() -> Path:
+    """The original AIEditing private environment, kept for existing installations."""
     if WIN and os.environ.get("LOCALAPPDATA"):
         return Path(os.environ["LOCALAPPDATA"]) / "AIEditing" / "venv"
     return home() / ".aiediting" / "venv"
 
 
+def toolkit_venv_dir() -> Path:
+    """Modern private Python for packages whose latest releases need Python 3.12+."""
+    if WIN and os.environ.get("LOCALAPPDATA"):
+        return Path(os.environ["LOCALAPPDATA"]) / "AIEditing" / "toolkit-venv"
+    return home() / ".aiediting" / "toolkit-venv"
+
+
+def venv_dir() -> Path:
+    modern = toolkit_venv_dir()
+    return modern if _python_at(modern).is_file() and (modern / "toolkit.ready").is_file() else legacy_venv_dir()
+
+
 def venv_python() -> Path:
-    return venv_dir() / ("Scripts/python.exe" if WIN else "bin/python")
+    return _python_at(venv_dir())

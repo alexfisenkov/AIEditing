@@ -39,8 +39,13 @@ def name_of(ctx, piece: Dict) -> Path:
     from .bands import clean_name
 
     stem = clean_name(piece.get("name") or "") or ctx.src.stem + ("-" + piece["id"] if piece.get("id") else "")
-    out = ctx.outdir / (stem + ".mp4")
-    return ctx.outdir / (stem + "-монтаж.mp4") if out == ctx.src else out
+    suffix = ".mov" if _transparent(ctx) else ".mp4"
+    out = ctx.outdir / (stem + suffix)
+    return ctx.outdir / (stem + "-монтаж" + suffix) if out == ctx.src else out
+
+
+def _transparent(ctx) -> bool:
+    return ctx.has("background") and (ctx.p("background") or {}).get("mode", "remove") in {"remove", "chromakey"}
 
 
 def _clear_place(ctx, final: Path, same_picture: bool) -> bool:
@@ -94,9 +99,14 @@ def render_piece(ctx, piece: Dict) -> Dict:
             from .bands import lay_bands
 
             cur = lay_bands(ctx, piece, cur, tmp)
+    if ctx.has("background") and not _transparent(ctx):
+        from .background import apply_background
+
+        cur = apply_background(ctx, cur, tmp)
     pictures = ctx.has("plate") or ctx.has("overlay_png")  # captions and plates only with their own steps
     items = [i for i in specs(ctx, piece) if pictures or i["kind"] == "animation"] \
         if pictures or ctx.has("animations") else []
+    subject = cur
     if items:
         from ..media.vertical import shown_size
         from .anim_layer import layers
@@ -106,6 +116,12 @@ def render_piece(ctx, piece: Dict) -> Dict:
         pngs = draw(ctx, piece, still, frame, tmp / "плашки") if still else []
         pngs += layers(ctx, piece, moving, frame, tmp / "анимации") if moving else []
         cur = media.overlay_png(cur, pngs, tmp / "5-плашки.mp4") if pngs else cur
+        if ctx.has("behind_head") and pngs:
+            from .background import apply_background
+
+            cur = apply_background(ctx, subject, tmp, graphics=cur)
+    if ctx.has("behind_head") and Path(cur) == Path(subject):
+        ctx.note("Графика за человеком не применялась: для этого отрезка не выбрано наложений")
     rate = rate_of(ctx.p("speed", 1.0))
     ctx.before_speed = cur if rate != 1.0 else None  # what a recogniser hears: sped-up speech it hears worse
     if rate != 1.0:  # the one place `params.speed` is applied: after the pictures, so they speed up with the voice; before the music, which stays as it is
@@ -120,6 +136,10 @@ def render_piece(ctx, piece: Dict) -> Dict:
         cur = fit_audio(media.loudnorm(cur, tmp / "7-громкость.mp4", lufs=lufs), tmp / "8-ровно.mp4")
     if ctx.p("delivery"):
         cur = media.deliver(cur, tmp / "9-выпуск.mp4", ctx.p("delivery"))
+    if _transparent(ctx):
+        from .background import apply_background
+
+        cur = apply_background(ctx, cur, tmp)
     final = name_of(ctx, piece)
     same = Path(cur) == ctx.src
     if _clear_place(ctx, final, same):

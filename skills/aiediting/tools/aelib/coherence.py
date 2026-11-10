@@ -13,6 +13,9 @@ WAYS = ("takes", "trim", "whole")
 def problems(profile: dict) -> List[str]:
     """What must be answered or changed before the format is built, in the person's language."""
     params, steps, found = profile.get("params") or {}, profile.get("steps") or [], []
+    if "behind_head" in steps and not {"plate", "overlay_png", "animations"}.intersection(steps):
+        found.append("behind_head нужен источник графики: plate, overlay_png или animations. "
+                     "Без наложений нечего помещать за человеком.")
     way = params.get("recording")
     if way is not None and way not in WAYS:
         found.append("params.recording — одно из: takes, trim, whole; сейчас: {}".format(way))

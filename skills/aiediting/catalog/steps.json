@@ -21,7 +21,8 @@
     "animations":       {"what": "анимированные вставки на HyperFrames там, где перечисляют файлы, шаги, пункты или называют число: в углу напротив лица вместо карточки, не чаще раза в 30–60 с", "runtime": ["media", "render", "asr"], "tools": ["ffmpeg", "node", "hyperframes"]},
     "graphics":         {"what": "графика поверх готового видео на Remotion: сцены пишет модель по речи, спикер переезжает между раскладками, время — секунды готового видео, поэтому работает и с нарезкой, и без неё; кадр 16:9", "runtime": ["media", "asr"], "tools": ["ffmpeg", "node", "remotion", "opencv-python", "numpy", "yunet-model"]},
     "reedit":           {"what": "перемонтаж длинного горизонтального ролика под 9:16 на Remotion: согласует отрывки, отдаёт их модели, а она собирает ролики по методу: спикер ездит снизу, сверху, кружком, та же графика, текст только в безопасных зонах", "runtime": ["media", "asr"], "tools": ["ffmpeg", "node", "remotion", "opencv-python", "numpy", "yunet-model"]},
-    "behind_head":      {"what": "эффекты «за головой» при вертикальной съёмке — пока нет: шаг только оставляет заметку в отчёте", "runtime": [], "tools": [], "not_built": true}
+    "background":       {"what": "отделяет человека от фона: прозрачный MOV, цвет, картинка, видео или размытие, локально на RVM", "runtime": ["media"], "tools": ["ffmpeg", "numpy", "opencv-python", "onnxruntime", "rvm-model"]},
+    "behind_head":      {"what": "кладёт плашки и анимации за человеком: передний план из RVM поверх графики", "runtime": ["media"], "tools": ["ffmpeg", "numpy", "opencv-python", "onnxruntime", "rvm-model"]}
   },
   "asr_tools": {
     "whispercpp": ["whisper-cpp", "whisper-model"],

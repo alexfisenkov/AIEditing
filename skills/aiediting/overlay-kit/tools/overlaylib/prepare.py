@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 import os
+import json
+import platform
 import re
 import shutil
 import sys
@@ -12,7 +14,7 @@ from . import face, media, scaffold, sounds, words
 from .common import ToolError, need, run, say, fmt_secs
 
 MIN_FREE_GB = 8.0
-NODE_MIN = (22, 12)  # the bundler of Remotion 4.0.541 (rspack): ^20.19 or 22.12 and newer; HyperFrames: 22
+NODE_MIN = (22, 12)  # Remotion's bundler minimum; setup installs the current supported LTS.
 
 
 def icloud_roots() -> list:
@@ -50,14 +52,70 @@ def check_node() -> None:
         raise ToolError("Нужен Node {}.{}+ (сейчас {}).".format(NODE_MIN[0], NODE_MIN[1], version))
 
 
+def shared_prefix() -> Path:
+    custom = os.environ.get("AIEDITING_REMOTION_PREFIX")
+    return Path(custom).expanduser() if custom else Path.home() / ".aiediting" / "remotion"
+
+
+def _browser_ready(prefix: Path) -> bool:
+    custom = os.environ.get("OVERLAY_BROWSER")
+    if custom:
+        return Path(custom).is_file()
+    machine, system = platform.machine().lower(), platform.system().lower()
+    target = ("mac-arm64" if machine == "arm64" else "mac-x64") if system == "darwin" else (
+        "win64" if system == "windows" else "linux-arm64" if machine == "arm64" else "linux64")
+    folder = prefix / "node_modules" / ".remotion" / "chrome-headless-shell" / target / (
+        "chrome-headless-shell-" + target)
+    return any((folder / name).is_file() for name in ("headless_shell", "chrome-headless-shell.exe", "chrome-headless-shell"))
+
+
+def _versions_ok(prefix: Path, lock: Path) -> bool:
+    try:
+        packages = json.loads(lock.read_text(encoding="utf-8"))["packages"]
+        for name in ("remotion", "@remotion/cli"):
+            expected = packages["node_modules/" + name]["version"]
+            actual = json.loads((prefix / "node_modules" / name / "package.json").read_text(encoding="utf-8"))["version"]
+            if expected != actual:
+                return False
+        return (prefix / "node_modules" / "@remotion" / "cli" / "remotion-cli.js").is_file()
+    except (OSError, ValueError, KeyError):
+        return False
+
+
 def install_packages(work: Path) -> None:
-    if (work / "node_modules" / "remotion").is_dir():
-        say("Пакеты уже стоят.")
-        return
-    if not (work / "package-lock.json").is_file():
+    lock = work / "package-lock.json"
+    if not lock.is_file():
         raise ToolError("В рабочей папке нет package-lock.json: ставить по закреплённым версиям нечем.")
+    modules = work / "node_modules"
+    shared = shared_prefix()
+    try:
+        matching = lock.read_bytes() == (shared / "package-lock.json").read_bytes()
+    except OSError:
+        matching = False
+    ready = matching and _versions_ok(shared, lock) and _browser_ready(shared)
+    if modules.is_symlink():
+        if ready and modules.resolve() == (shared / "node_modules").resolve():
+            say("Пакеты уже стоят в общем окружении AIEditing.")
+            return
+        modules.unlink()  # never let npm ci follow an alias into the shared prefix
+    if modules.is_dir() and _versions_ok(work, lock):
+        if _browser_ready(work):
+            say("Пакеты уже стоят.")
+            return
+        run([shutil.which("node") or "node", str(modules / "@remotion" / "cli" / "remotion-cli.js"),
+             "browser", "ensure"], "Браузер Remotion", cwd=work, capture=False)
+        return
+    if ready and not modules.exists():
+        try:
+            modules.symlink_to(shared / "node_modules", target_is_directory=True)
+            say("Пакеты из общего окружения AIEditing подключены.")
+            return
+        except (OSError, NotImplementedError):
+            pass  # Windows may not grant symlink rights: install into the work folder
     say("Ставлю пакеты по package-lock.json (npm ci)...")
     run([shutil.which("npm") or "npm", "ci", "--no-audit", "--no-fund", "--ignore-scripts"], "Установка пакетов", cwd=work, capture=False)
+    run([shutil.which("node") or "node", str(modules / "@remotion" / "cli" / "remotion-cli.js"),
+         "browser", "ensure"], "Браузер Remotion", cwd=work, capture=False)
 
 
 def run_prepare(args) -> int:

@@ -15,7 +15,7 @@ from .formats import PREFIX
 from .install import SKIP, InstallError, is_format_skill
 from .paths import agents_skills, backups_dir, claude_skills
 
-BUILT = {"SKILL.md", "profile.json", "pins.json", "runtime", "schema", "tools", "design"}  # what a build makes
+BUILT = {"SKILL.md", "profile.json", "pins.json", "runtime", "schema", "tools", "design", "catalog"}  # what a build makes
 AS_INSTALLED = "SKILL.как-установлен.md"  # beside the draft: a SKILL.md edited by hand, to carry over with the person
 COPY = "скилл"  # in the workshop: the working copy of a skill without a profile
 LEAVE = shutil.ignore_patterns("__pycache__", "*.pyc", ".DS_Store", "node_modules")

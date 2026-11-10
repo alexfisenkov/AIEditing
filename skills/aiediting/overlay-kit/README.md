@@ -14,11 +14,11 @@ python tools/overlay.py draft /abs/work/dir          # out/draft.mp4, half size
 python tools/overlay.py final /abs/work/dir /abs/release/dir "name.mp4"   # 1080p, -14 LUFS, sync check
 ```
 
-Everything is the Python standard library (3.9+, macOS and Windows). OpenCV is used for the face track and numpy for the sync check and the empty-stretch finder; both are in the AIEditing environment (`~/.aiediting/venv`), and a command that needs a missing one says so. Messages for the person are in Russian; every error ends with code 2 and a reason.
+The command wrapper uses Python 3.9+ on macOS and Windows. OpenCV is used for the face track and numpy for the sync check and the empty-stretch finder; AIEditing `setup` prepares them in a private Python environment, selecting a compatible Python 3.12–3.14 if the host is older. Messages for the person are in Russian; every error ends with code 2 and a reason.
 
 | Command | Does |
 |---|---|
-| `prepare <video> <W> --words F --design D [--logo F] [--sfx DIR] [--music F] [--speech WAV] [--no-install]` | checks, then unpacks the template, makes `public/clips/source.mp4` (H.264, no sound) and `speech.wav`, copies the words to `raw/words.txt`, builds the face track, writes the design data, lists the sounds, sets the duration, installs packages (`npm ci` by the pinned `package-lock.json`). Repeat-safe: filled scenes are never overwritten. `--speech`: a clean speech of the same length replaces the sound of the video as `speech.wav` |
+| `prepare <video> <W> --words F --design D [--logo F] [--sfx DIR] [--music F] [--speech WAV] [--no-install]` | checks, then unpacks the template, makes `public/clips/source.mp4` (H.264, no sound) and `speech.wav`, copies the words to `raw/words.txt`, builds the face track, writes the design data, lists the sounds, sets the duration, and reuses the shared Remotion packages when the lockfile and browser match. If reuse is unavailable, installs from the pinned lockfile into this working folder. Repeat-safe: filled scenes are never overwritten. `--speech`: a clean speech of the same length replaces the sound of the video as `speech.wav` |
 | `frame <W> <sec...>` | stills of any seconds |
 | `draft <W>` | type check, then a half-size render |
 | `sheets <video> <dir> [--step 4]` | contact sheets, 30 frames each; the first frame is half a step in, then one every step |
@@ -61,7 +61,7 @@ A design system named for this video replaces the tokens and the mark for this r
 
 ## Order of work
 
-`<kit>` is this folder, `<W>` the working folder: an **absolute path outside iCloud**, for example `~/.local/share/overlay-kit/<date-topic>`. Keep 8 GB free. Run long commands in the background with the output in `<W>/raw/*.log`: a draft takes minutes, a final about twice that for a 10-minute recording; a normal foreground call will cut them off. The first Remotion command (not `npm ci`) downloads the Chrome Headless Shell that Remotion renders with, about 200 MB, into `node_modules/.remotion`; set `OVERLAY_BROWSER` to the path of an installed Chrome to use that instead and download nothing.
+`<kit>` is this folder, `<W>` the working folder: an **absolute path outside iCloud**, for example `~/.local/share/overlay-kit/<date-topic>`. Keep 8 GB free. Run long commands in the background with the output in `<W>/raw/*.log`: a draft takes minutes, a final about twice that for a 10-minute recording; a normal foreground call will cut them off. `ae.py setup` prepares the shared Remotion renderer and Chrome Headless Shell. `prepare` links that checked installation when possible; a platform without symlink rights may install a working-folder copy. Set `OVERLAY_BROWSER` to an existing compatible browser to use that instead.
 
 1. **Prepare.** `overlay.py prepare` as above. Read what it says about the face: without OpenCV, without the model (`AIEDITING_YUNET_MODEL`, else `~/.aiediting/models/face_detection_yunet_2023mar.onnx`) or without a face the speaker's frame holds the centre.
 2. **Read the speech in full** (`raw/words.txt`) and mark the chapters in `src/data/layouts.ts` (`CHAPTERS`; chapter labels in the speaker's language). Look at the end of the transcript: a recogniser can lose pieces of a long recording.
@@ -160,12 +160,12 @@ The video is a dark stage: `muted`, `faint`, `white` are light on dark (the ordi
 | Part | Licence |
 |---|---|
 | `tools/`, `template/src`, `examples/` | MIT, like the repository |
-| Remotion (`remotion`, `@remotion/cli`) | Remotion's own licence, **not an open-source one**: free for individuals, companies of up to three employees and non-profits, a company licence is needed beyond that; read remotion.dev/license before you use the result commercially. It is installed from npm, not shipped here |
+| Remotion 4.0.542 (`remotion`, `@remotion/cli`) | Remotion's own licence, **not an open-source one**: free for individuals, companies of up to three employees and non-profits, a company licence is needed beyond that; read remotion.dev/license before you use the result commercially. It is installed from the pinned lockfile, not shipped here |
 | Fonts Unbounded, Onest, JetBrains Mono (`template/public/fonts`) | SIL Open Font License 1.1, texts beside the files (`OFL-*.txt`; Unbounded's is from github.com/googlefonts/unbounded) |
 | Sounds `pop-soft`, `riser-1s`, `tick`, `whoosh-soft` | CC0, synthesised for this project. Other sounds: only from sources with a licence you have checked (CC0), then `--sfx` |
 | Logos | none shipped: a brand mark is a trademark and a licence for each icon is not confirmed. `add-logos.mjs` fetches a path from the `simple-icons` package (CC0 for the project, "not necessarily for every icon", see its DISCLAIMER) on request: read the brand's guidelines before publishing |
 | Music | none shipped; `--music` is yours to license |
-| Playwright (`capture-*`) | Apache-2.0, pinned to 1.64.1; real Chrome through `channel: "chrome"`, no browser download |
+| Playwright 1.65.0 (`capture-*`) | Apache-2.0; real Chrome through `channel: "chrome"`, no Playwright browser download |
 
 ## When the person says "no questions"
 

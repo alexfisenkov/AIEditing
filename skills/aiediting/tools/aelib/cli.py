@@ -4,10 +4,20 @@ from __future__ import annotations
 import argparse
 import sys
 
-from . import cmd_design, cmd_media, cmd_profile, cmd_run, cmd_skills, doctor, trial
+from . import cmd_background, cmd_design, cmd_media, cmd_profile, cmd_run, cmd_skills, doctor, setup, trial
 from .session import CliError
 
 RUNTIME_ERRORS = {"LookError", "RenderError", "MediaError", "AsrError"}
+
+
+def _capabilities(opt):
+    from .capabilities import cmd_capabilities
+
+    return cmd_capabilities(opt)
+
+
+def _image_cutout(opt):
+    return cmd_background.image_cutout(opt)
 
 
 def _sub(sub, name, fn, *args, **flags):
@@ -60,6 +70,14 @@ def parser() -> argparse.ArgumentParser:
     _sub(sub, "restore-skill", cmd_skills.cmd_restore, "name", backup={}, list={"action": "store_true"})
     _sub(sub, "doctor", doctor.cmd_doctor, steps={}, asr={}, install={}, yes={"action": "store_true"},
          catalog={}, requirements={"action": "store_true"})
+    _sub(sub, "setup", setup.cmd_setup, steps={}, asr={}, check={"action": "store_true"})
+    _sub(sub, "capabilities", _capabilities, json={"action": "store_true"})
+    _sub(sub, "background", cmd_background.run, "video", "output",
+         mode={"choices": ["remove", "solid", "image", "video", "blur", "chromakey"], "required": True},
+         value={}, model={}, downsample_ratio={"type": float},
+         key_color={"default": "#00ff00"}, similarity={"type": float, "default": 0.12},
+         blend={"type": float, "default": 0.08})
+    _sub(sub, "image-cutout", _image_cutout, "source", "output")
     return ap
 
 
