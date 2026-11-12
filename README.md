@@ -104,8 +104,18 @@ CI is configured to run unit tests and install the pinned Python packages. The n
 
 ## How to use it
 
-1. Type `/aiediting`. A dashboard opens beside the chat (or in your browser): stages, your answers,
-   frames of your footage, design variants side by side, trial clips.
+The workshop starts with a command in your agent's chat. The command depends on the agent:
+
+| Agent | What to type in the chat |
+|---|---|
+| Claude Code | `/aiediting` |
+| Cursor | `/aiediting` — type `/` in the agent chat and pick aiediting from the list |
+| Codex (CLI or IDE extension) | `$aiediting` — or run `/skills` and pick aiediting from the list |
+
+If the agent does not find the command, restart it: skills are picked up at startup.
+
+1. Type your agent's command from the table. A dashboard opens beside the chat (or in your browser):
+   stages, your answers, frames of your footage, design variants side by side, trial clips.
 2. Choose: **a new format skill** or **refine** one you already have.
 3. New: pick formats from the list and add your own through commas («урок, вертикаль, подкаст»). Give
    1–3 source videos. Answer the questions in rounds of 3–4 — each with a recommended option and an
@@ -150,7 +160,8 @@ way the catalog lacks is investigated against the source, built and validated on
 it becomes a catalog step with runtime and tests. Any installed `монтаж-*` can be refined later, even one written by
 hand: what a profile does not describe stays with the skill and is changed together with you.
 
-**Without questions.** Say «без вопросов» in your first message and give a recording:
+**Without questions.** Say «без вопросов» in your first message and give a recording (in Codex, start with
+`$aiediting` instead of `/aiediting`):
 
 ```
 /aiediting новый формат «обращение», без склеек, в нашем стиле, без вопросов, вот запись
