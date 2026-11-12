@@ -49,8 +49,10 @@ class OverlayPng(TempDirCase):
         self.assertGreater(rows[160][210], 200)
         self.assertLess(gray_frame(out, 0.1, SIZE)[20][20], 120)  # still fading in
 
-    @unittest.skipIf(has_drawtext(), "this ffmpeg has drawtext; the no-drawtext case is not shown here")
     def test_this_ffmpeg_has_no_drawtext(self):
+        # Asked at run time, not at import: refresh_path() in an earlier test may put ffmpeg-full first in PATH.
+        if has_drawtext():
+            self.skipTest("this ffmpeg has drawtext; the no-drawtext case is not shown here")
         self.assertFalse(has_drawtext())  # the overlays above passed without it
 
 
