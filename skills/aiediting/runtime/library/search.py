@@ -45,14 +45,27 @@ _BAN_WORDS = {"не", "ни", "без", "брать", "бери", "берём", 
 
 
 def _words(text) -> List[str]:
-    """Every word of a name or a ban, two letters and up: «Ян» is a name too."""
+    """Every word of a name or a ban, two letters and up: «Ян» is a name too; ё is е («Пётр» is «Петр»)."""
     found = _WORD.findall(" ".join(text) if isinstance(text, (list, tuple)) else str(text or ""))
-    return [w.casefold() for w in found if len(w) >= 2 and not w.isdigit()]
+    return [w.casefold().replace("ё", "е") for w in found if len(w) >= 2 and not w.isdigit()]
+
+
+# A name that drops its vowel in the other cases: «Павел» → «Павла», «Лев» → «Льва»; and the endings of those cases.
+_FLEETING = ("ел", "ев", "ец", "ок", "ек")
+_CASE_ENDINGS = {"а", "я", "у", "ю", "е", "ы", "и", "ом", "ем", "ой", "ей"}
+
+
+def _fleeting(base: str, other: str) -> bool:
+    """`other` is `base` in another case with its fleeting vowel gone (and a soft sign in its place after a consonant)."""
+    if len(base) < 3 or not base.endswith(_FLEETING):
+        return False
+    stems = (base[:-2] + base[-1], base[:-2] + "ь" + base[-1])
+    return any(other.startswith(s) and other[len(s):] in _CASE_ENDINGS for s in stems)
 
 
 def _form(a: str, b: str) -> bool:
-    """Two forms of one word: «Петя»/«Петю», «пляж»/«пляжа» — an ending apart, never «Петя»/«Петербург»."""
-    if a == b:
+    """Two forms of one word: «Петя»/«Петю», «пляж»/«пляжа», «Павел»/«Павла» — an ending apart, never «Петя»/«Петербург»."""
+    if a == b or _fleeting(a, b) or _fleeting(b, a):
         return True
     short, long_ = sorted((a, b), key=len)
     if len(long_) - len(short) > 2:

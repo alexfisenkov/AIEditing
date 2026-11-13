@@ -175,6 +175,65 @@ class Download(StockCase):
             stock.download({"provider": "pexels", "id": "1"}, self.lib)
 
 
+class Moved:
+    """A server on 127.0.0.1 that answers every request 302 to `target` + the same path."""
+
+    def __init__(self, target):
+        moved = self
+
+        class Handler(BaseHTTPRequestHandler):
+            def do_GET(self):
+                self.send_response(302)
+                self.send_header("Location", moved.target + self.path)
+                self.send_header("Content-Length", "0")
+                self.end_headers()
+
+            def log_message(self, *args):
+                pass
+
+        self.target = target
+        self.server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
+        self.url = "http://127.0.0.1:{}".format(self.server.server_address[1])
+        self.thread = threading.Thread(target=self.server.serve_forever, daemon=True)
+
+    def __enter__(self):
+        self.thread.start()
+        return self
+
+    def __exit__(self, *exc):
+        self.server.shutdown()
+        self.server.server_close()
+
+
+class Redirect(StockCase):
+    def test_a_redirect_to_another_host_never_carries_the_key(self):
+        with StockApi() as other:
+            elsewhere = other.url.replace("127.0.0.1", "localhost")  # another host name than the one asked
+            with Moved(elsewhere) as moved, mock.patch.dict(stock.URLS, {"pexels": moved.url + "/pexels"}):
+                hits = stock.search("горы", "pexels")
+        self.assertEqual([h["id"] for h in hits], ["111"])
+        self.assertEqual(len(other.requests), 1)
+        self.assertNotIn("Authorization", other.requests[0]["headers"])
+
+    def test_the_file_goes_to_disk_through_the_services_download_and_a_big_one_is_refused(self):
+        from runtime.services import web
+
+        with StockApi() as api:
+            hit = self.hit_of(api)
+            with mock.patch.object(web, "download", wraps=web.download) as spy:
+                stock.download(hit, self.lib)
+            self.assertEqual(spy.call_count, 1)
+            big = dict(hit, id="другой")
+            with mock.patch.object(stock, "MAX_BYTES", len(CLIP) - 1):
+                with self.assertRaises(stock.StockError):
+                    stock.download(big, self.lib)
+        self.assertEqual(len(list((self.lib / "стоки").iterdir())), 1, "no half file is left")
+
+    def hit_of(self, api):
+        with mock.patch.dict(stock.URLS, api.urls()):
+            return stock.search("лес", "pexels")[0]
+
+
 class Command(StockCase):
     def test_stock_command_lists_hits_without_links_and_takes_one(self):
         with StockApi() as api, mock.patch.dict(stock.URLS, api.urls()):

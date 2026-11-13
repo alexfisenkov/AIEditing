@@ -7,11 +7,9 @@ from __future__ import annotations
 
 import datetime as dt
 import hashlib
-import json
-import os
 from pathlib import Path
 from typing import Dict, List, Optional
-from urllib import error, parse, request
+from urllib import parse
 
 from ..asr.contract import AsrError
 from ..asr.secrets import read_key
@@ -20,7 +18,6 @@ from .paths import LAYOUT, LibraryError, find_library
 
 KEYS = {"pexels": "PEXELS_API_KEY", "pixabay": "PIXABAY_API_KEY"}
 URLS = {"pexels": "https://api.pexels.com/v1/videos/search", "pixabay": "https://pixabay.com/api/videos/"}
-TIMEOUT = 60
 MAX_BYTES = 400 * 1024 * 1024
 CACHE = "стоки-запросы.json"
 FRESH_DAYS = 30
@@ -31,19 +28,17 @@ class StockError(LibraryError):
     """The stock service cannot be used now; the message says why, without the key."""
 
 
-def _get(url: str, headers: Dict[str, str], secret: str = "") -> bytes:
+WHAT = "Сервис стоков"
+
+
+def _get(url: str, headers: Dict[str, str], secret: str = "") -> dict:
+    """JSON of the service through `services.web`: a redirect to another host goes there without the key."""
+    from ..services import web
+
     try:
-        with request.urlopen(request.Request(url, headers=headers), timeout=TIMEOUT) as resp:
-            return resp.read(MAX_BYTES + 1)
-    except error.HTTPError as exc:
-        with exc:
-            detail = exc.read()[:200].decode("utf-8", "replace")
-        detail = detail.replace(secret, "***") if secret else detail
-        hint = " (ключ не принят — проверьте его в файле .env)" if exc.code in (401, 403) else (
-            " (лимит запросов исчерпан, попробуйте позже)" if exc.code == 429 else "")
-        raise StockError("Сервис стоков ответил {}{}: {}".format(exc.code, hint, detail))
-    except (error.URLError, OSError) as exc:
-        raise StockError("Нет связи с сервисом стоков {}: {}".format(url.split("?")[0], getattr(exc, "reason", exc)))
+        return web.get_json(url, headers, WHAT, secret)
+    except web.ServiceError as exc:
+        raise StockError(str(exc))
 
 
 def _kind(width: int, height: int) -> str:
@@ -130,13 +125,9 @@ def search(query: str, provider: str = "pexels", orientation: str = "landscape",
     else:
         url = URLS[provider] + "?" + parse.urlencode({"key": key, "q": query, "per_page": per_page})
         headers = {}
-    raw = _get(url, dict(headers, **{"User-Agent": "aiediting"}), key)
-    try:
-        data = json.loads(raw.decode("utf-8"))
-    except ValueError:
-        raise StockError("Сервис стоков вернул не JSON")
+    data = _get(url, dict(headers, **{"User-Agent": "aiediting"}), key)
     read = _pexels if provider == "pexels" else _pixabay
-    hits = read(data if isinstance(data, dict) else {}, query, orientation == "landscape")[:per_page]
+    hits = read(data, query, orientation == "landscape")[:per_page]
     _remember(name, hits)
     return hits
 
@@ -144,13 +135,12 @@ def search(query: str, provider: str = "pexels", orientation: str = "landscape",
 def _save(link: str, path: Path) -> None:
     if not link.startswith(("http://", "https://")):
         raise StockError("Ссылка на файл стока не похожа на адрес")
-    body = _get(link, {"User-Agent": "aiediting"})
-    if not body or len(body) > MAX_BYTES:
-        raise StockError("Файл стока пустой или слишком большой")
-    path.parent.mkdir(parents=True, exist_ok=True)
-    tmp = path.with_name(path.name + ".tmp")
-    tmp.write_bytes(body)
-    os.replace(str(tmp), str(path))
+    from ..services import web
+
+    try:  # in pieces, through a temporary name: the file is never held in memory, a broken one never stays
+        web.download(link, {"User-Agent": "aiediting"}, path, WHAT, limit=MAX_BYTES)
+    except web.ServiceError as exc:
+        raise StockError(str(exc))
 
 
 def download(hit: dict, library: Path) -> dict:

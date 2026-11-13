@@ -48,7 +48,9 @@ def copy_design(stage: Path, source: Path, steps=()) -> None:
         shutil.copytree(str(example), str(own), ignore=SKIP)
     if KIT_STEPS & set(steps):
         _graphics_parts(stage / "design")
-    if {"bands", "teaser"} & set(steps):
+    elif "music" in steps:
+        _sound_parts(stage / "design")
+    if {"bands", "teaser", "publish_pack"} & set(steps):  # publish_pack: `run.py covers` draws in the format's design
         _example_design(stage / "design")
 
 
@@ -99,6 +101,21 @@ def _graphics_parts(design: Path) -> None:
         (kit / KIT_MARK).write_text("\n".join(["copied by AIEditing; renewed at every build, and the build stops if these files changed"]
                                               + rows) + "\n", encoding="utf-8")
     _example_design(design)
+
+
+def _sound_parts(design: Path) -> None:
+    """Music without graphics still puts sounds by role on the plates (`params.sfx.roles`): the kit's sounds and their
+    `catalog.json` only, where `pipelines/music.py` looks for them, marked as copied by this workshop."""
+    kit = design / "overlay-kit"
+    sfx = kit / "template" / "public" / "sfx"
+    if (kit / KIT_MARK).is_file() and not kit_changes(kit):
+        shutil.rmtree(str(kit))
+    if kit.is_dir():  # a kit of the format's own, or one changed by hand, stays as it is
+        return
+    shutil.copytree(str(OVERLAY_KIT / "template" / "public" / "sfx"), str(sfx), ignore=shutil.ignore_patterns("*.pyc", *KIT_LEAVE))
+    rows = ["{}  {}".format(sha, path) for path, sha in sorted(_kit_files(kit).items())]
+    (kit / KIT_MARK).write_text("\n".join(["copied by AIEditing: the kit's sounds only, renewed at every build"] + rows) + "\n",
+                                encoding="utf-8")
 
 
 def _example_design(design: Path) -> None:

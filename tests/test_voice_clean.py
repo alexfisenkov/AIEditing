@@ -76,3 +76,44 @@ class VoiceClean(TempDirCase):
         self.run_edit(["voice_clean"], voice={"service": "auphonic", "preset": "uuid-of-my-preset", "key_env": "MY_AUPHONIC"})
         self.assertEqual(self.fake.calls[0]["preset"], "uuid-of-my-preset")
         self.assertEqual(self.fake.calls[0]["key_env"], "MY_AUPHONIC")
+
+
+class ToneAuphonic(FakeAuphonic):
+    """«Cleans» into a steady 1500 Hz tone of the same length: nothing of the speech's rhythm is left to line up by."""
+
+    def __call__(self, audio, preset, out, key_env=auphonic.KEY_ENV):
+        self.calls.append({"audio": audio.name, "preset": preset, "key_env": key_env})
+        ffmpeg("-i", str(audio), "-f", "lavfi", "-i", "aevalsrc=0.5*sin(2*PI*1500*t):s=48000", "-filter_complex",
+               "[1:a][0:a]amix=inputs=2:duration=shortest:weights=1 0:normalize=0[a]", "-map", "[a]", "-c:a", "pcm_s16le",
+               str(out))
+        return out
+
+
+@needs_ffmpeg
+class VoiceOfTheRecorder(TempDirCase):
+    """With a separate sound and the step `angles`, the sound that goes into the video is the recorder's: that one is cleaned."""
+
+    def setUp(self):
+        super().setUp()
+        from test_angles_render import SECONDS, SPEECH
+        from test_sync import bursts_file, shifted
+
+        self.main = bursts_file(self.tmp / "камера.mp4", SPEECH, SECONDS, freq=440, video="black")
+        self.sound = bursts_file(self.tmp / "рекордер.wav", shifted(SPEECH, -0.5), SECONDS + 1, freq=1000)
+        self.fake = ToneAuphonic()
+        patch = mock.patch.object(auphonic, "process", self.fake)
+        patch.start()
+        self.addCleanup(patch.stop)
+
+    def test_voice_clean_with_angles_and_audio_cleans_the_recorder_and_keeps_its_original(self):
+        from test_angles_render import pitch, words
+
+        prof = profile(["voice_clean", "speech_spans", "cut_spans", "angles"], asr_config(self.tmp, words()), gap=0.5,
+                       pad=0.12, voice={"service": "auphonic", "preset": "средне"})
+        report = pipelines.run(self.main, prof, self.tmp / "выпуск", Approver(), audio=self.sound)
+        self.assertEqual(len(self.fake.calls), 1)
+        original = self.tmp / "выпуск" / ".звук" / "исходный.wav"
+        self.assertGreater(band(original, 1000), band(original, 440) + 10, "the recorder's sound is kept as it was")
+        self.assertAlmostEqual(report["angles"]["offsets"][str(self.sound.resolve())], -0.5, delta=0.04)
+        self.assertAlmostEqual(pitch(report["output"], self.tmp), 1500, delta=80, msg="the cleaned recorder is heard")
+        self.assertTrue(any("Сдвиг по звуку" in n and "рекордер.wav" in n for n in report["notes"]), report["notes"])

@@ -43,17 +43,45 @@ def _piece(src: Path, folder: Path, start, duration, name: str = "кусок") -
 
     a = float(start or 0.0)
     b = a + float(duration) if duration else media.probe(src)["duration"]
-    return media.cut_spans(src, [(a, b)], folder / (name + (src.suffix or ".mp4")))
+    suffix = src.suffix or ".mp4"
+    if not media.probe(src)["has_video"]:  # a cut is AAC: a .wav of the recorder becomes .m4a
+        suffix = ".m4a"
+    return media.cut_spans(src, [(a, b)], folder / (name + suffix))
+
+
+def _file(raw, what: str) -> Path:
+    path = Path(raw).expanduser().resolve()
+    if not path.is_file():
+        raise CliError("Нет такого файла {}: {}".format(what, path))
+    return path
 
 
 def _screen(opt, folder: Path):
     """The screen recording of separate tracks, cut to the same piece as the camera."""
     if not getattr(opt, "screen", None):
         return None
-    screen = Path(opt.screen).expanduser().resolve()
-    if not screen.is_file():
-        raise CliError("Нет такого файла экрана: {}".format(screen))
-    return _piece(screen, folder, opt.start, opt.duration, "экран")
+    return _piece(_file(opt.screen, "экрана"), folder, opt.start, opt.duration, "экран")
+
+
+def _others(opt) -> dict:
+    """Other cameras and the sound recorded apart (step `angles`), checked before the trial makes its folder."""
+    found = {}
+    if getattr(opt, "camera", None):
+        found["cameras"] = [_file(c, "камеры") for c in opt.camera]
+    if getattr(opt, "audio", None):
+        found["audio"] = _file(opt.audio, "звука")
+    return found
+
+
+def _cut_others(others: dict, opt, folder: Path) -> dict:
+    """Each cut to the same seconds as the main camera: they started at about the same time, so `media.sync` lines the
+    pieces up as it lines up the whole files."""
+    out = dict(others)
+    if "cameras" in out:
+        out["cameras"] = [_piece(c, folder, opt.start, opt.duration, "камера-{}".format(k)) for k, c in enumerate(out["cameras"], 2)]
+    if "audio" in out:
+        out["audio"] = _piece(out["audio"], folder, opt.start, opt.duration, "звук")
+    return out
 
 
 def _own_design(profile: dict, draft: Path) -> dict:
@@ -125,15 +153,16 @@ def cmd_trial(opt) -> str:
     src = Path(opt.video).expanduser().resolve()
     if not src.is_file():
         raise CliError("Нет такого файла: {}".format(src))
+    others = _others(opt)
     folder = _folder(w / opt.skill / "trials", resume=bool(opt.answers), variant=probe.get("id"))
     folder.mkdir(parents=True, exist_ok=True)
     if probe:
         (folder / PATH_MARK).write_text(probe["id"], encoding="utf-8")
     _speech_heard_before(w / opt.skill / "trials", folder)
     piece, screen = _piece(src, folder, opt.start, opt.duration), _screen(opt, folder)
+    extra = dict(_cut_others(others, opt, folder), **({"screen": screen} if screen else {}))
     try:
-        report = pipelines.run(piece, profile, folder / "out", approver_for(profile, folder, opt.answers),
-                               **({"screen": screen} if screen else {}))
+        report = pipelines.run(piece, profile, folder / "out", approver_for(profile, folder, opt.answers), **extra)
     except NeedsApproval as e:
         session.event(lambda d: st.ask(d, "approve", "пробный монтаж {}: нужно решение".format(opt.skill)))
         raise Waiting("{}\nПапка пробы: {}".format(e, folder))

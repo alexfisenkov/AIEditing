@@ -3,6 +3,7 @@ import json
 import subprocess
 import sys
 import unittest
+from pathlib import Path
 
 from _support import SKILL, TempDirCase
 
@@ -80,6 +81,43 @@ class BuildSkill(TempDirCase):
         proc = self.build(profile_for("урок", ["cut_spans", "teleport"]))
         self.assertNotEqual(proc.returncode, 0)
         self.assertIn("teleport", proc.stdout + proc.stderr)
+
+    def test_the_sound_method_names_the_formats_own_loudness(self):
+        prof = profile_for("подкаст", LESSON_STEPS + ["music"])
+        prof["params"].update(lufs=-18, music={"dir": "музыка"})
+        self.build(prof)
+        text = (self.tmp / "out" / "монтаж-подкаст" / "SKILL.md").read_text(encoding="utf-8")
+        self.assertIn("params.lufs", text)
+        self.assertNotIn("−14 LUFS", text)
+        self.assertNotIn("-14 LUFS", text)
+
+    def test_music_with_sound_roles_and_no_graphics_brings_the_kits_sounds(self):
+        prof = profile_for("подкаст", LESSON_STEPS + ["music"])
+        prof["params"]["sfx"] = {"roles": True}
+        proc = self.build(prof)
+        self.assertEqual(proc.returncode, 0, proc.stdout + proc.stderr)
+        skill = self.tmp / "out" / "монтаж-подкаст"
+        probe = ("import json, sys\nfrom pathlib import Path\nsys.path.insert(0, sys.argv[1])\n"
+                 "from runtime.pipelines import music\n"
+                 "class Ctx:\n"
+                 "    music, chapters, keep, notes, outdir = {}, [{'start': 2.0, 'title': 'Глава'}], [(0.0, 10.0)], [], '.'\n"
+                 "    def p(self, name, default=None):\n"
+                 "        return {'sfx': {'roles': True}}.get(name, default)\n"
+                 "    def note(self, text):\n"
+                 "        self.notes.append(text)\n"
+                 "ctx = Ctx()\nmusic.plan_music(ctx)\n"
+                 "roles = ctx.music.get('accent_roles') or {}\n"
+                 "print(json.dumps({k: [str(v['file']), v['peak_ms']] for k, v in roles.items()}))\n")
+        done = subprocess.run([sys.executable, "-I", "-c", probe, str(skill)], capture_output=True, text=True,
+                              encoding="utf-8", cwd=str(self.tmp))
+        self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
+        roles = json.loads(done.stdout)
+        self.assertEqual(sorted(roles), ["card", "chapter"])
+        for file, peak in roles.values():
+            self.assertTrue(file.startswith(str(skill.resolve())), file)
+            self.assertTrue(Path(file).is_file(), file)
+            self.assertGreaterEqual(peak, 0)
+        self.assertFalse((skill / "design" / "overlay-kit" / "tools").exists(), "the sounds only, not the whole kit")
 
     def test_built_skill_works_from_its_own_copy(self):
         self.build(profile_for("подкаст", LESSON_STEPS))

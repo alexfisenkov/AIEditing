@@ -98,6 +98,23 @@ class Search(unittest.TestCase):
         rows = [{"f": "а.jpg", "what": "набережная", "tags": ["Петербург"]}]
         self.assertEqual([r["f"] for r in candidates(rows, "набережная", None, forbidden=["Петя"])], ["а.jpg"])
 
+    def test_a_ban_in_another_case_closes_the_name_with_a_fleeting_vowel_or_a_yo(self):
+        from runtime.library.search import candidates
+
+        for ban, name in (("Павла", "Павел"), ("Льва", "Лев"), ("Петра", "Пётр"), ("Артёма", "Артем"),
+                          ("Пётр", "Петр"), ("Федю", "Фёдор"), ("Павла не брать", "Павел Сидоров")):
+            rows = [{"f": "а.jpg", "what": "рыбалка", "who": [name]}, {"f": "б.jpg", "what": "рыбалка"}]
+            found = [r["f"] for r in candidates(rows, "рыбалка", None, forbidden=[ban])]
+            self.assertEqual(found, ["б.jpg"], "{} → {}".format(ban, name))
+
+    def test_a_fleeting_vowel_does_not_close_another_word(self):
+        from runtime.library.search import candidates
+
+        for ban, name in (("Олег", "Ольга"), ("Ольгу", "Олег"), ("Павел", "павлин"), ("Льва", "Ольга")):
+            rows = [{"f": "а.jpg", "what": "рыбалка", "who": [name]}]
+            found = [r["f"] for r in candidates(rows, "рыбалка", None, forbidden=[ban])]
+            self.assertEqual(found, ["а.jpg"], "{} ↛ {}".format(ban, name))
+
     def test_the_year_lifts_a_file_of_that_year(self):
         from runtime.library.search import candidates
 

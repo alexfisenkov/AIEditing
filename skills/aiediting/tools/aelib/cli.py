@@ -54,7 +54,8 @@ def parser() -> argparse.ArgumentParser:
     p = _sub(sub, "choose", cmd_design.cmd_choose, "skill", "element")
     p.add_argument("n", type=int)
     _sub(sub, "trial", cmd_media.cmd_trial, "skill", "video", start={"type": float},
-         duration={"type": float}, answers={}, screen={}, variant={})
+         duration={"type": float}, answers={}, screen={}, variant={}, camera={"action": "append", "default": []},
+         audio={})
     _sub(sub, "show", trial.cmd_show, "skill", "video", variant={})
     _sub(sub, "hear", trial.cmd_hear, "skill", "video")
     p = _sub(sub, "kit", cmd_profile.cmd_kit, "skill")

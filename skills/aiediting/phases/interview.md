@@ -110,7 +110,8 @@ what its own instructions name. You never open or print that file, you try the k
 - stock: `ae.py library stock "<a query from their niche>"` brings hits (it is a real request on their key);
 - a music folder: it exists and holds tracks you listed; Epidemic: its server answers a search;
 - their sounds: `overlay.py sfxcat <folder>` wrote `catalog.json`;
-- cameras: the first trial with `--camera` shows the offsets in the report; publishing: a trial gives `публикация.md`.
+- cameras: the first trial `ae.py trial <skill> <main camera> --camera <file> [--audio <recorder>]` writes in `отчёт.md` of
+  the trial «Сдвиг по звуку …» with every file, and no note that one was left out; publishing: a trial gives `публикация.md`.
 
 A choice that cannot be proved today is **not left in the profile as a dead step**: take it out, name it in the last message
 as one line, «осталось сделать: …», and it comes back through a refinement. A step the person turned down is removed too.

@@ -3,7 +3,8 @@
 params.voice = {"service": "auphonic", "preset": "мягко" | "средне" | "сильно" | <Auphonic preset id or name> | {algorithms},
 "key_env"?: "AUPHONIC_API_KEY"}. The preset is chosen by ear once (`ae.py voice-try`). Everything lives in `.звук/` of the
 issue folder: `исходный.wav` (the original sound), `чистый.wav` and the source with the clean sound under its own name.
-A second run with the same source and preset pays nothing: the clean sound is reused.
+A second run with the same source and preset pays nothing: the clean sound is reused. With a sound recorded apart
+(`--audio`) and the step `angles`, that sound is the one cleaned: `angles` puts its clean voice under the picture.
 """
 from __future__ import annotations
 
@@ -66,9 +67,40 @@ def _stamp(src: Path, preset) -> str:
     return hashlib.sha1(raw.encode("utf-8")).hexdigest()[:16]
 
 
+def _known(folder: Path, src: Path, preset) -> bool:
+    """`.звук/чистый.wav` is the sound of this very `src` cleaned with this preset."""
+    try:
+        known = json.loads((folder / STAMP).read_text(encoding="utf-8")).get("stamp")
+    except (OSError, ValueError, AttributeError):
+        known = None
+    return known == _stamp(src, preset) and (folder / CLEAN).is_file()
+
+
+def clean_of(ctx, sound: Path) -> Path:
+    """The cleaned voice of `sound` when this run's `voice_clean` made it, else `sound` itself. Files are lined up by
+    `sound` as recorded: the clean voice keeps its timing, not always the rhythm of the room."""
+    spec = spec_of(ctx.p("voice"))
+    folder = Path(ctx.outdir) / SOUND
+    if ctx.has("voice_clean") and spec and _known(folder, Path(sound), preset_of(spec)):
+        return (folder / CLEAN).resolve()
+    return sound
+
+
+def _cleaned(folder: Path, src: Path, preset, spec: Dict) -> bool:
+    """`.звук/чистый.wav` from the sound of `src`, paid once per file and preset; True when it was made now."""
+    from ..services import auphonic
+
+    if _known(folder, src, preset):
+        return False
+    extract(src, folder / ORIGINAL)
+    auphonic.process(folder / ORIGINAL, preset, folder / CLEAN, spec.get("key_env") or auphonic.KEY_ENV)
+    (folder / STAMP).write_text(json.dumps({"stamp": _stamp(src, preset), "preset": preset}, ensure_ascii=False),
+                                encoding="utf-8")
+    return True
+
+
 def plan_voice(ctx) -> None:
     from ..media import probe
-    from ..services import auphonic
 
     spec = spec_of(ctx.p("voice"))
     if not spec:
@@ -77,24 +109,20 @@ def plan_voice(ctx) -> None:
     if spec.get("service", "auphonic") != "auphonic":
         ctx.note("Чистка голоса: сервис {} не поддерживается, есть только auphonic — голос не чистился".format(spec.get("service")))
         return
-    if not ctx.info.get("has_audio"):
-        ctx.note("Чистка голоса: в исходнике нет звука")
+    apart = ctx.audio_src is not None and ctx.has("angles")  # the video's sound is the recorder's, not the camera's
+    src = Path(ctx.audio_src if apart else ctx.src)
+    if not (probe(src) if apart else ctx.info).get("has_audio"):
+        ctx.note("Чистка голоса: в {} нет звука".format("отдельном звуке" if apart else "исходнике"))
         return
-    folder, preset, src = Path(ctx.outdir) / SOUND, preset_of(spec), Path(ctx.src)
-    stamp = _stamp(src, preset)
-    stamp_file, clean, muxed = folder / STAMP, folder / CLEAN, folder / src.name
-    try:
-        known = json.loads(stamp_file.read_text(encoding="utf-8")).get("stamp")
-    except (OSError, ValueError, AttributeError):
-        known = None
-    if known != stamp or not clean.is_file():
-        extract(src, folder / ORIGINAL)
-        auphonic.process(folder / ORIGINAL, preset, clean, spec.get("key_env") or auphonic.KEY_ENV)
-        if muxed.exists():
-            muxed.unlink()
-        stamp_file.write_text(json.dumps({"stamp": stamp, "preset": preset}, ensure_ascii=False), encoding="utf-8")
+    folder, preset = Path(ctx.outdir) / SOUND, preset_of(spec)
+    muxed = folder / src.name
+    if _cleaned(folder, src, preset, spec) and muxed.exists():
+        muxed.unlink()
+    name = spec.get("preset") or DEFAULT if not isinstance(spec.get("preset"), dict) else "свой"
+    if apart:  # `angles` lines the recorder up as it was recorded and takes its clean voice (clean_of)
+        ctx.note("Голос очищен в Auphonic (пресет {}) в отдельном звуке {}; исходный — {}/{}".format(name, src.name, SOUND, ORIGINAL))
+        return
     if not muxed.is_file():
-        mux(src, clean, muxed)
+        mux(src, folder / CLEAN, muxed)
     ctx.src, ctx.info = muxed.resolve(), probe(muxed)
-    ctx.note("Голос очищен в Auphonic (пресет {}); исходный звук — {}/{}".format(
-        spec.get("preset") or DEFAULT if not isinstance(spec.get("preset"), dict) else "свой", SOUND, ORIGINAL))
+    ctx.note("Голос очищен в Auphonic (пресет {}); исходный звук — {}/{}".format(name, SOUND, ORIGINAL))

@@ -7,6 +7,7 @@ Times of the program are seconds of the cut video, before `params.speed`.
 """
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Dict, List, Optional, Sequence
 
 from .timeline import Span, length, merge, to_out
@@ -139,8 +140,9 @@ def _crop_at(shot: Dict, a: float, b: float) -> Optional[Dict]:
 def lay_angles(ctx, keep: Sequence[Span], out):
     """The cut video made from the program: each kept piece split where the angle changes, the sound apart if given."""
     from ..media.cut import cut_program
+    from .voice import clean_of
 
-    inputs = [ctx.src] + list(ctx.cameras) + ([ctx.audio_src] if ctx.audio_src else [])
+    inputs = [ctx.src] + list(ctx.cameras) + ([clean_of(ctx, ctx.audio_src)] if ctx.audio_src else [])
     shift = [0.0] + [ctx.offsets[str(c)] for c in ctx.cameras]
     sound, sound_shift = (len(inputs) - 1, ctx.offsets[str(ctx.audio_src)]) if ctx.audio_src else (0, 0.0)
     pieces, passed = [], 0.0
@@ -169,3 +171,6 @@ def plan_angles(ctx) -> None:
     ctx.note("Ракурсы: {} смен, кроп {:.0f} % времени, боковая камера {} раз, самый короткий ракурс {:.1f} с".format(
         len(ctx.angles) - 1, 100.0 * crop / max(length(ctx.keep), _EPS), len(side),
         min(s["end"] - s["start"] for s in ctx.angles)))
+    if ctx.offsets:
+        ctx.note("Сдвиг по звуку относительно главной камеры: {}".format("; ".join(
+            "{} {:+.2f} с".format(Path(f).name, s) for f, s in ctx.offsets.items())))

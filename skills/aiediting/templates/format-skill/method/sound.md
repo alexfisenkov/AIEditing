@@ -9,4 +9,4 @@
 <!-- if music -->
 **Sounds on the peak of the motion** when `params.sfx` has `roles`: the role follows the strength of the move (a soft whoosh for a small entrance, a big one for a big change, a tick for a counter, a hit for the title), and the peak of the sound goes on the peak of the motion, not on the start of the scene; `overlay.py peaks` reports the shift, and a miss of 6–9 frames is audible. Louder than the voice only a chapter title and a hit on a key word; a big whoosh about the voice; the rest 4–10 dB under it. Quiet on a change of angle, on typed letters and under an insert. Every visible insert that nothing covers has a sound; a chain of small appearances gets thin ticks. Adult sounds only. Theirs come first, then the kit's.
 <!-- end -->
-The result is about −14 LUFS with a peak not above −1 dBFS: measure the finished file.
+The result is at the loudness this format sets, `params.lufs` in `profile.json` (−16 LUFS when it names none), with a peak not above −1 dBFS: measure the finished file.

@@ -127,3 +127,24 @@ class Command(TempDirCase):
         empty = subprocess.run([sys.executable, str(run_py), "covers", str(self.tmp / "нет"), "--text", "Слово"],
                                capture_output=True, text=True, encoding="utf-8", env=env)
         self.assertEqual(empty.returncode, 2, empty.stdout + empty.stderr)
+
+    def test_a_format_without_a_design_of_its_own_still_makes_six_covers(self):
+        profile = {"format": "влог", "skill_name": "монтаж-влог", "language": "ru",
+                   "asr": {"provider": "command", "language": "ru", "model": None, "base_url": None,
+                           "api_key_env": None, "command": ["нет"]},
+                   "steps": ["speech_spans", "cut_spans", "publish_pack"], "params": {}, "approval": "plan",
+                   "design": "design/", "taste": [], "output_dir": "выпуски"}
+        folder = self.tmp / "work" / "монтаж-влог"
+        folder.mkdir(parents=True)  # no design/ at all: the design stage was never asked for
+        (folder / "profile.json").write_text(json.dumps(profile, ensure_ascii=False), encoding="utf-8")
+        built = subprocess.run([sys.executable, str(SKILL / "tools" / "ae.py"), "build-skill", str(folder / "profile.json"),
+                                str(self.tmp / "out")], capture_output=True, text=True, encoding="utf-8")
+        self.assertEqual(built.returncode, 0, built.stdout + built.stderr)
+        issue = self.tmp / "выпуски" / "2026-11-13-влог"
+        frames(issue / "обложки" / "кадры")
+        done = subprocess.run([sys.executable, str(self.tmp / "out" / "монтаж-влог" / "tools" / "run.py"), "covers", str(issue),
+                               "--text", "Как это работает"], capture_output=True, text=True, encoding="utf-8",
+                              env=dict(os.environ, AIEDITING_IN_VENV="1"))
+        self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
+        self.assertEqual(len(list((issue / "обложки").glob("обложка-*.jpg"))), 6)
+        self.assertTrue((issue / "обложки" / "лист.jpg").is_file())
