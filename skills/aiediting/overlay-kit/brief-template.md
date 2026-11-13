@@ -33,7 +33,7 @@ Frames of real work: `public/frames/<name>.jpg`, `<WorkFrame name= w h crop=[x,y
 
 ## Checking your work
 
-Work and check only in `<W>`, with absolute paths. Types: `npx --prefix "<W>" tsc -p "<W>" --noEmit`. Frames: `python "<kit>/tools/overlay.py" frame "<W>" 61 72.5` writes `<W>/out/frames/<second>.jpg`: look at two frames per scene with the Read tool (the appearance and the filled state), and one frame 1 s after every layout change: the stage must already hold the graphic, at its size. Fix overlaps, clipped text, a covered face and empty stretches at once; the draft's `empties` comes too late to be the first to find them. Someone else's unfinished file may break the build: wait a minute and repeat.
+Work and check only in `<W>`, with absolute paths. Types: `npx --prefix "<W>" tsc -p "<W>" --noEmit`. Frames: `python "<kit>/tools/overlay.py" frame "<W>" 61 72.5` writes `<W>/out/frames/<second>.jpg`: look at two frames per scene with the Read tool (the appearance and the filled state), and one frame 1 s after every layout change: the stage must already hold the graphic, at its size. Where the speaker stands in a box or a circle across a cut or a scene change, look at the frame 0.2 s after it: `python "<kit>/tools/overlay.py" face "<W>" --frames` renders these frames into `<W>/out/cuts/`, named by the second of the file; the face is whole and in the middle. Do not smooth or shift the face track yourself. Fix overlaps, clipped text, a covered face and empty stretches at once; the draft's `empties` comes too late to be the first to find them. Someone else's unfinished file may break the build: wait a minute and repeat.
 
 ## Segments
 

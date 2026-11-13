@@ -6,12 +6,13 @@
 // Spans are file seconds. Scenes live in scene seconds: the same as file seconds unless src/data/time-map.json has rows;
 // then scene = toOld(file) (src/kit/time.ts), and the spans stay in file seconds.
 import data from "./spans.json";
+import { Span, frameSecond, spanEdges } from "./spanTime";
 
 export const FPS = 30;
 export const RATE = data.rate;
 
 export type ClipId = string;
-export type Span = readonly [number, number];
+export type { Span };
 
 export const SPANS = data.spans as unknown as Record<ClipId, readonly Span[]>;
 
@@ -24,13 +25,9 @@ export const CTA_LEAD = HAS_CTA ? raw.cta_lead ?? 0 : 0;
 export const CTA_TAIL = HAS_CTA ? raw.cta_tail ?? 0 : 0;
 export const TAIL_SECONDS = CTA_TAIL;
 
-// Boundaries are rounded from the running total, so the error never builds up from span to span
-const edges = (id: ClipId) => {
-  let sum = 0;
-  return [0, ...SPANS[id].map(([a, b]) => Math.round(((sum += (b - a) / RATE)) * FPS))];
-};
+// [first frame, frames] of every span; the boundaries come from spanTime.ts, the same ones the seconds of a frame use
 export const spanFrames = (id: ClipId): readonly (readonly [number, number])[] => {
-  const e = edges(id);
+  const e = spanEdges(SPANS[id], FPS, RATE);
   return e.slice(1).map((end, i) => [e[i], end - e[i]] as const);
 };
 export const speechSeconds = (id: ClipId) => SPANS[id].reduce((n, [a, b]) => n + (b - a), 0) / RATE;
@@ -40,13 +37,5 @@ export const durationFrames = (id: ClipId) => speechFrames(id) + Math.round(CTA_
 // Seconds of the clip at which the call to action appears
 export const ctaStart = (id: ClipId) => Math.max(0, speechSeconds(id) - CTA_LEAD);
 
-// Second of the source file for a frame of the clip
-export const frameToNewTime = (id: ClipId) => (frame: number) => {
-  let left = (frame / FPS) * RATE;
-  for (const [a, b] of SPANS[id]) {
-    if (left < b - a) return a + left;
-    left -= b - a;
-  }
-  const last = SPANS[id][SPANS[id].length - 1];
-  return last[1];
-};
+// Second of the source file for a frame of the clip: the second of the very frame the video layer shows (spanTime.ts)
+export const frameToNewTime = (id: ClipId) => frameSecond(SPANS[id], FPS, RATE);

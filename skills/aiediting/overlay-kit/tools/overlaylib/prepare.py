@@ -10,7 +10,7 @@ import sys
 from pathlib import Path
 
 from . import design as design_mod
-from . import face, media, scaffold, sounds, words
+from . import face, facecmd, media, scaffold, sounds, words
 from .common import ToolError, need, run, say, fmt_secs
 
 MIN_FREE_GB = 8.0
@@ -158,6 +158,7 @@ def run_prepare(args) -> int:
     say("Готово: " + str(work))
     say("Длительность {}, кадр {}x{}, слов в файле: {}".format(fmt_secs(info["duration"]), info["width"], info["height"], n_words))
     say("Лицо: " + face_note)
+    facecmd.warn_stale(work)  # a folder made by an earlier kit keeps its own Presenter: the new track alone does not mend it
     say("Дизайн: " + design_note)
     say("Логотип: " + (logo or "не передан (угловой знак не показывается)"))
     say("Звуки: {} файлов{}; музыка: {}".format(len(manifest["files"]), " (из --sfx: {})".format(copied) if copied else "", manifest["music"] or "нет"))

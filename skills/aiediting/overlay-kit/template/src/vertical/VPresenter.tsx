@@ -2,9 +2,11 @@
 import React from "react";
 import { OffthreadVideo, Sequence, staticFile, useCurrentFrame } from "remotion";
 import face from "../data/face.json";
+import timeMap from "../data/time-map.json";
+import { Face, MapRow, faceSecond, makeFace, rowCuts } from "../kit/faceTrack";
 import { ease, lerp, useT } from "../kit/time";
 import { CHROME } from "../kit/tokens";
-import { ClipId, FPS, RATE, SPANS, spanFrames } from "./clips";
+import { ClipId, FPS, RATE, SPANS, frameToNewTime, spanFrames } from "./clips";
 import { VH, VW } from "./safe";
 
 export type VLayout = "full" | "close" | "top" | "low" | "ringLow" | "ringTL" | "ringTR" | "ringBL" | "ringBR" | "hidden";
@@ -12,44 +14,28 @@ export type VKey = readonly [number, VLayout];
 
 const W = 1920;
 const H = 1080;
-const STEP = 0.5;
 const TRANSITION = 0.75;
+const INSIDE = 0.01; // the tail after the speech reads the face just before the end of the last span
 
-// The 0.5 s face track is cleaned by a median, smoothed by a Gaussian and read with a spline: never the nearest point
-const track = (col: number, sigmaSec: number) => {
-  const raw = (face as number[][]).map((p) => p[col]);
-  const med = raw.map((_, i) => {
-    const w = raw.slice(Math.max(0, i - 2), i + 3).sort((a, b) => a - b);
-    return w[w.length >> 1];
-  });
-  const sigma = sigmaSec / STEP;
-  const radius = Math.ceil(sigma * 3);
-  const kernel = Array.from({ length: radius * 2 + 1 }, (_, k) => Math.exp(-((k - radius) ** 2) / (2 * sigma * sigma)));
-  return med.map((_, i) => {
-    let sum = 0;
-    let weight = 0;
-    for (let k = -radius; k <= radius; k++) {
-      const j = i + k;
-      if (j < 0 || j >= med.length) continue;
-      sum += med[j] * kernel[k + radius];
-      weight += kernel[k + radius];
-    }
-    return sum / weight;
-  });
-};
-const CX = track(1, 2);
-const CY = track(2, 2);
-const FH = track(3, 4);
-const spline = (a: number[], t: number) => {
-  const last = a.length - 1;
-  const x = Math.max(0, Math.min(last - 0.001, t / STEP));
-  const i = Math.floor(x);
-  const u = x - i;
-  const p0 = a[Math.max(0, i - 1)];
-  const p1 = a[Math.min(last, i)];
-  const p2 = a[Math.min(last, i + 1)];
-  const p3 = a[Math.min(last, i + 2)];
-  return 0.5 * (2 * p1 + (p2 - p0) * u + (2 * p0 - 5 * p1 + 4 * p2 - p3) * u * u + (3 * p1 - p0 - 3 * p2 + p3) * u * u * u);
+// The face track is cleaned by a median, smoothed by a Gaussian and read with a spline, never the nearest point, and all
+// of it inside one piece of the picture (kit/faceTrack.ts). A clip is spans of the file one after another, so the picture
+// jumps at the edges of its spans as well: they are cuts next to those of the track and of the time map.
+const ROWS = timeMap.rows as unknown as readonly MapRow[];
+const readers = new Map<ClipId, (frame: number) => Face>();
+const faceOf = (id: ClipId) => {
+  let read = readers.get(id);
+  if (!read) {
+    const spans = SPANS[id];
+    const at = makeFace(face as number[][], [...rowCuts(ROWS), ...spans.flatMap(([a, b]) => [faceSecond(ROWS, a), faceSecond(ROWS, b)])]);
+    const second = frameToNewTime(id);
+    const end = spans[spans.length - 1][1];
+    read = (frame) => {
+      const n = second(frame);
+      return at(faceSecond(ROWS, n === end ? end - INSIDE : n));
+    };
+    readers.set(id, read);
+  }
+  return read;
 };
 
 type Rect = { x: number; y: number; w: number; h: number; r: number; s: number; px: number; py: number; ring: number; a: number };
@@ -67,10 +53,7 @@ const BOX: Record<Exclude<VLayout, "hidden">, readonly [number, number, number, 
   ringBR: [640, 940, 300, 300, 150, 0.72, 0.45],
 };
 
-const rectFor = (l: VLayout, t: number): Rect => {
-  const cx = spline(CX, t);
-  const cy = spline(CY, t);
-  const fh = spline(FH, t);
+const rectFor = (l: VLayout, t: number, { cx, cy, fh }: Face): Rect => {
   const key = l === "hidden" ? "ringLow" : l;
   const [x, y, w, h, r, share, hold] = BOX[key];
   const breath = key === "full" || key === "close" ? 1 + 0.018 + Math.sin(t / 11) * 0.012 : 1;
@@ -125,11 +108,11 @@ type Props = {
 
 export const VPresenter: React.FC<Props> = ({ id, keys, alpha: extra = 1, z = 2, markers = true }) => {
   const t = useT();
-  useCurrentFrame();
+  const f = faceOf(id)(useCurrentFrame());
   const { now, prev, since } = current(keys, t);
   const p = ease(t, since, TRANSITION);
-  const a = rectFor(prev, t);
-  const b = rectFor(now, t);
+  const a = rectFor(prev, t, f);
+  const b = rectFor(now, t, f);
   const m = (k: keyof Rect) => lerp(a[k], b[k], p);
   const x = m("x");
   const y = m("y");
@@ -166,10 +149,10 @@ export const VPresenter: React.FC<Props> = ({ id, keys, alpha: extra = 1, z = 2,
             data-shown={alpha}
             style={{
               position: "absolute",
-              left: x + m("px") + spline(CX, t) * W * s - spline(FH, t) * H * s * 0.48,
-              top: y + m("py") + spline(CY, t) * H * s - spline(FH, t) * H * s * 0.62,
-              width: spline(FH, t) * H * s * 0.96,
-              height: spline(FH, t) * H * s * 1.24,
+              left: x + m("px") + f.cx * W * s - f.fh * H * s * 0.48,
+              top: y + m("py") + f.cy * H * s - f.fh * H * s * 0.62,
+              width: f.fh * H * s * 0.96,
+              height: f.fh * H * s * 1.24,
               pointerEvents: "none",
             }}
           />

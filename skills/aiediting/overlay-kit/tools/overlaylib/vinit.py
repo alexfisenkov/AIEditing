@@ -10,11 +10,11 @@ import shutil
 from pathlib import Path
 from typing import Dict, List
 
-from . import vmap, vspans
+from . import face, facecmd, vmap, vspans
 from .media import duration_of
 from .common import KIT, TEMPLATE, ToolError, say, warn, work_dir, write_atomic
 
-SET_FILES = ["VKit.tsx", "VPresenter.tsx", "VRoot.tsx", "audit.tsx", "clips.ts", "geometry.ts", "safe.ts", "index.ts"]
+SET_FILES = ["VKit.tsx", "VPresenter.tsx", "VRoot.tsx", "audit.tsx", "clips.ts", "geometry.ts", "safe.ts", "spanTime.ts", "index.ts"]
 SCENE = re.compile(r"^c(\d+)\.tsx$")
 HELPER = "vertical-frames.mjs"
 USE_T = re.compile(r"export const useT = \(\) => toOld\(useCurrentFrame\(\) ?/ ?FPS\);")
@@ -53,6 +53,11 @@ def write_clips_index(work: Path) -> List[str]:
 def patch_kit(work: Path) -> List[str]:
     """A folder made before the vertical set lacks setFrameMap in kit/time.ts and MARK in kit/tokens.ts: add them, change nothing else."""
     done = []
+    track_ts = work / "src" / "kit" / "faceTrack.ts"  # VPresenter reads the face through it; first, so that a refusal below leaves no half set
+    if not track_ts.is_file():
+        track_ts.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(str(TEMPLATE / "src" / "kit" / "faceTrack.ts"), str(track_ts))
+        done.append("src/kit/faceTrack.ts: добавлен")
     time_ts = work / "src" / "kit" / "time.ts"
     text = time_ts.read_text(encoding="utf-8") if time_ts.is_file() else ""
     if "setFrameMap" not in text:
@@ -128,6 +133,9 @@ def run_init(args) -> int:
     say("Записал: {}".format(", ".join(wrote) or "ничего"))
     if kept:
         say("Оставил как есть (--renew обновит): {}".format(", ".join(kept)))
+    facecmd.warn_stale(work)
+    if face.is_old_kind(face.load(work)):
+        warn("трек лица src/data/face.json прежнего образца: сглажен сквозь смены кадра. Что с ним делать, скажет overlay.py face <папка>.")
     say("Сцены: {}{}".format(", ".join(ids) or "нет", " (образец c1, замените его своей сценой)" if sample else ""))
     missing = [c for c in vspans.clip_ids(data) if c not in ids]
     if missing:

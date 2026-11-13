@@ -16,7 +16,7 @@ captions and chapter plates look like — watch a trial edit on **your** footage
 until it is right, and get a format skill named after your word, such as `монтаж-урок` ("lesson
 edit"). After that, in any folder, you just say "edit this like a lesson".
 
-> Status: early version (0.3.1).
+> Status: early version (0.3.2).
 
 <p align="center">
   <a href="assets/aiediting-dashboard.png"><img src="assets/dash-now.png" width="380" alt="The dashboard: the current stage, what it is waiting for, your formats and the frames of your source"></a>

@@ -1,58 +1,24 @@
 // The speaker: one continuous video layer, no cuts. Glides between layouts, the face stays in the middle of the frame.
 import React from "react";
-import { OffthreadVideo, staticFile } from "remotion";
+import { OffthreadVideo, staticFile, useCurrentFrame } from "remotion";
 import face from "../data/face.json";
 import { LAYOUTS, Layout } from "../data/layouts";
-import { C, CHROME, H, W, tint } from "./tokens";
+import timeMap from "../data/time-map.json";
+import { Face, MapRow, faceSecond, makeFace, rowCuts } from "./faceTrack";
+import { C, CHROME, FPS, H, W, tint } from "./tokens";
 import { ease, lerp, useT } from "./time";
 
 const TRANSITION = 0.85;
 
-// The camera follows the face without steps: the 0.5 s track is cleaned by a median, smoothed by a Gaussian
-// and read with a spline between points. Never read the nearest point: that makes the frame walk in visible steps.
-const STEP = 0.5;
-const track = (col: number, sigmaSec: number) => {
-  const raw = (face as number[][]).map((p) => p[col]);
-  const med = raw.map((_, i) => {
-    const w = raw.slice(Math.max(0, i - 2), i + 3).sort((a, b) => a - b);
-    return w[w.length >> 1];
-  });
-  const sigma = sigmaSec / STEP;
-  const radius = Math.ceil(sigma * 3);
-  const kernel = Array.from({ length: radius * 2 + 1 }, (_, k) => Math.exp(-((k - radius) ** 2) / (2 * sigma * sigma)));
-  return med.map((_, i) => {
-    let sum = 0;
-    let weight = 0;
-    for (let k = -radius; k <= radius; k++) {
-      const j = i + k;
-      if (j < 0 || j >= med.length) continue;
-      sum += med[j] * kernel[k + radius];
-      weight += kernel[k + radius];
-    }
-    return sum / weight;
-  });
-};
-const CX = track(1, 2);
-const CY = track(2, 2);
-const FH = track(3, 4);
-
-const spline = (a: number[], t: number) => {
-  const x = Math.max(0, Math.min(a.length - 1.001, t / STEP));
-  const i = Math.floor(x);
-  const u = x - i;
-  const p0 = a[Math.max(0, i - 1)];
-  const p1 = a[i];
-  const p2 = a[i + 1];
-  const p3 = a[Math.min(a.length - 1, i + 2)];
-  return 0.5 * (2 * p1 + (p2 - p0) * u + (2 * p0 - 5 * p1 + 4 * p2 - p3) * u * u + (3 * p1 - p0 - 3 * p2 + p3) * u * u * u);
-};
-
-const faceAt = (t: number) => ({ cx: spline(CX, t), cy: spline(CY, t), fh: spline(FH, t) });
+// The camera follows the face without steps and never glides through a cut: the 0.5 s track is cleaned by a median, smoothed
+// by a Gaussian and read with a spline, all inside one piece of the picture (kit/faceTrack.ts). The pieces end where `prepare`
+// found a scene change or a hard cut and at the edges of the time map's rows, where an edit by markers cut the video.
+const ROWS = timeMap.rows as unknown as readonly MapRow[];
+const faceAt = makeFace(face as number[][], rowCuts(ROWS));
 
 type Rect = { x: number; y: number; w: number; h: number; r: number; s: number; px: number; py: number; ring: number };
 
-const rectFor = (l: Layout, t: number): Rect => {
-  const { cx, cy, fh } = faceAt(t);
+const rectFor = (l: Layout, t: number, { cx, cy, fh }: Face): Rect => {
   if (l === "full" || l === "close") {
     // A calm breathing push-in; close is nearer to the face
     const base = l === "close" ? 1.22 : 1.0;
@@ -98,8 +64,10 @@ export const Presenter: React.FC = () => {
   const t = useT();
   const { now, prev, since } = currentLayout(t);
   const p = ease(t, since, TRANSITION);
-  const a = rectFor(prev, t);
-  const b = rectFor(now, t);
+  // The face is read at the second of the file being shown: a row held at its end stays on its own face
+  const f = faceAt(faceSecond(ROWS, useCurrentFrame() / FPS));
+  const a = rectFor(prev, t, f);
+  const b = rectFor(now, t, f);
   const m = (k: keyof Rect) => lerp(a[k], b[k], p);
   const x = m("x");
   const y = m("y");

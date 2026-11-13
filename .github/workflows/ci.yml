@@ -27,6 +27,10 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python }}
+      # The pure .ts modules of the overlay kit are tested in node itself; without a node that runs TypeScript those tests are skipped.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
       - name: ffmpeg (macOS)
         if: runner.os == 'macOS'
         run: brew install ffmpeg
@@ -36,6 +40,7 @@ jobs:
       - name: Версии
         run: |
           python --version
+          node --version
           ffmpeg -hide_banner -version
       - name: Тесты
         run: python -B -m unittest discover -s tests -v

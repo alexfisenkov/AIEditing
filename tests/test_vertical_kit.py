@@ -665,7 +665,7 @@ class FaceTrackWarningTest(unittest.TestCase):
         work = work_folder(tmp)
         subprocess.run(["ffmpeg", "-hide_banner", "-loglevel", "error", "-y", "-f", "lavfi", "-i", "color=c=black:size=64x36:rate=30:duration=20", "-pix_fmt", "yuv420p",
                         str(work / "public" / "clips" / "source.mp4")], check=True)
-        (work / "src" / "data" / "face.json").write_text(json.dumps([[t * 0.5, 0.5, 0.4, 0.4] for t in range(int(track_end * 2) + 1)]), encoding="utf-8")
+        (work / "src" / "data" / "face.json").write_text(json.dumps([[t * 0.5, 0.5, 0.4, 0.4, 0.0] for t in range(int(track_end * 2) + 1)]), encoding="utf-8")
         (work / "src" / "data" / "time-map.json").write_text(json.dumps({"rows": TimeMapTest.ROWS}), encoding="utf-8")
         out = io.StringIO()
         with contextlib.redirect_stdout(out):

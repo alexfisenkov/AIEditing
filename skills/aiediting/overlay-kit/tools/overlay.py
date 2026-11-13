@@ -28,7 +28,7 @@ if (__name__ == "__main__" and not os.environ.get("AIEDITING_IN_VENV") and sys.p
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from overlaylib import commands, final, prepare, vertical  # noqa: E402
+from overlaylib import commands, facecmd, final, prepare, vertical  # noqa: E402
 from overlaylib.common import ToolError, stdout_utf8  # noqa: E402
 
 
@@ -74,6 +74,10 @@ def build_parser() -> argparse.ArgumentParser:
     add("index", commands.cmd_index, "пересобрать списки сцен и раскладок (делают сами frame/draft/final)", "work")
     sp = add("example", commands.cmd_example, "положить нейтральный образец из examples/ как сегмент A", "work")
     sp.add_argument("--force", action="store_true", help="заменить уже заполненный сегмент A")
+    sp = add("face", facecmd.run_face, "трек лица: его склейки, что в папке читает его по-старому, пересборка, кадры после склеек", "work")
+    sp.add_argument("--rebuild", action="store_true", help="построить трек заново; прежний остаётся в raw/face-before-rebuild.json")
+    sp.add_argument("--video", help="с --rebuild в папке с картой времени: первый принятый ролик (в его секундах живут сцены)")
+    sp.add_argument("--frames", action="store_true", help="отрисовать кадр через 0,2 с после каждой склейки трека: out/cuts/<секунда>.jpg")
 
     sp = add("vertical-init", vertical.run_init, "положить набор для вертикальных клипов (src/vertical) в рабочую папку", "work")
     sp.add_argument("--spans", help="свой spans.json (отрезки, скорость, призыв)")
