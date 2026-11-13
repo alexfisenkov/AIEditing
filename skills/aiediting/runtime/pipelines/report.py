@@ -4,6 +4,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Dict, List
 
+from .broll_shoot import write as write_shoot_list
 from .speed import rate_of, scale_rows
 from .timeline import to_out
 
@@ -59,6 +60,13 @@ def _body(ctx, r: Dict) -> List[str]:
         lines += ["", "## Анимации", ""] + ["- {}–{} «{}»: {}".format(
             stamp(a["at"]), stamp(a["end"]), a["template"], " · ".join(x for x in (a["title"], a["text"]) if x))
             for a in r["animations"]]
+    if r.get("broll"):
+        lines += ["", "## Вставки", ""] + ["- {}–{} «{}»: {}{}".format(
+            stamp(b["at"]), stamp(b["end"]), b["phrase"], b["shown"],
+            "; на кадре: " + ", ".join(b["who"]) if b["who"] else "") for b in r["broll"]]
+    if r.get("shoot"):
+        lines += ["", "## Досъёмка", "", "- {} — мест без кадра: {} (время, фраза, что снять)".format(
+            Path(r["shoot"]).name, len(ctx.shoot_list))]
     if r["clips"]:
         lines += ["", "## Отрывки", ""] + ["- {} {}–{}: {}{}".format(c["id"], stamp(c["start"]), stamp(c["end"]),
                                                                    c.get("said", ""), _taken_out(c)) for c in r["clips"]]
@@ -88,6 +96,8 @@ def finish(ctx) -> Dict:
     if rate != 1.0:
         ctx.note("Готовое видео ускорено в {:g} раза: таймкоды глав и субтитров — уже с ускорением, "
                  "вырезанное указано по времени исходника".format(rate))
+    r["broll"] = scale_rows(r["broll"], rate, "at", "end")
+    r["shoot"] = write_shoot_list(ctx, rate)
     r["clips"] = [{k: p[k] for k in ("id", "start", "end", "said", "drop") if k in p} for p in (ctx.pieces or [])]
     r["drift_in_source"] = _from_recording(ctx, r["drift_ms"])
     if r["drift_ms"] >= DRIFT_OK and not r["drift_in_source"]:

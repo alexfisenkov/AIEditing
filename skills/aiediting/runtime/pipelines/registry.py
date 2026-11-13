@@ -29,6 +29,7 @@ PLAN: Dict[str, Optional[Callable]] = {
     "background": _lazy("background", "plan_background"),
     "vertical": _lazy("vertical_plan", "plan_vertical"),
     "teaser": _lazy("teaser", "plan_teaser"),
+    "broll": _lazy("broll", "plan_broll"),  # after the cut and the vertical plan: it needs the seams; before the plates, which stand over it
     "plate": _lazy("plates", "plan_plates"),
     "animations": _lazy("animations", "plan_animations"),  # after plate: an insert replaces a card
     "overlay_png": None,

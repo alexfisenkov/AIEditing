@@ -6,6 +6,7 @@
     describe <вид> <json-файл>     the agent's rows into the inventory
     find "<фраза>" [--year Y]      candidates for an insert; the never list is left out
     rule "<текст>" [--format F] [--video V]  ·  rules [--format F]  ·  forbid "<кто/что>"
+    stock "<запрос>" [--provider P] [--take N]   free stock video by the person's key; --take puts hit N in the library
 """
 from __future__ import annotations
 
@@ -14,7 +15,7 @@ import json
 from pathlib import Path
 from typing import List
 
-from . import inventory, rules, search
+from . import inventory, rules, search, stock
 from .paths import KINDS, LAYOUT, LibraryError, find_library, need_library, pointer_file, set_library, wanted
 
 SHEETS = "листы"
@@ -46,6 +47,10 @@ def _parser() -> argparse.ArgumentParser:
     p.add_argument("--video")
     sub.add_parser("rules").add_argument("--format")
     sub.add_parser("forbid").add_argument("what")
+    p = sub.add_parser("stock")
+    p.add_argument("query")
+    p.add_argument("--provider", choices=sorted(stock.KEYS))
+    p.add_argument("--take", type=int)
     return ap
 
 
@@ -104,6 +109,26 @@ def _find(lib: Path, phrase: str, year, limit: int) -> str:
                                              " · " + ", ".join(r["who"]) if r.get("who") else "") for r in found)
 
 
+def _stock(lib: Path, query: str, provider, take) -> str:
+    """Hits of the first service with a key (or the named one); `take` puts one of them into the library."""
+    hits, last = [], None
+    for name in [provider] if provider else sorted(stock.KEYS):
+        try:
+            hits = stock.search(query, name)
+        except stock.StockError as exc:
+            last = exc
+            continue
+        if hits:
+            break
+    if not hits:
+        raise last or stock.StockError("Под этот запрос в стоках ничего нет")
+    if take:
+        if not 1 <= take <= len(hits):
+            raise LibraryError("Нет результата №{}: найдено {}".format(take, len(hits)))
+        return "Сток в библиотеке: {}".format(stock.download(hits[take - 1], lib)["f"])
+    return "\n".join("{}. {}×{} · {} с".format(i, h["width"], h["height"], h["dur"]) for i, h in enumerate(hits, 1))
+
+
 def run(argv: List[str]) -> str:
     """The answer of one command; LibraryError (a ValueError) when it cannot be done."""
     opt = _parser().parse_args(argv)
@@ -129,6 +154,8 @@ def run(argv: List[str]) -> str:
         return "Записал в правила: {}".format(rules.add_rule(lib, opt.text, opt.format, opt.video))
     if opt.cmd == "rules":
         return rules.rules_text(lib, opt.format) or "Правил пока нет"
+    if opt.cmd == "stock":
+        return _stock(lib, opt.query, opt.provider, opt.take)
     return "Записал в «чего нельзя»: {}".format(rules.forbid(lib, opt.what))
 
 

@@ -14,6 +14,7 @@
     "vertical":         {"what": "собирает 9:16: стек «экран сверху, лицо снизу» или лицо крупно", "runtime": ["media", "look"], "tools": ["ffmpeg", "opencv-python", "numpy", "yunet-model"]},
     "bands":            {"what": "на полях вокруг горизонтальной картинки в 9:16: сверху заголовок отрывка, снизу постоянный призыв", "runtime": ["media", "render"], "tools": ["ffmpeg", "pillow"]},
     "teaser":           {"what": "отдельный короткий ролик: чёрный экран, кнопка Play, фрагменты и быстрая перемотка с полосой времени всего видео", "runtime": ["media", "render"], "tools": ["ffmpeg", "pillow"]},
+    "broll":            {"what": "ставит вставки из библиотеки человека (или бесплатного стока по его ключу) под смысл фраз, без звука, и пишет досъёмку для мест без кадра", "runtime": ["media", "library", "asr"], "tools": ["ffmpeg"]},
     "export_platforms": {"what": "выгружает версии под Reels, Shorts и TikTok", "runtime": ["media"], "tools": ["ffmpeg"]},
     "music":            {"what": "подкладывает трек из папки-библиотеки человека на −20 дБ", "runtime": ["media"], "tools": ["ffmpeg"]},
     "motion":           {"what": "укрупнения по раскладке и «камера в бок, экран в бок» в утверждённых местах", "runtime": ["media"], "tools": ["ffmpeg"]},

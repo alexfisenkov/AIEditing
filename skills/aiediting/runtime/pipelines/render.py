@@ -103,6 +103,10 @@ def render_piece(ctx, piece: Dict) -> Dict:
         from .background import apply_background
 
         cur = apply_background(ctx, cur, tmp)
+    if ctx.has("broll") and ctx.broll and not piece.get("layout") and not _transparent(ctx):
+        from .broll import lay
+
+        cur = lay(ctx, piece, cur, tmp)  # over the cut video, before the plates and the speed-up: they stand over it
     pictures = ctx.has("plate") or ctx.has("overlay_png")  # captions and plates only with their own steps
     items = [i for i in specs(ctx, piece) if pictures or i["kind"] == "animation"] \
         if pictures or ctx.has("animations") else []

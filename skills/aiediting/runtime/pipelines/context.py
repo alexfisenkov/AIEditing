@@ -33,6 +33,8 @@ class Context:
         self.overlays: List[Dict] = []     # chapters, cards (source time); captions are per piece
         self.pieces: Optional[List[Dict]] = None  # vertical clips; None = one video of the whole source
         self.teaser: List[Dict] = []       # fragments of the teaser, once approved (source time)
+        self.broll: List[Dict] = []        # approved inserts: start, end (source time), file, from, who, phrase, kind, shown
+        self.shoot_list: List[Dict] = []   # places no frame fits: start, end (source time), phrase, what, dur, orient
         self.music: Dict = {}
         self.chapters: List[Dict] = []
         self.srt_glossary: Dict[str, str] = {}
@@ -42,7 +44,7 @@ class Context:
         self.decisions: List[Dict] = []
         self.notes: List[str] = []
         self.report: Dict = {"cuts": [], "blurred": [], "fixes": [], "drift_ms": 0.0, "chapters": [],
-                             "motion": [], "clips": [], "words_lost": [], "outputs": [], "exports": []}
+                             "motion": [], "clips": [], "words_lost": [], "outputs": [], "exports": [], "broll": []}
         self.loud: Optional[List] = None   # loud stretches of the source, once `speech_spans` has measured them
         self._words: Optional[Dict] = None
         self._timed = False
