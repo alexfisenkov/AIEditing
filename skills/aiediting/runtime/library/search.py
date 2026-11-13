@@ -38,17 +38,51 @@ def _year(row: dict) -> Optional[int]:
     return int(date[:4]) if date[:4].isdigit() else None
 
 
+# Words of a ban that say «don't», not «whom»: «Петю не брать», «кадры с пляжа никогда не ставить».
+_BAN_WORDS = {"не", "ни", "без", "брать", "бери", "берём", "берем", "ставить", "ставь", "показывать", "показывай",
+              "нельзя", "никогда", "больше", "кадры", "кадров", "фото", "видео", "замени", "заменить", "с", "со",
+              "и", "на", "в", "во", "у", "к", "по", "от", "из"}
+
+
+def _words(text) -> List[str]:
+    """Every word of a name or a ban, two letters and up: «Ян» is a name too."""
+    found = _WORD.findall(" ".join(text) if isinstance(text, (list, tuple)) else str(text or ""))
+    return [w.casefold() for w in found if len(w) >= 2 and not w.isdigit()]
+
+
+def _form(a: str, b: str) -> bool:
+    """Two forms of one word: «Петя»/«Петю», «пляж»/«пляжа» — an ending apart, never «Петя»/«Петербург»."""
+    if a == b:
+        return True
+    short, long_ = sorted((a, b), key=len)
+    if len(long_) - len(short) > 2:
+        return False
+    same = 0
+    while same < len(short) and short[same] == long_[same]:
+        same += 1
+    return same >= max(2, len(short) - 1) and same >= len(long_) - 2
+
+
+def _covers(part: List[str], whole: List[str]) -> bool:
+    return bool(part) and all(any(_form(p, w) for w in whole) for p in part)
+
+
+def _named(name: str, entry: str) -> bool:
+    """The ban names this person or tag: all of the ban's name words are in it (forbid «Петя» → «Петя Иванов»),
+    or all of its words are in the ban (forbid «Петю не брать» → «Петя»)."""
+    mine = _words(name)
+    said = [w for w in _words(entry) if w not in _BAN_WORDS]
+    return _covers(said, mine) or _covers(mine, said)
+
+
 def blocked(row: dict, forbidden: Iterable[str]) -> bool:
     """A row whose person, tag or file is named in the never list (any word form of a name)."""
     names = list(row.get("who") or []) + list(row.get("tags") or [])
     for entry in forbidden:
-        said = stems(entry)
         if str(entry).strip().casefold() == str(row.get("f", "")).casefold():
             return True
-        for name in names:
-            mine = stems(name)
-            if mine and _hits(mine, said) == len(mine):
-                return True
+        if any(_named(name, str(entry)) for name in names):
+            return True
     return False
 
 

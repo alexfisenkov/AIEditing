@@ -79,6 +79,25 @@ class Search(unittest.TestCase):
         self.assertNotIn("фото/петя.jpg", found)
         self.assertIn("фото/море.jpg", found)
 
+    def test_a_banned_first_name_leaves_out_the_full_name(self):
+        from runtime.library.search import candidates
+
+        rows = [{"f": "а.jpg", "what": "рыбалка", "who": ["Петя Иванов"]}, {"f": "б.jpg", "what": "рыбалка"}]
+        self.assertEqual([r["f"] for r in candidates(rows, "рыбалка", None, forbidden=["Петя"])], ["б.jpg"])
+        self.assertEqual([r["f"] for r in candidates(rows, "рыбалка", None, forbidden=["Петю не брать"])], ["б.jpg"])
+
+    def test_a_two_letter_name_is_banned_too(self):
+        from runtime.library.search import candidates
+
+        rows = [{"f": "а.jpg", "what": "рыбалка", "who": ["Ян"]}, {"f": "б.jpg", "what": "рыбалка", "who": ["Анна"]}]
+        self.assertEqual([r["f"] for r in candidates(rows, "рыбалка", None, forbidden=["Ян"])], ["б.jpg"])
+
+    def test_a_banned_name_does_not_touch_a_longer_word_that_starts_the_same(self):
+        from runtime.library.search import candidates
+
+        rows = [{"f": "а.jpg", "what": "набережная", "tags": ["Петербург"]}]
+        self.assertEqual([r["f"] for r in candidates(rows, "набережная", None, forbidden=["Петя"])], ["а.jpg"])
+
     def test_the_year_lifts_a_file_of_that_year(self):
         from runtime.library.search import candidates
 
