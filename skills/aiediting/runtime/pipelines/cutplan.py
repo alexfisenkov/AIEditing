@@ -10,6 +10,10 @@ from .words import norm, spoken
 SLIVER = 0.3  # a kept bit this short with no word in it is just leftover silence
 LONGEST_NOISE = 3.0  # seconds: a longer loud piece without words is left in, it may be a demo with its sound
 NEAR_LOST = 1.5      # seconds around a word that lost its place: a loud piece there may be that word
+# gentle clean-up: {breath in the pause: (a longer pause is shortened, to this long)}
+GENTLE = {False: (0.35, 0.2), True: (0.6, 0.3)}
+BEFORE = (0.10, 0.15)  # s before the next word where the cut goes, in the quietest point
+LONGEST_BREATH = 1.0   # s of sound in a pause: more is not a breath, the pause stays whole
 
 
 def plan_speech(ctx) -> None:
@@ -65,16 +69,51 @@ def _voiced(keep: List[Span], words: List[Dict], fillers: List[Dict], takes: Lis
     return stay, out
 
 
+def _sound_in(env, a: float, b: float, level: float, rate: int) -> float:
+    """Seconds between a and b where the sound is above `level`."""
+    return sum(1 for e in env[max(0, int(a * rate)):max(0, int(b * rate))] if e > level) / float(rate)
+
+
+def gentle(ctx, words: List[Dict]) -> List[Span]:
+    """`params.cleanup = "gentle"`: kept from words, every pause between them shortened by GENTLE, the cut in the
+    quietest point 100–150 ms before the next word. A pause with longer sound than a breath is left as it is."""
+    from ..media.sync import RATE, envelope, quietest
+
+    env = envelope(ctx.src)
+    level = max(4 * sorted(env)[len(env) // 10], 0.002) if env else 1.0  # well above the room, a breath is over it
+    said = sorted(words, key=lambda w: (float(w["start"]), float(w["end"])))
+    first = float(said[0]["start"])
+    start = quietest(env, max(0.0, first - BEFORE[1]), max(0.0, first - BEFORE[0])) if first > BEFORE[0] else 0.0
+    cuts, end = [], float(said[0]["end"])
+    for w in said[1:]:
+        e, s = end, float(w["start"])
+        end = max(end, float(w["end"]))
+        sound = _sound_in(env, e + 0.03, s - 0.03, level, RATE)
+        breath = sound >= 0.05
+        if s - e <= GENTLE[breath][0] or sound > LONGEST_BREATH:
+            continue
+        q = quietest(env, s - BEFORE[1], s - BEFORE[0])
+        a = e + GENTLE[breath][1] - (s - q)
+        if q - a > 0.01:
+            cuts.append((round(a, 3), round(q, 3)))
+    return subtract([(round(start, 3), round(min(ctx.info["duration"], end + GENTLE[False][1]), 3))], cuts)
+
+
 def plan_cut(ctx) -> None:
     from .editing import plan_editing
+    from .repeats import plan_repeats
     from .retakes import plan_retakes
     from .seams import tidy, widened, wordless_inside
 
-    needs_words = ctx.p("fillers_cut") or ctx.p("wordless") == "cut" or ctx.p("editor") or \
+    soft = ctx.p("cleanup") == "gentle"
+    needs_words = ctx.p("fillers_cut") or ctx.p("wordless") == "cut" or ctx.p("editor") or soft or ctx.p("repeats") or \
         ctx.p("retakes") in ("last_good", True) or ctx.p("word_gap") is not None
     words = spoken(ctx.transcript()) if needs_words else []
+    if soft and words:
+        ctx.keep = gentle(ctx, words)
     fillers = _fillers(ctx, words)
     takes = plan_retakes(ctx, words) if ctx.p("retakes") in ("last_good", True) else []
+    takes += plan_repeats(ctx, words, takes)
     takes += plan_editing(ctx, words, takes)
     takes = widened(words, takes)
     hesitations = widened(words, [{"drop": [w["start"], w["end"]]} for w in fillers])

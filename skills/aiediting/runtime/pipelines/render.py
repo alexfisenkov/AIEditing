@@ -80,11 +80,15 @@ def render_piece(ctx, piece: Dict) -> Dict:
     keep, tmp = piece["keep"], ctx.work / (piece.get("id") or "whole")
     tmp.mkdir(parents=True, exist_ok=True)
     cur, screen, done = ctx.src, ctx.screen, {"id": piece.get("id")}
-    if not _full(ctx, keep):
+    if ctx.has("angles") and ctx.angles and not piece.get("layout"):
+        from .angles import lay_angles
+
+        cur = lay_angles(ctx, keep, tmp / "1-ракурсы.mp4")  # the cut itself, from every camera by the program
+    elif not _full(ctx, keep):
         # a clip of a finished video is encoded several more times: its first pass must not lose the text on screen
         cur = media.cut_spans(cur, keep, tmp / "1-склейка.mp4", kbps=CLIP_KBPS if piece.get("layout") else None)
-        if screen is not None and ctx.motion:
-            screen = media.cut_spans(screen, keep, tmp / "1-экран.mp4")
+    if not _full(ctx, keep) and screen is not None and ctx.motion:
+        screen = media.cut_spans(screen, keep, tmp / "1-экран.mp4")
     regions = _regions(ctx, keep) if ctx.has("blur_regions") else []
     if regions:
         cur = media.blur_regions(cur, regions, tmp / "2-блюр.mp4")

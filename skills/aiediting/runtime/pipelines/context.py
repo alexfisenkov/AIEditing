@@ -12,10 +12,18 @@ WORK = ".aiediting-run"  # inside the issue folder: nothing is ever written anyw
 
 
 class Context:
-    def __init__(self, src, profile: Dict, outdir, approve: Callable[[str, dict], bool], screen=None):
+    def __init__(self, src, profile: Dict, outdir, approve: Callable[[str, dict], bool], screen=None,
+                 cameras=None, audio=None):
         self.src = Path(src).resolve()
         if not self.src.is_file():
             raise PipelineError("Нет исходника: {}".format(self.src))
+        self.cameras: List[Path] = [Path(c).resolve() for c in (cameras or [])]  # more cameras of the same scene
+        self.audio_src: Optional[Path] = Path(audio).resolve() if audio else None  # the sound recorded apart
+        for extra in self.cameras + ([self.audio_src] if self.audio_src else []):
+            if not extra.is_file():
+                raise PipelineError("Нет файла: {}".format(extra))
+        self.offsets: Dict[str, float] = {}  # str(file) -> seconds it started after the source (media.sync.offset)
+        self.angles: List[Dict] = []       # the program of angles: start, end (s of the cut video), camera, crop
         self.profile, self.approve = profile, approve
         self.params: Dict = dict(profile.get("params") or {})
         self.steps: List[str] = list(profile.get("steps") or [])

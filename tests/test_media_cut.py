@@ -62,6 +62,42 @@ class CutPauses(TempDirCase):
         self.assertLess(drift_ms(out), 40)
 
 
+def pcm(path, tmp):
+    """The first audio stream as mono 48 kHz floats in −1…1."""
+    import array
+
+    raw = tmp / "звук.raw"
+    subprocess.run(["ffmpeg", "-hide_banner", "-nostdin", "-loglevel", "error", "-y", "-i", str(path), "-vn", "-ac", "1",
+                    "-ar", "48000", "-f", "s16le", "-c:a", "pcm_s16le", str(raw)], check=True)
+    samples = array.array("h")
+    samples.frombytes(raw.read_bytes())
+    return [s / 32768.0 for s in samples]
+
+
+@needs_ffmpeg
+class NoClickOnSeams(TempDirCase):
+    """A 250 Hz sine cut where it is at its crest and joined where it is at its trough: a raw splice jumps by the
+    whole swing (a click); a short fade on each side of the seam takes the jump away and keeps the length."""
+
+    def test_seam_of_a_broken_sine_does_not_jump(self):
+        from _support import ffmpeg
+        from runtime.media import cut_spans, probe
+
+        src = self.tmp / "синус.mp4"
+        ffmpeg("-f", "lavfi", "-i", "color=c=black:s=160x120:r=25:d=4", "-f", "lavfi", "-i",
+               "aevalsrc='0.5*sin(2*PI*250*t)':s=48000:d=4", "-c:v", "libx264", "-preset", "ultrafast",
+               "-pix_fmt", "yuv420p", "-c:a", "pcm_s16le", "-shortest", str(src.with_suffix(".mov")))
+        src = src.with_suffix(".mov")
+        # 1.001 s: crest (250 × 1.001 = 250.25 turns); 2.003 s: trough (500.75 turns). By hand: a jump of 1.0 at the seam.
+        out = cut_spans(src, [(0.0, 1.001), (2.003, 3.5)], self.tmp / "склейка.mp4")
+        self.assertAlmostEqual(probe(out)["duration"], 1.001 + 1.497, delta=0.04)  # not longer or shorter than a frame
+        x = pcm(out, self.tmp)
+        steady = 0.5 * 2 * 3.14159 * 250 / 48000  # the largest step of the sine itself, 0.016
+        near = x[int(0.95 * 48000):int(1.05 * 48000)]
+        jump = max(abs(b - a) for a, b in zip(near, near[1:]))
+        self.assertLess(jump, 4 * steady, "a click at the seam: {:.3f}".format(jump))
+
+
 @needs_ffmpeg
 class ManySplices(TempDirCase):
     def test_hundreds_of_spans_fit_on_any_command_line(self):

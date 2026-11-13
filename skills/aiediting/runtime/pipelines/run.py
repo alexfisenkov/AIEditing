@@ -3,27 +3,31 @@ from __future__ import annotations
 
 import shutil
 from pathlib import Path
-from typing import Callable, Dict, Optional
+from typing import Callable, Dict, List, Optional
 
 from .context import Context
 from .errors import PipelineError
 from .registry import PLAN, STEPS
 
 
-def run(src, profile: Dict, outdir, approve: Callable[[str, dict], bool], screen: Optional[Path] = None) -> Dict:
+def run(src, profile: Dict, outdir, approve: Callable[[str, dict], bool], screen: Optional[Path] = None,
+        cameras: Optional[List[Path]] = None, audio: Optional[Path] = None) -> Dict:
     """Edits `src` by `profile["steps"]` into `outdir` (the only place written to); returns the Report.
 
     approve(key, payload) -> bool is asked before anything irreversible; it may raise to stop the run
     (a file-based approver does) — a later run with the answers resumes from the same questions.
     screen: the screen recording when camera and screen are separate tracks.
+    cameras, audio: more cameras of the same scene and the sound recorded apart (step `angles`).
     """
     unknown = [s for s in (profile or {}).get("steps", []) if s not in PLAN]
     if unknown:
         raise PipelineError("Неизвестные шаги {}; доступны: {}".format(", ".join(unknown), ", ".join(STEPS)))
-    ctx = Context(src, profile, outdir, approve, screen)
+    ctx = Context(src, profile, outdir, approve, screen, cameras=cameras, audio=audio)
     if ctx.src == ctx.outdir or ctx.src.parent == ctx.work:
         raise PipelineError("Папка выпуска не может быть исходником")
     ctx.outdir.mkdir(parents=True, exist_ok=True)
+    if (ctx.cameras or ctx.audio_src) and not ctx.has("angles"):
+        ctx.note("Другие камеры и отдельный звук не использованы: в профиле нет шага angles (несколько камер)")
     if ctx.p("denoise"):
         ctx.note("Шумодав в этой версии не делается — звук не очищался")
     if ctx.p("clean_speech") and ctx.src.name != "clean-speech.mov":

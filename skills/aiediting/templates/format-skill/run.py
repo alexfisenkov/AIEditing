@@ -7,6 +7,7 @@
     python tools/run.py edit <video> [--topic T]    edit by the profile into <output_dir>/<date>-<topic>/
                        [--out DIR] [--answers F]    exit 3: a decision is needed, see вопросы.json
                        [--screen FILE]              the screen recording when camera and screen are separate
+                       [--camera FILE]… [--audio FILE]  more cameras and the sound recorded apart (step angles)
                        [--no-questions]             the person asked for none, in this run or in the profile
     python tools/run.py note <issue folder> "text" [--format [F]]  a remark: into отчёт.md and, with a library,
                                                     into the person's rules (--format: this format's section)
@@ -111,11 +112,22 @@ def edit(profile, opt):
     if screen is not None and not screen.is_file():
         print("Нет такого файла экрана: {}".format(screen))
         return 2
+    extra = {"screen": screen} if screen else {}
+    cameras = [Path(c).expanduser().resolve() for c in opt.camera or []]
+    audio = Path(opt.audio).expanduser().resolve() if opt.audio else None
+    for path in cameras + ([audio] if audio else []):
+        if not path.is_file():
+            print("Нет такого файла: {}".format(path))
+            return 2
+    if cameras:
+        extra["cameras"] = cameras
+    if audio:
+        extra["audio"] = audio
     out = Path(opt.out).resolve() if opt.out else issue_folder(profile, src, opt.topic)
     library_news()
     approve = approver_for(profile, out, Path(opt.answers) if opt.answers else None, opt.no_questions)
     try:
-        report = pipelines.run(src, profile, out, approve, **({"screen": screen} if screen else {}))
+        report = pipelines.run(src, profile, out, approve, **extra)
     except NeedsApproval as e:
         print(str(e))
         print("Папка выпуска: {}".format(out))
@@ -227,6 +239,8 @@ def main(argv):
     e.add_argument("--out")
     e.add_argument("--answers")
     e.add_argument("--screen")
+    e.add_argument("--camera", action="append", help="another camera of the same scene; may be given several times")
+    e.add_argument("--audio", help="the sound recorded apart: it replaces the camera's")
     e.add_argument("--no-questions", action="store_true")
     n = sub.add_parser("note")
     n.add_argument("issue")

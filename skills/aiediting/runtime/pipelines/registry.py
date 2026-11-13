@@ -26,6 +26,7 @@ PLAN: Dict[str, Optional[Callable]] = {
     "blur_regions": _lazy("secrets", "plan_blur"),
     "speech_spans": _lazy("cutplan", "plan_speech"),
     "cut_spans": _lazy("cutplan", "plan_cut"),
+    "angles": _lazy("angles", "plan_angles"),  # after the cut: an angle changes on its seams
     "motion": _lazy("motion", "plan_motion"),
     "background": _lazy("background", "plan_background"),
     "vertical": _lazy("vertical_plan", "plan_vertical"),
