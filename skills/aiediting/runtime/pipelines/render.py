@@ -120,6 +120,7 @@ def render_piece(ctx, piece: Dict) -> Dict:
         pngs = draw(ctx, piece, still, frame, tmp / "плашки") if still else []
         pngs += layers(ctx, piece, moving, frame, tmp / "анимации") if moving else []
         cur = media.overlay_png(cur, pngs, tmp / "5-плашки.mp4") if pngs else cur
+        done["pictures"] = pngs  # the timeline lays them on a lane of their own; after() drops the key
         if ctx.has("behind_head") and pngs:
             from .background import apply_background
 

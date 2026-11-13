@@ -36,4 +36,22 @@ def after(ctx, piece: Dict, final: Path, done: Dict) -> Dict:
 
         done["words_lost"] = check_words(ctx, getattr(ctx, "before_speed", None) or final, piece["keep"])
         ctx.report["words_lost"] += [dict(w, piece=piece.get("id")) for w in done["words_lost"]]
+    _hand_over(ctx, piece, final, done)
     return done
+
+
+def _hand_over(ctx, piece: Dict, final: Path, done: Dict) -> None:
+    """The timeline and the publishing pack belong to the whole horizontal video, not to its 9:16 clips."""
+    pictures = done.pop("pictures", None)
+    whole = piece.get("id") is None and not piece.get("layout")
+    if ctx.has("timeline") and not ctx.has("graphics"):
+        if whole:
+            from .timeline_export import write_timeline
+
+            done["timeline"] = write_timeline(ctx, final, pictures)
+        else:
+            ctx.note("Таймлиния делается для целого ролика, у вертикальных отрывков её нет")
+    if ctx.has("publish_pack") and whole:
+        from .publish import write_pack
+
+        done["publish"] = write_pack(ctx, final)

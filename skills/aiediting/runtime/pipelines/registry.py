@@ -41,6 +41,8 @@ PLAN: Dict[str, Optional[Callable]] = {
     "verify_words": None,
     "export_platforms": None,
     "behind_head": _lazy("background", "plan_behind_head"),
+    "timeline": _lazy("timeline_export", "plan_timeline"),  # written after the render (aftercare): the layers of the video
+    "publish_pack": _lazy("publish", "plan_publish"),  # written after the render: chapters, places for words, frames
 }
 
 STEPS: List[str] = list(PLAN)

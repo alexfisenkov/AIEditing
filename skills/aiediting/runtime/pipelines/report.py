@@ -48,6 +48,11 @@ def _body(ctx, r: Dict) -> List[str]:
         lines.append("- {} — {} с{}".format(Path(o["video"]).name, o["duration"],
                                              ", субтитры " + Path(o["srt"]).name if o.get("srt") else ""))
         lines += ["  - {}".format(Path(e).name) for e in o.get("exports", [])]
+        if o.get("timeline"):
+            lines.append("  - {} — таймлиния для DaVinci Resolve, как открыть: таймлиния.md".format(Path(o["timeline"]).name))
+        if o.get("publish"):
+            lines.append("  - {} — главы для YouTube и места под названия, описание и теги; кадры для обложек: "
+                         "обложки/кадры".format(Path(o["publish"]).name))
     lines += ["", "## Вырезано", ""] + _list(["- {}–{}: {}".format(stamp(c["start"]), stamp(c["end"]), c["why"])
                                                for c in r["cuts"]])
     lines += ["", "## Закрыто блюром", ""] + _list(["- {}–{}: {}".format(stamp(b["start"]), stamp(b["end"]),

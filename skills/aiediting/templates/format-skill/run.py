@@ -14,6 +14,8 @@
     python tools/run.py library <command> …         the person's library, as `ae.py library` (where, scan, sheet, find…)
     python tools/run.py hear <video> [--from S --to E]  what the format's recogniser hears, in seconds of that file
     python tools/run.py subtitles <issue folder> [--answers F]  the corrections of ответы.json again on the .srt and the words file, no render
+    python tools/run.py covers <issue folder> --text "2–4 words" [--more]  six covers from обложки/кадры and a sheet;
+                                                    --more: six more, nothing overwritten
 """
 import argparse
 import os
@@ -166,6 +168,37 @@ def subtitles(profile, opt):
     return 1 if any(not r.get("soft") for r in done["missed"]) else 0
 
 
+def covers(profile, opt):
+    """Six covers in the format's design from the frames the publishing pack chose; the words are the person's."""
+    from runtime.media import covers as cv
+    from runtime.render import RenderError, default_design
+
+    issue = Path(opt.issue).expanduser().resolve()
+    out = issue / "обложки"
+    frames = sorted((out / "кадры").glob("*.jpg"))
+    if not frames:
+        print("Нет кадров для обложек в {}: сначала монтаж с шагом publish_pack".format(out / "кадры"))
+        return 2
+    if not 2 <= len(opt.text.split()) <= 4:
+        print("Внимание: на обложке читается 2–4 слова, а здесь {}".format(len(opt.text.split())))
+    design = SKILL / (profile.get("design") or "design")
+    design = design if (design / "tokens.json").is_file() else default_design()
+    try:
+        ordered = cv.order(frames)
+        if not opt.more:
+            cv.clear(out)
+        made = cv.render(ordered, opt.text, design, out, first=cv.next_number(out) if opt.more else 1)
+        sheet = cv.sheet(sorted(p for p in out.glob("обложка-*.jpg") if cv.NAME.match(p.name)), out / "лист.jpg")
+    except (ValueError, OSError, RenderError) as e:
+        print("Обложки не сделаны: {}".format(e))
+        return 1
+    for path in made:
+        print(path)
+    print("Лист: {} (превью 320 px — в {})".format(sheet, out / "превью"))
+    print("Сделать ещё шесть? python tools/run.py covers \"{}\" --text \"{}\" --more".format(issue, opt.text))
+    return 0
+
+
 def hear(profile, opt):
     import tempfile
     from runtime import asr, media
@@ -210,6 +243,10 @@ def main(argv):
     s = sub.add_parser("subtitles")
     s.add_argument("issue")
     s.add_argument("--answers")
+    cv = sub.add_parser("covers")
+    cv.add_argument("issue")
+    cv.add_argument("--text", required=True)
+    cv.add_argument("--more", action="store_true")
     opt = ap.parse_args(argv)
     if opt.cmd == "library":
         from runtime.library.cli import main as library
@@ -235,6 +272,8 @@ def main(argv):
         return hear(profile, opt)
     if opt.cmd == "subtitles":
         return subtitles(profile, opt)
+    if opt.cmd == "covers":
+        return covers(profile, opt)
     return edit(profile, opt)
 
 

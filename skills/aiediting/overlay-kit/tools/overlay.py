@@ -28,7 +28,7 @@ if (__name__ == "__main__" and not os.environ.get("AIEDITING_IN_VENV") and sys.p
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from overlaylib import commands, facecmd, final, peaks, prepare, sfxcat, vertical  # noqa: E402
+from overlaylib import commands, facecmd, final, peaks, prepare, sfxcat, timeline, vertical  # noqa: E402
 from overlaylib.common import ToolError, say, stdout_utf8  # noqa: E402
 
 
@@ -97,6 +97,9 @@ def build_parser() -> argparse.ArgumentParser:
 
     add("peaks", peaks.cmd_peaks, "звуки сцен против пиков движения черновика: сдвиг в кадрах", "work", "draft")
     add("sfxcat", _sfxcat, "каталог папки звуков: роль, длина, пик (catalog.json рядом со звуками)", "folder")
+    sp = add("timeline", timeline.run_timeline, "таймлиния для DaVinci Resolve: готовый ролик одной картинкой, звук стемами "
+             "(голос, звуки, музыка), маркеры глав; FCPXML и памятка в папке выпуска", "work", "release")
+    sp.add_argument("--video", help="имя готового ролика в папке выпуска (по умолчанию — тот, что назван в отчёте)")
 
     sp = add("vertical-init", vertical.run_init, "положить набор для вертикальных клипов (src/vertical) в рабочую папку", "work")
     sp.add_argument("--spans", help="свой spans.json (отрезки, скорость, призыв)")

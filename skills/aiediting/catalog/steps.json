@@ -24,7 +24,9 @@
     "graphics":         {"what": "графика поверх готового видео на Remotion: сцены пишет модель по речи, спикер переезжает между раскладками, время — секунды готового видео, поэтому работает и с нарезкой, и без неё; кадр 16:9", "runtime": ["media", "asr"], "tools": ["ffmpeg", "node", "remotion", "opencv-python", "numpy", "yunet-model"]},
     "reedit":           {"what": "перемонтаж длинного горизонтального ролика под 9:16 на Remotion: согласует отрывки, отдаёт их модели, а она собирает ролики по методу: спикер ездит снизу, сверху, кружком, та же графика, текст только в безопасных зонах", "runtime": ["media", "asr"], "tools": ["ffmpeg", "node", "remotion", "opencv-python", "numpy", "yunet-model"]},
     "background":       {"what": "отделяет человека от фона: прозрачный MOV, цвет, картинка, видео или размытие, локально на RVM", "runtime": ["media"], "tools": ["ffmpeg", "numpy", "opencv-python", "onnxruntime", "rvm-model"]},
-    "behind_head":      {"what": "кладёт плашки и анимации за человеком: передний план из RVM поверх графики", "runtime": ["media"], "tools": ["ffmpeg", "numpy", "opencv-python", "onnxruntime", "rvm-model"]}
+    "behind_head":      {"what": "кладёт плашки и анимации за человеком: передний план из RVM поверх графики", "runtime": ["media"], "tools": ["ffmpeg", "numpy", "opencv-python", "onnxruntime", "rvm-model"]},
+    "timeline":         {"what": "кладёт рядом с роликом таймлинию для DaVinci Resolve (FCPXML 1.10) и памятку: куски камеры, вставки, плашки, музыка и её варианты, маркеры глав, вставок и правок", "runtime": ["media"], "tools": ["ffmpeg"]},
+    "publish_pack":     {"what": "готовит публикация.md: главы по правилам YouTube, места под три названия, описание и теги, кадры для обложек в паузах речи; обложки — run.py covers; ничего не загружает", "runtime": ["media", "asr", "render"], "tools": ["ffmpeg", "pillow"]}
   },
   "asr_tools": {
     "whispercpp": ["whisper-cpp", "whisper-model"],

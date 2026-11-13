@@ -4,8 +4,10 @@
 // (`{ role: "whoosh", at: second }`): the role's first sound — the person's own before the kit's — starts `peak_ms`
 // early, so its loudest moment lands on `at`; `n` takes another sound of the role, `vol` another level.
 // A missing file falls back to a sibling sound or role, or is skipped, so a scene never fails on a missing file.
+// An ordinary render carries all of it; a render with the input prop `stem` carries one part only — "speech", "sfx" or
+// "music" — the stems `overlay.py timeline` lays under the picture.
 import React from "react";
-import { Audio, Sequence, staticFile } from "remotion";
+import { Audio, Sequence, getInputProps, staticFile } from "remotion";
 import sfx from "../data/sfx.json";
 import { FPS } from "./tokens";
 import { toNewExact } from "./time";
@@ -108,31 +110,44 @@ const RoleSequence: React.FC<{ cue: RoleCue }> = ({ cue }) => {
   );
 };
 
-export const SoundTrack: React.FC<{ cues: readonly Cue[] }> = ({ cues }) => (
-  <>
-    <Audio src={staticFile("clips/speech.wav")} />
-    {MUSIC ? (
-      <Audio
-        src={staticFile(MUSIC)}
-        loop
-        loopVolumeCurveBehavior="extend"
-        volume={(f) => {
-          const s = f / FPS;
-          const fade = Math.min(1, s / 3, (DURATION - s) / 3);
-          return 0.055 * Math.max(0, fade);
-        }}
-      />
-    ) : null}
-    {cues.map((cue, i) => {
-      if ("role" in cue) return <RoleSequence key={i} cue={cue} />;
-      const [t, name] = cue;
-      const file = fileFor(name);
-      if (!file) return null;
-      return (
-        <Sequence key={i} from={Math.round((toNewExact(t) ?? -9999) * FPS)} durationInFrames={FPS * 4} layout="none">
-          <Audio src={staticFile(file)} volume={VOL[name]} />
-        </Sequence>
-      );
-    })}
-  </>
-);
+export type Stem = "speech" | "sfx" | "music";
+const STEMS: readonly Stem[] = ["speech", "sfx", "music"];
+
+// null: the whole sound; an unknown value is treated as none, so a mistyped prop never silences a render
+export const stemOf = (props: unknown): Stem | null => {
+  const asked = (props as { stem?: unknown } | null)?.stem;
+  return STEMS.find((s) => s === asked) ?? null;
+};
+
+export const SoundTrack: React.FC<{ cues: readonly Cue[] }> = ({ cues }) => {
+  const stem = stemOf(getInputProps());
+  const on = (part: Stem) => stem === null || stem === part;
+  return (
+    <>
+      {on("speech") ? <Audio src={staticFile("clips/speech.wav")} /> : null}
+      {MUSIC && on("music") ? (
+        <Audio
+          src={staticFile(MUSIC)}
+          loop
+          loopVolumeCurveBehavior="extend"
+          volume={(f) => {
+            const s = f / FPS;
+            const fade = Math.min(1, s / 3, (DURATION - s) / 3);
+            return 0.055 * Math.max(0, fade);
+          }}
+        />
+      ) : null}
+      {(on("sfx") ? cues : []).map((cue, i) => {
+        if ("role" in cue) return <RoleSequence key={i} cue={cue} />;
+        const [t, name] = cue;
+        const file = fileFor(name);
+        if (!file) return null;
+        return (
+          <Sequence key={i} from={Math.round((toNewExact(t) ?? -9999) * FPS)} durationInFrames={FPS * 4} layout="none">
+            <Audio src={staticFile(file)} volume={VOL[name]} />
+          </Sequence>
+        );
+      })}
+    </>
+  );
+};
