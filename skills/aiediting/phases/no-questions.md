@@ -61,6 +61,26 @@ the speech names come later, by the kit's order of work, because the speech is n
 | Brand names, terms | the project's texts; what they said | what is heard, marked in the list |
 | What they mean by the style | a video or frame they pointed to; earlier work they named | your judgement, stated in the list |
 
+### What of the new is already set up
+
+The library, inserts, the timeline, the voice, music, sound design, the publishing pack, cameras and gentle cleaning are
+**used when they are set up, and are never started for the occasion**. Found, not asked; a gap is a line in the list.
+
+| Capability | Used when | Otherwise |
+|---|---|---|
+| Inserts from their life (`broll`, `params.broll=true`) | `ae.py library where` answers and `ae.py library status` shows described files | no step. With a free stock key already in place (`ae.py library stock "<query>"` answers) `stock` is true; no key, no stock. Under `auto` the proposals stand and are in the report; the re-shoot list is written |
+| Timeline (`timeline`) | their message names a program to edit in, or an installed skill of theirs already has it | no step: the finished video only |
+| Voice (`voice_clean`) | an installed skill of theirs has it, or they named the service; a key that merely lies on the disk does not choose it | no step; Auphonic is a paid request |
+| Music (`music`) | their message or the library's `музыка/` names a folder with tracks, or an installed skill of theirs has a service | no step: nothing is inserted, nothing invented |
+| Sound design (`params.sfx`) | graphics or plates are in the format, and a sound folder is theirs or the kit's roles are asked for | none |
+| Publishing pack (`publish_pack`) | they asked for a title, a description, chapters or covers | no step |
+| Cameras (`angles`) | they gave more than one camera file, or a separate sound | one camera as before |
+| Gentle cleaning (`params.cleanup=gentle`) | they said so, or the installed skill has it | the format's own way |
+
+Their rules (`правила.md`, `чего-нельзя.md` of the library) are read before anything is chosen, and the person's word beats
+the format's setting. A skill already installed runs as it was built: the new does not reach it except through a refinement.
+A key that is missing at run time is not asked for: the step says why in the report, and the video goes on without it.
+
 ## 3. Their words become the format
 
 A new format: `ae.py formats "<word>"`, with the start the table below names; then `ae.py profile
@@ -167,6 +187,8 @@ Then one message, in their language, from `решения.md`, in this order:
   history; logos added, with «check the brand's rules before publishing»;
 - tools installed; Remotion's licence when used: free for individuals, companies of up to three employees and non-profits, paid beyond that, check
   before commercial use; the working folder with its size, kept until they accept;
+- which of the new was used (the library and its inserts, the timeline, the voice, music, sounds, the publishing pack, cameras) and which was
+  not set up, with what is left to do for each;
 - what is missing, as one numbered list;
 - how to repeat it («смонтируй как <слово> <путь>» in a new session). With `approval: auto`: this format now runs
   without questions, and «доработка» can turn that off. Otherwise: the next run asks again unless they say «без

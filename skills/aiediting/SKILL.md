@@ -4,7 +4,7 @@ description: Workshop that builds your own video-editing skills. Interviews you 
 disable-model-invocation: true
 argument-hint: "[new|refine] format name or path to a source video"
 metadata:
-  version: "0.3.3"
+  version: "0.4.0"
 ---
 
 # AIEditing
@@ -37,7 +37,7 @@ the rest of the session.
 
 | Stage id | Read | Produces |
 |---|---|---|
-| `start` | `phases/start.md` | the dashboard open; «новый» or «доработка» chosen |
+| `start` | `phases/start.md` | the dashboard open; the person met in one message and a personal plan; «новый» or «доработка» chosen |
 | `formats` | `phases/formats.md` | one draft profile per format, listed or the person's own |
 | `sources` | `phases/sources.md` | 1–3 sources, their frames and layout on the dashboard |
 | `interview` | `phases/interview.md` + `prompts/question-round.md` | the profile answered, round by round; the paths of the format offered |
@@ -79,7 +79,7 @@ in another one. One word per stage, on the dashboard and in the chat: Старт
 Every event is one call: `python "<skillDir>/tools/ae.py" <command>` — `init`, `no-questions`, `stage`, `ask`,
 `answered`, `formats`, `profile`, `variant`, `frames`, `layout`, `design-example`, `samples`, `choose`, `trial`, `show`, `hear`, `kit`,
 `verdict`, `build-skill`, `install-skill`, `list-skills`, `backup-skill`, `restore-skill`, `doctor`, `setup`, `capabilities`, `background`, `image-cutout`,
-`finish`. The command list with arguments is at the top of `tools/ae.py`. `phases/start.md` says how to
+`library`, `voice-try`, `finish`. The command list with arguments is at the top of `tools/ae.py`. `phases/start.md` says how to
 find `<skillDir>`. You never edit `state.js` or the dashboard by hand. Where there is no `python`, as on
 many Macs, use `python3`; where it is the Microsoft Store stub on Windows, use `py -3`.
 
@@ -98,8 +98,10 @@ many Macs, use `python3`; where it is the Microsoft Store stub on Windows, use `
    without checking their source, requirements and a real output.
 4. **Examples are always on the person's own video.** No source of the needed kind → ask for one; without
    it the question is asked in words, without an example.
-5. **Every remark on the format goes into the profile** (`ae.py profile taste`), and only AIEditing changes a profile —
-   a format skill writes remarks into its report and suggests «запусти AIEditing — доработка».
+5. **Every remark on the format goes into the profile** (`ae.py profile taste`), and only AIEditing changes a profile. A format
+   skill writes each remark into its report and, where the person has a library, into their own rules (`правила.md`, general or
+   by format), which it follows from the next video; the steps and the design of the format change only here, and it suggests
+   «запусти AIEditing — доработка».
 6. **The previous version is kept.** Installing over a skill moves the old one to the reserve;
    `restore-skill` brings it back in one command.
 7. **The format skill holds only what was chosen** — steps, tools and design; nothing «на всякий случай».
@@ -110,6 +112,11 @@ many Macs, use `python3`; where it is the Microsoft Store stub on Windows, use `
    capability to the catalog, runtime and tests. Name a concrete blocker only after trying the viable path.
    For a person in video, `ae.py background` uses local ONNX Runtime and RVM MobileNetV3 on Apple Silicon;
    inspect a preview for edge quality. It does not promise arbitrary object segmentation or flawless mattes.
+
+10. **Everything new is by choice.** The library, inserts, the timeline, the voice, music, sound design, the publishing pack, cameras,
+    gentle cleaning and the preparation are offered, never assumed: a person has the thing or not, wants it or not. What is chosen
+    is carried to the end and proved by a fact before the build (`phases/interview.md`); what they have not is not inserted and
+    not invented. This workshop is refined, not remade: the formats, phases and profiles that exist work as they did.
 
 ## Files
 
@@ -124,6 +131,7 @@ many Macs, use `python3`; where it is the Microsoft Store stub on Windows, use `
     └── trials/01/ …             trial pieces, вопросы.json / ответы.json, out/
 overlay-kit/                     in this skill: the method and tools of the `graphics` and `reedit` steps, copied into formats that use them
 ~/.agents/skills/монтаж-<слово>/ the installed format skill; pointer in ~/.claude/skills/
+~/.aiediting/library.json        the pointer to the person's library, one per computer (`ae.py library`); the folder is theirs
 ~/.agents/skills/.aiediting-backups/  previous versions
 ```
 

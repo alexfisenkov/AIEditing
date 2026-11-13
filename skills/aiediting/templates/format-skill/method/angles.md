@@ -1,0 +1,3 @@
+## Several cameras
+
+`python "<skillDir>/tools/run.py" edit "<main camera>" --camera "<second camera>" [--camera …] [--audio "<sound recorded apart>"]`. The cameras and the sound are lined up by sound, and the report gives each offset; check a sharp move (a clap, a gesture) on the first frames of every camera, at the start, in the middle and at the end of a long record. The plan of angles is the main camera, a crop ×1.2 with air above the head for about a quarter of the time (3–12 s), a side camera now and then (3–10 s, not oftener than once a minute), a barely noticeable push in at the start; no angle is shorter than 3–4 s and a change sits on a cut. One camera: the crop and the push only. A graphic on a side angle stands in front of the face, never behind the head.

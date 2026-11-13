@@ -1,5 +1,21 @@
 # What's new in AIEditing
 
+## 0.4.0 — 2026-11-13
+
+A refinement, not a remake: the formats, phases and profiles that exist work as they did. Everything new is a choice of the person; what they do not have or do not want is not set up, not inserted and not made up.
+
+- Getting to know the person: the workshop starts with one message (computer and disk, videos, cameras and sound, an editing program, topic and audience, material of their own, services they have, videos they like and dislike, what must never be shown) and a personal plan. What it already knows it does not ask again. Whether to use their own shot material and connect a library is asked slowly, with what they get and that «no» breaks nothing; the first trial never waits for it.
+- The library: one folder of the person's own on their disk, found by every format skill of theirs (`ae.py library`, `run.py library`); files about them, a numbered-sheet inventory of the gallery, an Instagram export, camera footage and stock; their rules and the list of what never to show.
+- Inserts (`broll`) from the library under the literal meaning of a phrase, with free stock by the person's own key and a re-shoot list; the rules of the joints and lengths; a person they ask not to show is written into the list and never shown again.
+- A timeline for DaVinci Resolve (`timeline`, FCPXML) beside the video, in layers or as one picture with separate sound stems; no program, no timeline: the video and remarks by timecode.
+- Voice through Auphonic on the person's key, with the preset chosen by ear (`ae.py voice-try`); music from the person's folder or a service they have, in variants and by chapter; sounds by role on the peak of the motion of graphics (`overlay.py peaks`), a catalog for the person's own sound folder (`overlay.py sfxcat`).
+- A publishing pack (`publish_pack`): three titles, a YouTube description with chapters by YouTube's rules, tags, frames for covers; six covers on request (`run.py covers`). Nothing is uploaded or published.
+- Several cameras and a sound recorded apart (`angles`); gentle cleaning of speech next to the dense one (`params.cleanup`, `params.repeats`); joints without clicks everywhere.
+- Preparation before a shoot (`run.py prep "<topic>"`): a map of 7–12 steps, the camera, a checklist; a map beside the source gives the chapters.
+- Every remark of the person is written into their own rules at once (`run.py note`, `run.py forbid`) and followed from the next video; the steps and design of a format still change only through «AIEditing — доработка».
+- Interview: a row for each new key of the profile, and «chosen means proved»: a key that answers, a folder that holds tracks, a program that opens, before the skill is built. «Without questions» uses what is set up and names what is not.
+- Format skills get a method for each chosen step (`library`, `broll`, `sound`, `publish`, `timeline`, `angles`, `prep`) and one on how to give remarks; the overlay kit gets `recipes.md` (show, do not write: three levels, alternating formats, the camera window, no two identical screens, events on the word, exits beyond the edge) and rules of pace and captions for vertical clips.
+
 ## 0.3.3 — 2026-11-13
 
 - Overlay kit: the face check of a render. Right after every change of the picture (0.2 s and 1 s after every cut the face track knows, every joint of an edit by markers across which the face jumps, and in a vertical clip every joint of two spans) the speaker's face must be whole inside the speaker's window. The frames are rendered from the composition itself, as the render is (`tools/face-frames.mjs`); the presenter reports where its window is (`src/kit/speakerBox.ts`, only when asked); YuNet looks inside it. Findings: «НЕТ ЛИЦА В РАМКЕ», «ЛИЦО СРЕЗАНО КРАЕМ РАМКИ», «РАМКА СПИКЕРА НЕ СООБЩЕНА», each with the second and the frame's file.

@@ -88,6 +88,7 @@ A design system named for this video replaces the tokens and the mark for this r
 - Only the design's tokens and fonts; colour only for `C.ok` and for real work on screens and frames.
 - Real frames carry the speaker and the audience's view of the product, nothing else. Switch the product to the audience's view before capturing; cut owner-only blocks (see the capture guide); never capture other people's personal data.
 - Pace: a new event every 6-10 seconds, each readable. The speaker fills the whole frame at least a quarter of the time.
+- Show the subject, not its name (`recipes.md`): real content or motion before text, the formats alternating, a camera window in the corner when full-screen scenes run together for more than about 15 s, never two identical screens, every event on the frame of its word, every exit beyond the edge of the frame.
 
 Lessons from a 73-marker review of a finished video. Each one is a rule now:
 
@@ -187,4 +188,5 @@ Take everything that is known and create. The design comes as the format's profi
 - `template/`: the Remotion project (`src/kit` is the toolbox, `src/scenes` the segments, `src/data` the data), the pinned `package-lock.json`, fonts, the sounds by role with their catalog.
 - `vertical.md`: the vertical cut (clips 9:16): order of work, rules of the frame, the call to action, sound, covers. `template/src/vertical/` is its set, `examples/vertical/c1.tsx` a sample scene, `tools/vertical-frames.mjs` the frame audit.
 - `brief-template.md`: the brief for scene executors.
+- `recipes.md`: how to show instead of write: the three levels, the recipes, the rules of the window, the formats and the edge.
 - `examples/`: four neutral scenes (`seg-a.tsx`, `layouts-a.ts`), a demo screen and a words file that fit together. `overlay.py example <W>` installs them.

@@ -54,6 +54,8 @@ including a missing catalog row or a legacy `not_built` marker, calls for invest
 local tool, install checked requirements in an isolated environment and validate actual output. Add a
 repeatable capability to the catalog, runtime and tests. Only a concrete failed route is a blocker.
 
+Something new they want (the themes of `phases/interview.md` that this skill lacks) is offered the same way, by choice, and proved by a fact before the build; the skill keeps working as it was where they chose nothing.
+
 Design changes → `phases/design.md` for the elements they named. Need a source to show on → ask for one
 (`phases/sources.md`, `ae.py frames`).
 
@@ -70,6 +72,8 @@ A remark teaches the skills only if it lands in the right place. Decide for each
 | clean speech, takes, trimming, markers | `overlay-kit/takes-and-markers.md` | only formats with `params.clean_speech` read it |
 | a way to edit the catalog does not have | `catalog/formats.json` and a preset, «A new way» below | the next person is offered it |
 | the taste of this one format | its `profile.json`, `ae.py profile taste`, in the person's own words | |
+| a personal rule the format skill already keeps: a remark after a video, a person or a thing never to show | `правила.md` and `чего-нельзя.md` of the library, written by the format skill itself (`run.py note --format`, `run.py forbid`) | it acts from the next video; read it with the person here and carry into the profile only what should hold for the format and not for them alone |
+| a wish for something new: inserts, a timeline, a voice, music, sounds, a publishing pack, cameras, gentle cleaning | the theme of the same name in `phases/interview.md`, by choice, proved before the build | an installed skill never gets it by itself: only a refinement rebuilds it |
 | only this one video | its report | nowhere else |
 
 A rule that names the person's own paths, accounts or materials goes to `design/sources.md` of their format, never to this workshop.

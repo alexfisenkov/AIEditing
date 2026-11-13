@@ -1,0 +1,8 @@
+## The publishing pack
+
+`публикация.md` beside the video: places for three titles, the YouTube description with the chapters, tags, and frames for covers in `обложки/кадры/`. **Nothing is uploaded or published, ever**: the person does that, and the test of covers in the service is theirs by hand. You write the words from what was said in the video, never a claim, a number or a link that is not there: no link given is a visible gap.
+
+- **Title**, three variants: the result and the subject, clear at a glance, honest (the video keeps the promise), up to 100 characters with the main thing in the first 50; no exclamation mark, no all capitals, no question at the end; if a tool is named, name it so that everyone understands.
+- **Description**: the first line is what is in the video and what the viewer gets; blocks apart by empty lines; then the chapters from the pack's list and not by eye. YouTube takes them only when the first is `0:00`, there are at least three, each is at least 10 s, in rising order, one to a line. The pack already merges what breaks the rules.
+- **Tags**: short, from the subject.
+- **Covers**: `python "<skillDir>/tools/run.py" covers "<issue folder>" --text "<2–4 words>"` makes six in the format's design on a sharp frame of a pause in the speech, a 3840×2160 JPG with a 320 px preview and a sheet. The words are a finished thought clear without the title, not a scrap; the right lower corner stays free; no blur, 3D letters, stickers, arrows or red circles. Look at the sheet at preview size, show it, and ask «сделать ещё?»; then `--more` brings six others and overwrites nothing.

@@ -6,10 +6,15 @@ the person until the finished video. Exit code 3 then means **you** decide:
 
 <!-- unless reedit -->
 - `editing`, `retakes`: keep what you doubt, cut what is plainly a repeat or a slip.
+- `repeats`: the same, a repeat is taken out only when it is plainly the same thought said again.
 - `chapters`, `cards`, `animations`: their text comes only from what is said; leave out what does not earn its place.
 <!-- end -->
 - `clips`: take the highest scored; when the skill has the section «Clips from a finished video», pick by it, with `headline` and
   `teaser` where this skill has them.
+<!-- if broll -->
+- `broll`: the proposals stand and nothing is asked: each insert is a line of the report with who is in its frame, and the re-shoot list
+  is written. A person they asked not to show is never inserted; stock only by the key they already set.
+<!-- end -->
 <!-- unless reedit -->
 - `layout`: look at the frames it names and set `kind` and `face`.
 - `secrets`: everything with a box goes under the blur by itself. A secret said aloud has no box: it stays in the sound,

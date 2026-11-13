@@ -190,6 +190,21 @@ suggests running AIEditing to refine the format.
 
 ---
 
+### Your own materials, and everything that is optional (0.4)
+
+The workshop now begins by getting to know you, in one message: your computer and disk, which videos you make, cameras and sound, whether you have an editing program, your topic and audience, how much material of your own you have, which services you already use, videos you like and dislike, and what must never be shown. It answers with a short personal plan: what is already there, what to set up, what can be skipped. What it already knows it does not ask again.
+
+Everything below is **your choice**. A thing you do not have, or do not want, is not set up, not inserted and not made up; a thing you choose is carried to the end with you, step by step, and proved by a fact (a key that answers, a folder that holds tracks) before the skill is built.
+
+- **A library of your own.** One folder on your disk, chosen by you, found by every `монтаж-*` of yours (`ae.py library`, `run.py library`). It holds files about you (who you are, your life by years, people, places, your blog), a list of your gallery, Instagram export and camera footage with one line per file, your personal rules and the list of what never to show. The files are not copied and nothing leaves your computer. The first video never waits for it, and the list is made in small pieces.
+- **Inserts from your life** (`broll`): under the literal meaning of a phrase, your own shot first, then a free stock video by your own key, then a graphic. You approve each line in the plan, or in a mode without questions they stand and are in the report. A list of what to re-shoot (`досъёмка.md`) comes with the video. When you say «этого не бери», it is written into the list of what never to show.
+- **A timeline for an editing program** (`timeline`): a DaVinci Resolve file beside the video and a note. No program, and no wish for one: the finished video comes, and you give remarks by the timecode.
+- **A cleaner voice** (Auphonic, your own account and key), **music** (your own folder, or a service you already have, such as Epidemic Sound; with nothing at all, nothing is inserted) and **sounds on the peak of the motion of graphics**. Your own folder of sounds goes before the kit's; connect it with `overlay.py sfxcat <your folder>` and give it as `--sfx`.
+- **A publishing pack** (`publish_pack`): three title variants, a YouTube description with the chapters by YouTube's rules, tags, six covers on request (`run.py covers`). Nothing is uploaded or published.
+- **Several cameras and a sound recorded apart** (`angles`), **gentle cleaning of speech** next to the dense one (`params.cleanup`), **preparation before a shoot** (`run.py prep "<topic>"`: a map of 7–12 steps, the camera, a checklist). Every remark you make after a video goes into your own rules at once and is followed from the next one; the steps and the design of a format change only through «AIEditing — доработка».
+
+Keys for the services you choose: `AUPHONIC_API_KEY`, `PEXELS_API_KEY`, `PIXABAY_API_KEY` in your `.env` (see «Keys»). The agent never asks for a value or prints it.
+
 ## Tool methods
 
 The parent includes a [task-based handbook](skills/aiediting/references/methods.md), with source
@@ -206,6 +221,7 @@ examples. These do not change an installed format profile or add native pipeline
 | edits **a trial piece** of your source to show you; where a format has several paths, a short probe of each and then the chosen one in full; without questions, the whole recording | voices, generates video, music or images |
 | installs its full supported local toolkit with `ae.py setup`; repairs a task's subset on demand without per-tool questions | asks for a key or prints one |
 | keeps the previous version of a skill and restores it in one command | puts into a skill anything you did not choose |
+| meets you in one message and, if you wish, uses your own footage and library for inserts | inserts what you do not have, or shows a person you asked not to show |
 
 ---
 
@@ -289,7 +305,7 @@ script to generation; AIEditing does not include it — only this link.
 ## Keys
 
 Keys live only in your environment or in a `.env` file (see `.env.example`); AIEditing reads them
-by variable name and never prints them. Never paste a key into the chat.
+by variable name and never prints them. Never paste a key into the chat. Besides the recognisers: `AUPHONIC_API_KEY` (voice), `PEXELS_API_KEY` and `PIXABAY_API_KEY` (free stock video); you put the value into `.env` yourself, and the agent only tries the key with a real request.
 
 The key already lies in another place — say, the `.env` of another tool? Give that file's path as
 `asr.key_file` in the interview (`~` works). The key is read from it at every run and copied nowhere:
@@ -329,7 +345,7 @@ skills/aiediting/        the skill itself (what gets installed)
 ├── tools/state/         the dashboard page, state and local server
 ├── templates/           the format-skill template and starting profiles
 ├── catalog/             formats, steps, tools with licences and pins
-├── runtime/             editing mechanics copied into every format skill
+├── runtime/             editing mechanics copied into every format skill (the library, inserts, the timeline, voice, publishing)
 ├── overlay-kit/         graphics over the video: scenes, the camera, cuts by markers
 ├── schema/  design/     profile schema, example design system
 assets/                  the logo and dashboard screenshots for this page

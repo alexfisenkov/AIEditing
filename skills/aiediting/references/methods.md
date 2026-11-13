@@ -27,6 +27,7 @@ modified merely because the parent learns a method.
 | Face boxes, region tracks, OCR, word times, PNG | [vision-and-transcription.md](vision-and-transcription.md) | Existing look/ASR/render APIs; confidence and coordinate/time ownership |
 | HyperFrames inserts, Remotion, layers and motion | [graphics-and-compositing.md](graphics-and-compositing.md) | Existing overlay kit and renderer methods, still → draft → final |
 | B-roll, multicam programme, captions and sound decisions | [editorial-methods.md](editorial-methods.md) | Adapted supplied-skill principles; source-based edit plan, then local composition |
+| Own footage, a library, gentle cuts and a plan of angles | [editorial-methods.md](editorial-methods.md) | `ae.py library`, the steps `broll`, `angles`, `params.cleanup`; only when the person chose them |
 | Codec/decode, sync, black/freeze diagnostics and VMAF | [technical-quality.md](technical-quality.md) | `quality` only for explicitly aligned same-content inputs; human inspection remains separate |
 
 ## The checked recipe launcher

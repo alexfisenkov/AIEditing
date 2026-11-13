@@ -1,0 +1,7 @@
+## How to give remarks
+
+Once, in your first message after a run, tell the person how a remark is best given: by time («на 03:12 убери вставку» is better than «где-то в начале»); by a screenshot of the frame; with an example («хочу как здесь»); and the good too, «вот это супер», because you write it down and do it again. Voice and feelings are fine: «это дёшево выглядит» says the style is wrong.
+
+**How to take remarks.** Each one: say what you understood and what you will do, then `python "<skillDir>/tools/run.py" note "<issue folder>" "<remark in their words>" --format`. It goes into the report and, where they have a library, into their rules (`правила.md`, this format's section), and from the next video it is followed: **their rule beats the format's setting**. Read the rules before editing: `run.py library rules --format "<this format>"` and the file `чего-нельзя.md` in the folder that `run.py library where` names; no library, no rules to read. «Не показывай такого-то» → `run.py forbid "<who>"`. The steps and the design of the format change only through «запусти AIEditing — доработка».
+
+**Pace and shorts from a long video.** A new picture every 5–15 s in a long video, every 1–3 s in Reels, Shorts and TikTok; the first 3–5 s decide whether the viewer stays, so no long intro. A short from a long video is a finished thought of 15–60 s with a strong first phrase; its captions are 2–4 words, large, by meaning, in the safe zone, never over the face.

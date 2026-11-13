@@ -17,6 +17,8 @@
     python tools/run.py subtitles <issue folder> [--answers F]  the corrections of ответы.json again on the .srt and the words file, no render
     python tools/run.py covers <issue folder> --text "2–4 words" [--more]  six covers from обложки/кадры and a sheet;
                                                     --more: six more, nothing overwritten
+    python tools/run.py prep "<тема>" [--steps 8] [--out DIR]  подготовка.md before a shoot: the map of 7–12 steps, the camera, the checklist;
+                                                    a map beside the source gives the chapters of the edit
 """
 import argparse
 import os
@@ -125,6 +127,7 @@ def edit(profile, opt):
         extra["audio"] = audio
     out = Path(opt.out).resolve() if opt.out else issue_folder(profile, src, opt.topic)
     library_news()
+    map_news(src, out)
     approve = approver_for(profile, out, Path(opt.answers) if opt.answers else None, opt.no_questions)
     try:
         report = pipelines.run(src, profile, out, approve, **extra)
@@ -152,6 +155,72 @@ def library_news():
                 print("Библиотека: новых файлов «{}» — {}; опишите: run.py library sheet {}".format(kind, len(rows), kind))
     except Exception as exc:  # the library never stops an edit
         print("Библиотека не просмотрена: {}".format(exc))
+
+
+PREP = "подготовка.md"
+PREP_TEXT = """# Подготовка к съёмке: {topic}
+
+## Карта ролика
+
+Человек рассказывает по карте; монтаж потом делит ролик на главы по её шагам. Названия шагов — коротко, 2–5 слов.
+
+{steps}
+## Куда поставить камеру
+
+Сдвиньте камеру так, чтобы перед лицом или над головой оставалось свободное место: туда лягут анимации. Главный ракурс — по пояс или по грудь, глаза на уровне объектива. Вторая камера сбоку, если она есть, тоже со свободным местом перед лицом.
+
+## Что подготовить для вставок
+
+- что покажете на экране (программы, сайты, файлы) — откройте до записи;
+- примеры из жизни: есть ли под них ваши фото и видео? Нет — доснимите до или после;
+- цифры: проверьте, что они правдивые и свежие.
+
+## Чек-лист перед записью
+
+- камеры: батареи, карты памяти, одна частота кадров, фокус на лице, экспозиция зафиксирована;
+- звук: петличка заряжена, пробная запись 10 секунд прослушана;
+- свет включён, мерцания нет; фон убран, ничего личного в кадре; телефон в авиарежиме;
+- хлопок в ладоши в начале записи (для синхрона камер и отдельного звука).
+
+## Во время записи
+
+Сбились — пауза 2–3 секунды и фраза заново. Запись не останавливайте: неудачный дубль вырежет монтаж, а пауза перед новым помогает его найти.
+"""
+
+
+def prep(profile, opt):
+    """The skeleton of the map and the lists; the steps are written with the person (method `prep`), never by the code."""
+    if not 7 <= opt.steps <= 12:
+        print("Шагов в карте от 7 до 12, а здесь {}".format(opt.steps))
+        return 2
+    folder = Path(opt.out).expanduser().resolve() if opt.out else issue_folder(profile, Path(opt.topic), opt.topic)
+    path = folder / PREP
+    if path.exists():
+        print("Уже есть: {} — правьте его, я не перезаписываю".format(path))
+        return 0
+    steps = "".join("{}. [шаг {} — впиши название]\n   - [о чём сказать]\n   - [о чём сказать]\n   - [о чём сказать]\n".format(i, i)
+                    for i in range(1, opt.steps + 1))
+    folder.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_name(path.name + ".tmp")
+    tmp.write_text(PREP_TEXT.format(topic=opt.topic.strip(), steps=steps), encoding="utf-8")
+    tmp.replace(path)
+    print("Подготовка: {}".format(path))
+    print("Заполните карту вместе с человеком; после съёмки положите файл рядом с записью — главы возьмутся из неё")
+    return 0
+
+
+def map_news(src, out):
+    """A map of the shoot beside the source (or in the issue folder) names the chapters of this edit."""
+    import re
+
+    for path in (Path(src).parent / PREP, Path(out) / PREP):
+        if not path.is_file():
+            continue
+        body = path.read_text(encoding="utf-8").split("## Карта ролика", 1)[-1].split("\n## ", 1)[0]
+        titles = [m.group(1).strip() for m in re.finditer(r"(?m)^\d+\.\s+(.+)$", body) if not m.group(1).lstrip().startswith("[")]
+        if titles:
+            print("Карта съёмки {}: главы ролика по её шагам — {}".format(path, "; ".join(titles)))
+        return
 
 
 def subtitles(profile, opt):
@@ -257,6 +326,10 @@ def main(argv):
     s = sub.add_parser("subtitles")
     s.add_argument("issue")
     s.add_argument("--answers")
+    pr = sub.add_parser("prep")
+    pr.add_argument("topic")
+    pr.add_argument("--steps", type=int, default=8)
+    pr.add_argument("--out")
     cv = sub.add_parser("covers")
     cv.add_argument("issue")
     cv.add_argument("--text", required=True)
@@ -288,6 +361,8 @@ def main(argv):
         return subtitles(profile, opt)
     if opt.cmd == "covers":
         return covers(profile, opt)
+    if opt.cmd == "prep":
+        return prep(profile, opt)
     return edit(profile, opt)
 
 

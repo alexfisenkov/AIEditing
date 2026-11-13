@@ -140,6 +140,20 @@ an assumed Palmier MCP installation.
   librosa can help measure PCM and timing; neither chooses the edit or
   completes a mix. Music and SFX need a known source and permitted use.
 
+## 5a. Own material, gentle cuts and angles
+
+These are native now, each one only when the person chose it (`phases/interview.md`).
+
+- **Own footage first.** Under a phrase put a shot of the person's own life (the library, the step `broll`) before a stock clip, and a stock clip before
+  a graphic; the shot must be the literal meaning of the phrase, horizontal in a horizontal video, the best stretch of 3-6 s, with its joint on a cut
+  or at least 3 s from one, no more than 2-3 in a row, its sound off. Whatever has no shot goes to a re-shoot list, not to a generated picture.
+- **Gentle cutting.** `params.cleanup` `gentle`: cut at the quietest point 100-150 ms before the next word, shorten a pause over 0.35 s to 0.2 s and a
+  breath pause over 0.6 s to 0.3 s, join with a 5-10 ms audio crossfade so there is no click. A cut that takes 5-10 % of the length is gentle; 20 % or
+  more is cutting meaning: stop and show the person. Never cut a story, an example, a number, a name, an intended repetition or a question and its answer.
+- **Angles.** With several cameras (`angles`): the main camera, a crop ×1.2 with air above the head for about a quarter of the time (3-12 s), a side
+  camera now and then (3-10 s, at most once a minute), a barely noticeable push in at the start; no angle under 3-4 s, a change on a cut. With one
+  camera the crop and the push alone give the feel of several.
+
 ## 6. Acceptance through the actual file
 
 Use a representative short edit to prove timing, framing, caption style,

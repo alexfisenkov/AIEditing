@@ -30,6 +30,10 @@ several, ask which format first. One video per run.
    Run setup before editing, even when AIEditing itself is no longer installed. Announce the total
    heavy downloads once; the request to edit authorizes local dependencies without a question
    for each tool. If repair fails, report the exact error.
+   Before any edit read the person's own files, when they have a library (`run.py library where` names its folder):
+   `правила.md` (`run.py library rules --format "{{format}}"` prints the general rules and this format's) and `чего-нельзя.md`
+   in that folder. **Their rule beats this format's setting**, and a person or a thing on that list is never shown. No library:
+   nothing to read, go on.
 2. {{video_first}}`python "<skillDir>/tools/run.py" edit "<video>" --topic "<тема одним-двумя словами>"`. Camera and screen
    recorded as two files → the camera is `<video>`, and add `--screen "<screen file>"`. A format with «Graphics»
    or «Re-edit» goes on by that section; step 4 comes after it.
@@ -43,7 +47,15 @@ several, ask which format first. One video per run.
 5. A remark after watching («паузы длинные», «плашка мелкая») →
    `python "<skillDir>/tools/run.py" note "<issue folder>" "<remark in their words>"`, then say the line it
    prints: the remark is in the report, and the format changes for good only through AIEditing —
-   «запусти AIEditing — доработка {{name}}». Never edit `profile.json` yourself.
+   «запусти AIEditing — доработка {{name}}». Never edit `profile.json` yourself. With a library the same remark goes into their
+   rules at once (`--format` into this format's section) and is followed from the next video; see «How to give remarks».
+<!-- if publish_pack -->
+   With the publishing pack: `python "<skillDir>/tools/run.py" covers "<issue folder>" --text "<2–4 words>"` makes the covers;
+   see «The publishing pack».
+<!-- end -->
+<!-- if prep -->
+   Before a shoot: `python "<skillDir>/tools/run.py" prep "<topic>"` writes `подготовка.md`; see «Preparation before a shoot».
+<!-- end -->
 
 {{method}}## The steps of this format
 

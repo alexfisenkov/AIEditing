@@ -14,6 +14,9 @@ their pins) and `SKILL.md` from `templates/format-skill/`, and checks that the c
 A refusal names the problem → fix the draft, build again. A format with paths and none chosen is refused: go back to
 `phases/trial.md`, «A format with paths», rather than setting `variant` to get past it.
 
+Before the build, what the person chose of the new (`phases/interview.md`, «Everything new is by choice, and what is chosen is proved»)
+is proved by a fact. A step still unproved is out of `steps` and in the last message as «осталось сделать: …».
+
 ## 2. Tools — verify and repair
 
 `python3 "<skillDir>/tools/ae.py" setup --check` checks the installed toolkit. For this format, run
@@ -41,6 +44,8 @@ person, in one message:
 - how to use it: «смонтируй как <слово> <путь>»; a bare «смонтируй <путь>» works while this is their only format, with
   several the agent asks which first; results go to `<output_dir>/<дата-тема>/`;
 - it only edits — publishing, voice-over and generation are theirs;
+- what they chose of the new is in it and works: the library and inserts, the timeline, the voice, music, sounds, the publishing pack, cameras; what is left to set up is named;
+- how to give remarks (a timecode, a screenshot, «вот это супер»): the skill itself answers that, and writes every remark into their rules;
 - a remark after a video → the skill writes it into the report; to change the format for good —
   «запусти AIEditing — доработка <skill>».
 

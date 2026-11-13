@@ -30,6 +30,9 @@ Frames of real work: `public/frames/<name>.jpg`, `<WorkFrame name= w h crop=[x,y
 6. **Facts**: only what they say in this segment or what a real screen shows. No numbers of your own. A strange word from the transcript does not go on screen. A condition stays: «в настроенном проекте», «могу», «если подключить» does not become a ready fact on screen. A short headline keeps the condition or stays out.
 7. **Performance**: `filter: blur` only on short appearances and never on the whole frame.
 8. Scenes of neighbouring segments do not overlap; return the last layout to `full` by the end of your segment.
+9. **Show, do not write.** Before a scene, read `<kit>/recipes.md`. Each scene shows the subject of the speech and what happens to it (real content or motion), with text only for the one key thought. Alternate the formats from one scene to the next; never the same device twice running.
+10. **The speaker stays in view.** Full-screen scenes one after another for more than about 15 s get a small window with the speaker's camera in the lower right corner, off whatever must be read. Never inside a scene the frame of this video's camera while that window shows the same person (no «two identical screens»): take the person's other videos.
+11. **Events on the word.** Each appearance stands on the frame of the word that names it (`raw/words.txt`), or two or three frames earlier. Everything leaves beyond the edge of the frame, never dissolving in place; on a side angle a graphic stands in front of the face.
 
 ## Checking your work
 

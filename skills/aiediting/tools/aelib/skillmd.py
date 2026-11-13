@@ -20,7 +20,16 @@ METHOD_IF = {"editor.md": lambda p: "cut_spans" in p["steps"], "no-questions.md"
              "clips-headline.md": lambda p: "bands" in p["steps"],
              "clips-teaser.md": lambda p: "teaser" in p["steps"],
              "reedit.md": lambda p: "reedit" in p["steps"],
-             "takes.md": lambda p: bool((p.get("params") or {}).get("clean_speech"))}
+             "takes.md": lambda p: bool((p.get("params") or {}).get("clean_speech")),
+             # what is new: each method only for the step the person chose (`prep` has no step: the interview sets `params.prep`)
+             "library.md": lambda p: "broll" in p["steps"],
+             "broll.md": lambda p: "broll" in p["steps"],
+             "sound.md": lambda p: bool({"voice_clean", "music"} & set(p["steps"])),
+             "publish.md": lambda p: "publish_pack" in p["steps"],
+             "timeline.md": lambda p: "timeline" in p["steps"],
+             "angles.md": lambda p: "angles" in p["steps"],
+             "prep.md": lambda p: bool((p.get("params") or {}).get("prep")),
+             "help.md": lambda p: True}
 KIT_SECTIONS = (("graphics", "Graphics"), ("reedit", "Re-edit"))  # the steps that go on outside the pipeline, by their section
 KIT_APPROVAL = {
     "Graphics": "«План → готовый ролик»: the pipeline shows the plan for one approval and makes the base video; the graphics then go on "
@@ -54,6 +63,8 @@ def _lines(items, empty: str) -> str:
 def _for_steps(text: str, profile: dict) -> str:
     """A method file may hold lines for some steps only: `<!-- if step -->…<!-- end -->`, `<!-- unless step -->…<!-- end -->`."""
     steps = set(profile["steps"])
+    if (profile.get("params") or {}).get("prep"):
+        steps.add("prep")
     if not {"blur_regions", "reedit"} & steps:  # not a step: `reedit` keeps secrets out in its own way, and says so
         steps.add("no_blur")
 
@@ -105,13 +116,14 @@ def render(profile: dict, need: dict, steps: dict, tools: dict, version: str, ow
         "approval": _approval(profile, section),
         "taste": _lines(taste, "(none yet)"), "tools": _lines(tool_lines, "- nothing beyond Python"),
         "asr": ASR.get(profile["asr"]["provider"], profile["asr"]["provider"])
-        + ("; and what «{}» names".format(section) if section else ""),
+        + ("; and what «{}» names".format(section) if section else "")
+        + ("; the person's own Auphonic account for the voice (the audio goes there, by their key)" if "voice_clean" in profile["steps"] else ""),
         "writes": LATER_WORDS.get(section, "") + (" and the folder of its clean speech" if _clean_speech(profile) else ""),
         "video_first": ("**First make the clean speech: see «Clean speech». `<video>` here is its `clean-speech.mov`.** "
                         if _clean_speech(profile) else ""),
         "recording": RECORDING.get((profile.get("params") or {}).get("recording"), RECORDING["takes"]),  # after `method`, which holds it
     }
-    text = (FORMAT_TEMPLATE / "SKILL.md.tmpl").read_text(encoding="utf-8")
+    text = _for_steps((FORMAT_TEMPLATE / "SKILL.md.tmpl").read_text(encoding="utf-8"), profile)
     for key, value in values.items():
         text = text.replace("{{" + key + "}}", value)
     return text

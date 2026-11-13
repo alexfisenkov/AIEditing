@@ -74,6 +74,10 @@ Why: a clip taken over a finished video carried the music pad of that video. A v
 
 Other checks of `vertical-final`: 1080x1920 at 30 fps; picture and sound tracks of equal length, equal to the length the data gives; the target `--lufs` (-14 by default) within 1, true peak not above -1 (the mix aims at -1.5); the tail after the speech silent; the call stands its time (measured on the band above the card; skipped for a clip without a call).
 
+## Pace, captions and a short from a long video
+
+A short is a finished thought of 15-60 s with a strong first phrase: a question, a result, a number, a turn. The first 1-2 s decide whether it is watched, so when the span begins with a connecting word, begin with the strongest phrase and give the context after it. A new picture every 1-3 s (a layout, a scene, an insert); the pauses are cut harder than in the long video (0.1-0.2 s). Burned-in captions: 2-4 words on the screen, large, split by meaning and never in the middle of a phrase («в / Москве»), changing with the words, one bold sans, white with a soft shadow or on a dark plate, the key word in the accent; in the safe zone and never over the face. Graphics of the long video are redrawn for 9:16, larger; a full-screen 16:9 scene is never put in with fields. The end is not a long goodbye: one short call, or the last phrase leading back to the first.
+
 ## Covers
 
 A vertical cover is a 1080x1920 picture; Reels and the profile grid crop it. Two bands are safe: **3:4** keeps y 240-1680, **1:1** keeps y 420-1500 (`COVER_BANDS` in `safe.ts`). Everything that must be read lies inside 3:4 and the key line inside 1:1; nothing on the head. Side margins 70 px.

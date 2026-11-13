@@ -31,3 +31,7 @@ profile keys. One theme per round, 3–4 questions, numbered. Each question:
 - Never invent a fact about them (their folder, their brand names, their music) as a recommendation:
   «не знаю» stays a visible gap in the profile.
 - An answer that opens a new question → it goes into the next round of the same theme.
+- A question about **their own materials, a library or a paid service** is explained slowly and calmly: what it is, what they get, what it costs
+  (time, disk, money), that nothing leaves their computer without their word, and that «нет» breaks nothing. Never a scare, never a push.
+- **Less is better.** Offer the smallest version, and when they want more they say so, or ask «может, ещё сделать побольше?». A thing they do not
+  have and do not want is not asked about again.
