@@ -26,6 +26,8 @@ from overlaylib.common import ToolError  # noqa: E402
 PRIVATE = ["fisenkov", "фисенков", "мастерск", "masterskaya", "александр", "/users/", "ии-революция"]
 TEXT_SUFFIXES = {".md", ".ts", ".tsx", ".json", ".py", ".mjs", ".js", ".txt", ".html", ".svg", ".css", ".yml", ".yaml", ".sh"}
 SKIP_DIRS = {"__pycache__", "node_modules"}
+ROLES = ["whoosh-soft", "whoosh", "whoosh-big", "drop", "rise", "reverse", "hit", "sub", "ui-appear", "tick", "tap", "shutter",
+         "notify", "done", "error", "sparkle", "typing", "transition", "glitch", "ding", "pop", "click", "ambience"]
 
 REFERENCE_OVERLAY = {
     "color": {
@@ -86,10 +88,41 @@ class NothingPrivate(unittest.TestCase):
 
     def test_no_logos_and_no_unverified_sounds_or_music_ship(self):
         self.assertEqual(json.loads((TEMPLATE / "src/data/brands.json").read_text(encoding="utf-8")), {})
-        shipped = sorted(p.stem for p in (TEMPLATE / "public/sfx").iterdir())
-        self.assertEqual(shipped, ["pop-soft", "riser-1s", "tick", "whoosh-soft"])
+        sfx = TEMPLATE / "public/sfx"
+        top = sorted(p.stem for p in sfx.iterdir() if p.is_file() and p.suffix == ".wav")
+        self.assertEqual(top, ["pop-soft", "riser-1s", "tick", "whoosh-soft"])  # the old names keep working
         self.assertFalse((TEMPLATE / "public/music").exists())
         self.assertFalse((TEMPLATE / "public/logos").exists())
+
+    def test_the_sound_library_is_four_old_plus_four_synthesised_plus_103_free_sounds_all_in_the_catalog(self):
+        sfx = TEMPLATE / "public/sfx"
+        audio = sorted(str(p.relative_to(sfx)).replace(os.sep, "/") for p in sfx.rglob("*")
+                       if p.suffix.lower() in sounds.AUDIO)
+        self.assertEqual(len(audio), 4 + 4 + 103)
+        catalog = json.loads((sfx / "catalog.json").read_text(encoding="utf-8"))
+        rows = catalog["sounds"]
+        self.assertEqual(sorted(r["file"] for r in rows), audio)
+        for r in rows:
+            self.assertEqual(set(r), {"role", "file", "dur_ms", "peak_ms", "level_db"}, r["file"])
+            self.assertIn(r["role"], ROLES)
+            self.assertTrue(0 <= r["peak_ms"] <= r["dur_ms"], r["file"])
+            if "/" in r["file"]:
+                self.assertTrue(r["file"].startswith(r["role"] + "/"), r["file"])
+        self.assertEqual({r["role"] for r in rows if "/" not in r["file"]}, {"pop", "rise", "tick", "whoosh-soft"})
+
+    def test_no_author_lines_no_stock_sites_and_no_memes_in_the_sounds(self):
+        banned = ["freesound", "pixabay", "kenney", "mixkit", "attribution", "source_url", "creator", "credit", "remotion",
+                  "vine", "wilhelm", "bruh", "quack", "minecraft", "spongebob", "illuminati", "yippee", "fs-"]
+        found = []
+        for path in sorted((TEMPLATE / "public/sfx").rglob("*")):
+            if path.is_dir():
+                continue
+            hits = [b for b in banned if b in path.name.lower()]
+            body = path.read_bytes().lower()
+            hits += [b for b in banned if b.encode() in body and b != "fs-"]
+            if hits:
+                found.append("{}: {}".format(path.name, ", ".join(hits)))
+        self.assertEqual(found, [])
 
     def test_every_shipped_font_has_its_licence_text_with_a_copyright_line(self):
         fonts = TEMPLATE / "public/fonts"

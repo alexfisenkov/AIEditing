@@ -28,8 +28,22 @@ if (__name__ == "__main__" and not os.environ.get("AIEDITING_IN_VENV") and sys.p
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from overlaylib import commands, facecmd, final, prepare, vertical  # noqa: E402
-from overlaylib.common import ToolError, stdout_utf8  # noqa: E402
+from overlaylib import commands, facecmd, final, peaks, prepare, sfxcat, vertical  # noqa: E402
+from overlaylib.common import ToolError, say, stdout_utf8  # noqa: E402
+
+
+def _sfxcat(args) -> int:
+    path = sfxcat.write(Path(args.folder))
+    rows = sfxcat.read(path.parent)
+    count: dict = {}
+    for r in rows:
+        count[r["role"]] = count.get(r["role"], 0) + 1
+    say("Каталог: {} — звуков {}: {}".format(path, len(rows), ", ".join("{} {}".format(k, v) for k, v in count.items()) or "нет"))
+    skipped = sfxcat.left_out(path.parent)
+    if skipped:
+        say("Без роли, в каталог не вошли ({}): {}. Роль — это подпапка: {}".format(
+            len(skipped), ", ".join(skipped[:10]), ", ".join(sfxcat.ROLES)))
+    return 0
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -80,6 +94,9 @@ def build_parser() -> argparse.ArgumentParser:
     sp.add_argument("--video", help="с --rebuild в папке с картой времени: первый принятый ролик (в его секундах живут сцены)")
     sp.add_argument("--frames", action="store_true", help="отрисовать кадр через 0,2 с после каждой склейки трека: out/cuts/<секунда>.jpg")
     sp.add_argument("--check", action="store_true", help="проверить детектором, что лицо целиком в рамке спикера через 0,2 и 1 с после каждой склейки; код 1 при находках")
+
+    add("peaks", peaks.cmd_peaks, "звуки сцен против пиков движения черновика: сдвиг в кадрах", "work", "draft")
+    add("sfxcat", _sfxcat, "каталог папки звуков: роль, длина, пик (catalog.json рядом со звуками)", "folder")
 
     sp = add("vertical-init", vertical.run_init, "положить набор для вертикальных клипов (src/vertical) в рабочую папку", "work")
     sp.add_argument("--spans", help="свой spans.json (отрезки, скорость, призыв)")

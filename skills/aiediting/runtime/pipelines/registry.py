@@ -18,6 +18,7 @@ def _lazy(module: str, name: str) -> Callable:
 # name -> planning function or None (a step that only renders, see render.py)
 PLAN: Dict[str, Optional[Callable]] = {
     "reedit": _lazy("reedit", "plan_reedit"),  # first: it refuses a wrong set of steps before anything is asked
+    "voice_clean": _lazy("voice", "plan_voice"),  # before anything listens: the clean voice is the source from here on
     "graphics": _lazy("graphics", "plan_graphics"),  # first: it completes the words the other steps rely on
     "bands": _lazy("bands", "plan_bands"),  # only checks: refused before anything is asked or made
     "detect_layout": _lazy("layout", "plan_layout"),

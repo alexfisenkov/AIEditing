@@ -50,7 +50,7 @@ The words file is lines `%7.2f word`, seconds from the start of the passed video
 | The design system | the folder the person names (it holds `tokens.json`); none named: the bundled Chrome & Graphite example | `--design`; see "Design" |
 | The speaker's mark | a file the person gives | `--logo`; none given: no corner mark |
 | Fonts | the design's own, or the three OFL families in `template/public/fonts` | automatic, see "Design" |
-| Sounds and the pad | four CC0 sounds ship in `template/public/sfx`; more by name | `--sfx DIR`, `--music FILE`; no music means no pad |
+| Sounds and the pad | 111 CC0 sounds ship in `template/public/sfx`: the four old names at the top, the rest by role in subfolders, all in `catalog.json` with the moment of their peak; a cue `{ role: "whoosh", at: 12.4 }` puts that peak on the second; the person's own folder (old names at the top, role subfolders) goes before the kit's | `--sfx DIR`, `--music FILE`; no music means no pad; `overlay.py sfxcat DIR` writes a folder's catalog; `overlay.py peaks <W> out/draft.mp4` prints every sound against the nearest peak of movement and the shift in frames |
 | Real screens | the product, site or page the video talks about | `tools/capture-guide.md` |
 | Names, dates, titles on screen | fresh captures only | never from memory or from an earlier release |
 | What was said | `raw/words.txt` | the only source of captions and timings |
@@ -171,7 +171,7 @@ The video is a dark stage: `muted`, `faint`, `white` are light on dark (the ordi
 | `tools/`, `template/src`, `examples/` | MIT, like the repository |
 | Remotion 4.0.542 (`remotion`, `@remotion/cli`) | Remotion's own licence, **not an open-source one**: free for individuals, companies of up to three employees and non-profits, a company licence is needed beyond that; read remotion.dev/license before you use the result commercially. It is installed from the pinned lockfile, not shipped here |
 | Fonts Unbounded, Onest, JetBrains Mono (`template/public/fonts`) | SIL Open Font License 1.1, texts beside the files (`OFL-*.txt`; Unbounded's is from github.com/googlefonts/unbounded) |
-| Sounds `pop-soft`, `riser-1s`, `tick`, `whoosh-soft` | CC0, synthesised for this project. Other sounds: only from sources with a licence you have checked (CC0), then `--sfx` |
+| Sounds (`template/public/sfx`) | CC0: the eight synthesised for this project (`pop-soft`, `riser-1s`, `tick`, `whoosh-soft` and four in the role folders) and 103 sounds published as CC0 1.0, renamed by their role. Other sounds: only from sources with a licence you have checked (CC0), then `--sfx` |
 | Logos | none shipped: a brand mark is a trademark and a licence for each icon is not confirmed. `add-logos.mjs` fetches a path from the `simple-icons` package (CC0 for the project, "not necessarily for every icon", see its DISCLAIMER) on request: read the brand's guidelines before publishing |
 | Music | none shipped; `--music` is yours to license |
 | Playwright 1.65.0 (`capture-*`) | Apache-2.0; real Chrome through `channel: "chrome"`, no Playwright browser download |
@@ -184,7 +184,7 @@ Take everything that is known and create. The design comes as the format's profi
 
 - `tools/overlay.py` and `tools/overlaylib/`: the command line, one module per job.
 - `tools/capture-guide.md`, `capture-receiver.mjs`, `capture-snippet.js`, `capture-render.mjs`: capturing real screens. `tools/add-logos.mjs`: logos on request.
-- `template/`: the Remotion project (`src/kit` is the toolbox, `src/scenes` the segments, `src/data` the data), the pinned `package-lock.json`, fonts, four sounds.
+- `template/`: the Remotion project (`src/kit` is the toolbox, `src/scenes` the segments, `src/data` the data), the pinned `package-lock.json`, fonts, the sounds by role with their catalog.
 - `vertical.md`: the vertical cut (clips 9:16): order of work, rules of the frame, the call to action, sound, covers. `template/src/vertical/` is its set, `examples/vertical/c1.tsx` a sample scene, `tools/vertical-frames.mjs` the frame audit.
 - `brief-template.md`: the brief for scene executors.
 - `examples/`: four neutral scenes (`seg-a.tsx`, `layouts-a.ts`), a demo screen and a words file that fit together. `overlay.py example <W>` installs them.

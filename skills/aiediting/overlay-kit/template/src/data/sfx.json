@@ -5,5 +5,717 @@
     "tick": "sfx/tick.wav",
     "whoosh-soft": "sfx/whoosh-soft.wav"
   },
-  "music": null
+  "music": null,
+  "roles": {
+    "whoosh-soft": [
+      {
+        "file": "sfx/whoosh-soft.wav",
+        "dur_ms": 350,
+        "peak_ms": 145,
+        "level_db": -3.2
+      },
+      {
+        "file": "sfx/whoosh-soft/whoosh-soft-01.ogg",
+        "dur_ms": 170,
+        "peak_ms": 35,
+        "level_db": -1.7
+      },
+      {
+        "file": "sfx/whoosh-soft/whoosh-soft-02.ogg",
+        "dur_ms": 397,
+        "peak_ms": 95,
+        "level_db": -4.2
+      }
+    ],
+    "whoosh": [
+      {
+        "file": "sfx/whoosh/whoosh-01.ogg",
+        "dur_ms": 477,
+        "peak_ms": 105,
+        "level_db": -3.6
+      },
+      {
+        "file": "sfx/whoosh/whoosh-02.ogg",
+        "dur_ms": 588,
+        "peak_ms": 15,
+        "level_db": -5.1
+      },
+      {
+        "file": "sfx/whoosh/whoosh-03.ogg",
+        "dur_ms": 279,
+        "peak_ms": 25,
+        "level_db": -6.3
+      }
+    ],
+    "whoosh-big": [
+      {
+        "file": "sfx/whoosh-big/whoosh-big-01.ogg",
+        "dur_ms": 2136,
+        "peak_ms": 995,
+        "level_db": -0.1
+      },
+      {
+        "file": "sfx/whoosh-big/whoosh-big-02.ogg",
+        "dur_ms": 3999,
+        "peak_ms": 3575,
+        "level_db": 0.0
+      }
+    ],
+    "drop": [
+      {
+        "file": "sfx/drop/drop-01.ogg",
+        "dur_ms": 107,
+        "peak_ms": 5,
+        "level_db": -0.3
+      },
+      {
+        "file": "sfx/drop/drop-02.ogg",
+        "dur_ms": 186,
+        "peak_ms": 5,
+        "level_db": 0.0
+      },
+      {
+        "file": "sfx/drop/drop-03.ogg",
+        "dur_ms": 186,
+        "peak_ms": 5,
+        "level_db": 0.0
+      }
+    ],
+    "rise": [
+      {
+        "file": "sfx/riser-1s.wav",
+        "dur_ms": 1000,
+        "peak_ms": 875,
+        "level_db": -3.1
+      },
+      {
+        "file": "sfx/rise/rise-01.wav",
+        "dur_ms": 500,
+        "peak_ms": 435,
+        "level_db": -3.2
+      },
+      {
+        "file": "sfx/rise/rise-02.wav",
+        "dur_ms": 2000,
+        "peak_ms": 1785,
+        "level_db": -3.1
+      },
+      {
+        "file": "sfx/rise/rise-03.ogg",
+        "dur_ms": 337,
+        "peak_ms": 15,
+        "level_db": -6.3
+      },
+      {
+        "file": "sfx/rise/rise-04.ogg",
+        "dur_ms": 407,
+        "peak_ms": 295,
+        "level_db": -6.8
+      },
+      {
+        "file": "sfx/rise/rise-05.ogg",
+        "dur_ms": 380,
+        "peak_ms": 105,
+        "level_db": -6.7
+      },
+      {
+        "file": "sfx/rise/rise-06.ogg",
+        "dur_ms": 2018,
+        "peak_ms": 1015,
+        "level_db": -8.2
+      },
+      {
+        "file": "sfx/rise/rise-07.ogg",
+        "dur_ms": 2459,
+        "peak_ms": 2075,
+        "level_db": -2.9
+      },
+      {
+        "file": "sfx/rise/rise-08.ogg",
+        "dur_ms": 5978,
+        "peak_ms": 3225,
+        "level_db": -5.2
+      },
+      {
+        "file": "sfx/rise/rise-09.ogg",
+        "dur_ms": 5968,
+        "peak_ms": 2905,
+        "level_db": -5.0
+      },
+      {
+        "file": "sfx/rise/rise-10.ogg",
+        "dur_ms": 5965,
+        "peak_ms": 4265,
+        "level_db": -5.2
+      }
+    ],
+    "reverse": [
+      {
+        "file": "sfx/reverse/reverse-01.ogg",
+        "dur_ms": 3976,
+        "peak_ms": 1135,
+        "level_db": -0.8
+      },
+      {
+        "file": "sfx/reverse/reverse-02.ogg",
+        "dur_ms": 5998,
+        "peak_ms": 3295,
+        "level_db": -7.2
+      }
+    ],
+    "hit": [
+      {
+        "file": "sfx/hit/hit-01.ogg",
+        "dur_ms": 527,
+        "peak_ms": 5,
+        "level_db": 0.0
+      },
+      {
+        "file": "sfx/hit/hit-02.ogg",
+        "dur_ms": 439,
+        "peak_ms": 25,
+        "level_db": 0.0
+      },
+      {
+        "file": "sfx/hit/hit-03.ogg",
+        "dur_ms": 566,
+        "peak_ms": 5,
+        "level_db": 0.0
+      },
+      {
+        "file": "sfx/hit/hit-04.ogg",
+        "dur_ms": 548,
+        "peak_ms": 35,
+        "level_db": 0.0
+      },
+      {
+        "file": "sfx/hit/hit-05.ogg",
+        "dur_ms": 747,
+        "peak_ms": 35,
+        "level_db": -3.0
+      },
+      {
+        "file": "sfx/hit/hit-06.ogg",
+        "dur_ms": 3997,
+        "peak_ms": 2995,
+        "level_db": -4.0
+      },
+      {
+        "file": "sfx/hit/hit-07.ogg",
+        "dur_ms": 3978,
+        "peak_ms": 325,
+        "level_db": -0.3
+      },
+      {
+        "file": "sfx/hit/hit-08.ogg",
+        "dur_ms": 3999,
+        "peak_ms": 1605,
+        "level_db": -3.5
+      }
+    ],
+    "sub": [
+      {
+        "file": "sfx/sub/sub-01.ogg",
+        "dur_ms": 990,
+        "peak_ms": 135,
+        "level_db": -0.1
+      },
+      {
+        "file": "sfx/sub/sub-02.ogg",
+        "dur_ms": 1993,
+        "peak_ms": 275,
+        "level_db": 0.0
+      }
+    ],
+    "ui-appear": [
+      {
+        "file": "sfx/ui-appear/ui-appear-01.ogg",
+        "dur_ms": 47,
+        "peak_ms": 15,
+        "level_db": -4.4
+      },
+      {
+        "file": "sfx/ui-appear/ui-appear-02.ogg",
+        "dur_ms": 64,
+        "peak_ms": 35,
+        "level_db": -7.9
+      },
+      {
+        "file": "sfx/ui-appear/ui-appear-03.ogg",
+        "dur_ms": 64,
+        "peak_ms": 25,
+        "level_db": -7.6
+      },
+      {
+        "file": "sfx/ui-appear/ui-appear-04.ogg",
+        "dur_ms": 181,
+        "peak_ms": 65,
+        "level_db": -6.0
+      },
+      {
+        "file": "sfx/ui-appear/ui-appear-05.ogg",
+        "dur_ms": 253,
+        "peak_ms": 252,
+        "level_db": -0.8
+      },
+      {
+        "file": "sfx/ui-appear/ui-appear-06.ogg",
+        "dur_ms": 256,
+        "peak_ms": 235,
+        "level_db": 0.0
+      },
+      {
+        "file": "sfx/ui-appear/ui-appear-07.ogg",
+        "dur_ms": 3793,
+        "peak_ms": 1195,
+        "level_db": -4.1
+      }
+    ],
+    "tick": [
+      {
+        "file": "sfx/tick.wav",
+        "dur_ms": 30,
+        "peak_ms": 5,
+        "level_db": -2.1
+      },
+      {
+        "file": "sfx/tick/tick-01.ogg",
+        "dur_ms": 20,
+        "peak_ms": 5,
+        "level_db": -0.9
+      },
+      {
+        "file": "sfx/tick/tick-02.ogg",
+        "dur_ms": 11,
+        "peak_ms": 5,
+        "level_db": -5.5
+      },
+      {
+        "file": "sfx/tick/tick-03.ogg",
+        "dur_ms": 79,
+        "peak_ms": 5,
+        "level_db": -3.6
+      },
+      {
+        "file": "sfx/tick/tick-04.ogg",
+        "dur_ms": 73,
+        "peak_ms": 5,
+        "level_db": -1.4
+      },
+      {
+        "file": "sfx/tick/tick-05.ogg",
+        "dur_ms": 75,
+        "peak_ms": 25,
+        "level_db": -5.8
+      }
+    ],
+    "tap": [
+      {
+        "file": "sfx/tap/tap-01.ogg",
+        "dur_ms": 37,
+        "peak_ms": 5,
+        "level_db": -0.7
+      },
+      {
+        "file": "sfx/tap/tap-02.ogg",
+        "dur_ms": 38,
+        "peak_ms": 5,
+        "level_db": 0.0
+      },
+      {
+        "file": "sfx/tap/tap-03.ogg",
+        "dur_ms": 260,
+        "peak_ms": 5,
+        "level_db": -3.7
+      }
+    ],
+    "notify": [
+      {
+        "file": "sfx/notify/notify-01.ogg",
+        "dur_ms": 361,
+        "peak_ms": 15,
+        "level_db": 0.0
+      },
+      {
+        "file": "sfx/notify/notify-02.ogg",
+        "dur_ms": 381,
+        "peak_ms": 95,
+        "level_db": -0.1
+      },
+      {
+        "file": "sfx/notify/notify-03.ogg",
+        "dur_ms": 692,
+        "peak_ms": 155,
+        "level_db": -9.5
+      },
+      {
+        "file": "sfx/notify/notify-04.ogg",
+        "dur_ms": 488,
+        "peak_ms": 115,
+        "level_db": 0.0
+      },
+      {
+        "file": "sfx/notify/notify-05.ogg",
+        "dur_ms": 570,
+        "peak_ms": 235,
+        "level_db": -0.8
+      }
+    ],
+    "done": [
+      {
+        "file": "sfx/done/done-01.ogg",
+        "dur_ms": 285,
+        "peak_ms": 5,
+        "level_db": 0.0
+      },
+      {
+        "file": "sfx/done/done-02.ogg",
+        "dur_ms": 313,
+        "peak_ms": 5,
+        "level_db": 0.0
+      },
+      {
+        "file": "sfx/done/done-03.ogg",
+        "dur_ms": 537,
+        "peak_ms": 5,
+        "level_db": 0.0
+      }
+    ],
+    "error": [
+      {
+        "file": "sfx/error/error-01.wav",
+        "dur_ms": 320,
+        "peak_ms": 185,
+        "level_db": -3.0
+      }
+    ],
+    "sparkle": [
+      {
+        "file": "sfx/sparkle/sparkle-01.ogg",
+        "dur_ms": 143,
+        "peak_ms": 5,
+        "level_db": -0.2
+      },
+      {
+        "file": "sfx/sparkle/sparkle-02.ogg",
+        "dur_ms": 273,
+        "peak_ms": 5,
+        "level_db": -0.3
+      },
+      {
+        "file": "sfx/sparkle/sparkle-03.ogg",
+        "dur_ms": 177,
+        "peak_ms": 85,
+        "level_db": -1.0
+      },
+      {
+        "file": "sfx/sparkle/sparkle-04.ogg",
+        "dur_ms": 320,
+        "peak_ms": 65,
+        "level_db": 0.0
+      },
+      {
+        "file": "sfx/sparkle/sparkle-05.ogg",
+        "dur_ms": 315,
+        "peak_ms": 75,
+        "level_db": 0.0
+      },
+      {
+        "file": "sfx/sparkle/sparkle-06.ogg",
+        "dur_ms": 364,
+        "peak_ms": 205,
+        "level_db": 0.0
+      },
+      {
+        "file": "sfx/sparkle/sparkle-07.ogg",
+        "dur_ms": 856,
+        "peak_ms": 795,
+        "level_db": -0.4
+      },
+      {
+        "file": "sfx/sparkle/sparkle-08.ogg",
+        "dur_ms": 952,
+        "peak_ms": 15,
+        "level_db": 0.0
+      }
+    ],
+    "typing": [
+      {
+        "file": "sfx/typing/typing-01.wav",
+        "dur_ms": 635,
+        "peak_ms": 435,
+        "level_db": -3.9
+      },
+      {
+        "file": "sfx/typing/typing-02.ogg",
+        "dur_ms": 1000,
+        "peak_ms": 855,
+        "level_db": -2.6
+      },
+      {
+        "file": "sfx/typing/typing-03.ogg",
+        "dur_ms": 2030,
+        "peak_ms": 805,
+        "level_db": -6.3
+      },
+      {
+        "file": "sfx/typing/typing-04.ogg",
+        "dur_ms": 3799,
+        "peak_ms": 3025,
+        "level_db": -3.2
+      },
+      {
+        "file": "sfx/typing/typing-05.ogg",
+        "dur_ms": 3994,
+        "peak_ms": 3205,
+        "level_db": -4.7
+      },
+      {
+        "file": "sfx/typing/typing-06.ogg",
+        "dur_ms": 3994,
+        "peak_ms": 2935,
+        "level_db": -8.0
+      }
+    ],
+    "transition": [
+      {
+        "file": "sfx/transition/transition-01.ogg",
+        "dur_ms": 252,
+        "peak_ms": 5,
+        "level_db": -1.4
+      },
+      {
+        "file": "sfx/transition/transition-02.ogg",
+        "dur_ms": 253,
+        "peak_ms": 15,
+        "level_db": -1.2
+      },
+      {
+        "file": "sfx/transition/transition-03.ogg",
+        "dur_ms": 301,
+        "peak_ms": 185,
+        "level_db": 0.0
+      },
+      {
+        "file": "sfx/transition/transition-04.ogg",
+        "dur_ms": 365,
+        "peak_ms": 65,
+        "level_db": 0.0
+      },
+      {
+        "file": "sfx/transition/transition-05.ogg",
+        "dur_ms": 359,
+        "peak_ms": 65,
+        "level_db": 0.0
+      },
+      {
+        "file": "sfx/transition/transition-06.ogg",
+        "dur_ms": 500,
+        "peak_ms": 455,
+        "level_db": -2.0
+      },
+      {
+        "file": "sfx/transition/transition-07.ogg",
+        "dur_ms": 836,
+        "peak_ms": 115,
+        "level_db": -5.5
+      },
+      {
+        "file": "sfx/transition/transition-08.ogg",
+        "dur_ms": 957,
+        "peak_ms": 954,
+        "level_db": -0.7
+      },
+      {
+        "file": "sfx/transition/transition-09.ogg",
+        "dur_ms": 997,
+        "peak_ms": 505,
+        "level_db": 0.0
+      },
+      {
+        "file": "sfx/transition/transition-10.ogg",
+        "dur_ms": 1497,
+        "peak_ms": 555,
+        "level_db": -3.9
+      },
+      {
+        "file": "sfx/transition/transition-11.ogg",
+        "dur_ms": 3668,
+        "peak_ms": 1265,
+        "level_db": -3.1
+      }
+    ],
+    "glitch": [
+      {
+        "file": "sfx/glitch/glitch-01.ogg",
+        "dur_ms": 24,
+        "peak_ms": 5,
+        "level_db": -1.7
+      },
+      {
+        "file": "sfx/glitch/glitch-02.ogg",
+        "dur_ms": 1798,
+        "peak_ms": 785,
+        "level_db": -6.4
+      },
+      {
+        "file": "sfx/glitch/glitch-03.ogg",
+        "dur_ms": 3988,
+        "peak_ms": 3145,
+        "level_db": -8.3
+      },
+      {
+        "file": "sfx/glitch/glitch-04.ogg",
+        "dur_ms": 3991,
+        "peak_ms": 3465,
+        "level_db": -5.5
+      },
+      {
+        "file": "sfx/glitch/glitch-05.ogg",
+        "dur_ms": 3999,
+        "peak_ms": 2195,
+        "level_db": -0.1
+      },
+      {
+        "file": "sfx/glitch/glitch-06.ogg",
+        "dur_ms": 3999,
+        "peak_ms": 2965,
+        "level_db": -0.3
+      },
+      {
+        "file": "sfx/glitch/glitch-07.ogg",
+        "dur_ms": 3998,
+        "peak_ms": 2785,
+        "level_db": -0.4
+      }
+    ],
+    "ding": [
+      {
+        "file": "sfx/ding/ding-01.ogg",
+        "dur_ms": 117,
+        "peak_ms": 5,
+        "level_db": -0.1
+      },
+      {
+        "file": "sfx/ding/ding-02.ogg",
+        "dur_ms": 3544,
+        "peak_ms": 5,
+        "level_db": -10.2
+      }
+    ],
+    "pop": [
+      {
+        "file": "sfx/pop-soft.wav",
+        "dur_ms": 90,
+        "peak_ms": 15,
+        "level_db": -3.0
+      },
+      {
+        "file": "sfx/pop/pop-01.ogg",
+        "dur_ms": 78,
+        "peak_ms": 25,
+        "level_db": 0.0
+      },
+      {
+        "file": "sfx/pop/pop-02.ogg",
+        "dur_ms": 92,
+        "peak_ms": 5,
+        "level_db": 0.0
+      },
+      {
+        "file": "sfx/pop/pop-03.ogg",
+        "dur_ms": 97,
+        "peak_ms": 5,
+        "level_db": -4.8
+      },
+      {
+        "file": "sfx/pop/pop-04.ogg",
+        "dur_ms": 114,
+        "peak_ms": 5,
+        "level_db": -5.2
+      },
+      {
+        "file": "sfx/pop/pop-05.ogg",
+        "dur_ms": 194,
+        "peak_ms": 5,
+        "level_db": 0.0
+      },
+      {
+        "file": "sfx/pop/pop-06.ogg",
+        "dur_ms": 240,
+        "peak_ms": 5,
+        "level_db": 0.0
+      },
+      {
+        "file": "sfx/pop/pop-07.ogg",
+        "dur_ms": 260,
+        "peak_ms": 5,
+        "level_db": -3.2
+      },
+      {
+        "file": "sfx/pop/pop-08.ogg",
+        "dur_ms": 208,
+        "peak_ms": 65,
+        "level_db": -3.6
+      }
+    ],
+    "click": [
+      {
+        "file": "sfx/click/click-01.ogg",
+        "dur_ms": 94,
+        "peak_ms": 5,
+        "level_db": -1.0
+      },
+      {
+        "file": "sfx/click/click-02.ogg",
+        "dur_ms": 96,
+        "peak_ms": 5,
+        "level_db": -0.3
+      },
+      {
+        "file": "sfx/click/click-03.ogg",
+        "dur_ms": 123,
+        "peak_ms": 5,
+        "level_db": -3.1
+      },
+      {
+        "file": "sfx/click/click-04.ogg",
+        "dur_ms": 99,
+        "peak_ms": 5,
+        "level_db": 0.0
+      },
+      {
+        "file": "sfx/click/click-05.ogg",
+        "dur_ms": 94,
+        "peak_ms": 5,
+        "level_db": 0.0
+      },
+      {
+        "file": "sfx/click/click-06.ogg",
+        "dur_ms": 204,
+        "peak_ms": 5,
+        "level_db": -0.2
+      }
+    ],
+    "ambience": [
+      {
+        "file": "sfx/ambience/ambience-01.ogg",
+        "dur_ms": 17307,
+        "peak_ms": 14005,
+        "level_db": -10.5
+      },
+      {
+        "file": "sfx/ambience/ambience-02.ogg",
+        "dur_ms": 20000,
+        "peak_ms": 4205,
+        "level_db": -20.0
+      },
+      {
+        "file": "sfx/ambience/ambience-03.ogg",
+        "dur_ms": 20000,
+        "peak_ms": 18865,
+        "level_db": -15.1
+      }
+    ]
+  }
 }
