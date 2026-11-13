@@ -414,7 +414,7 @@ class Kit(TempDirCase):
         (work / "src" / "kit" / "tokens.ts").write_text("export const MARK = 1;\n", encoding="utf-8")
         done = vinit.patch_kit(work)
         self.assertEqual((work / "src" / "kit" / "faceTrack.ts").read_text(encoding="utf-8"), FACE_TRACK.read_text(encoding="utf-8"))
-        self.assertEqual(len(done), 1)
+        self.assertEqual(len(done), 2)  # faceTrack.ts and speakerBox.ts
         self.assertFalse((work / "src" / "data" / "time-map.json").exists(), "a missing time map is never made up: it must fail loudly")
         (work / "src" / "kit" / "faceTrack.ts").write_text("// mine\n", encoding="utf-8")
         self.assertEqual(vinit.patch_kit(work), [])

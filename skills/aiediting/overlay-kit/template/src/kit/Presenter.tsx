@@ -5,6 +5,7 @@ import face from "../data/face.json";
 import { LAYOUTS, Layout } from "../data/layouts";
 import timeMap from "../data/time-map.json";
 import { Face, MapRow, faceSecond, makeFace, rowCuts } from "./faceTrack";
+import { useSpeakerBox } from "./speakerBox";
 import { C, CHROME, FPS, H, W, tint } from "./tokens";
 import { ease, lerp, useT } from "./time";
 
@@ -77,6 +78,7 @@ export const Presenter: React.FC = () => {
   const s = m("s");
   const ring = m("ring");
   const rim = Math.min(1, (W - w) / 300);
+  useSpeakerBox({ x, y, w, h, r, shown: 1 });
   return (
     <>
       {ring > 0.02 && (

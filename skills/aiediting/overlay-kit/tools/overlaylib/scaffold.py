@@ -83,6 +83,22 @@ def add_logo(work: Path, logo: Optional[str]) -> Optional[str]:
     return "logos/" + found.name if found else None
 
 
+KIT_MODULES = ("faceTrack.ts", "speakerBox.ts")  # imported by the presenters of this kit, used by nothing older
+
+
+def add_kit_modules(work: Path) -> List[str]:
+    """A folder made by an earlier kit gets the kit's newer modules when they are missing; nothing existing is replaced. They are
+    new files only, so a folder whose presenters are older is left as it works, and a renewed presenter finds what it imports."""
+    done = []
+    for name in KIT_MODULES:
+        target = work / "src" / "kit" / name
+        if not target.is_file():
+            target.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(str(TEMPLATE / "src" / "kit" / name), str(target))
+            done.append("src/kit/{}: добавлен".format(name))
+    return done
+
+
 def install_helpers(work: Path) -> None:
     """Node helpers must sit inside the folder to see its node_modules (playwright)."""
     dst = work / "tools-local"

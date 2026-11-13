@@ -4,6 +4,7 @@ import { OffthreadVideo, Sequence, staticFile, useCurrentFrame } from "remotion"
 import face from "../data/face.json";
 import timeMap from "../data/time-map.json";
 import { Face, MapRow, faceSecond, makeFace, rowCuts } from "../kit/faceTrack";
+import { useSpeakerBox } from "../kit/speakerBox";
 import { ease, lerp, useT } from "../kit/time";
 import { CHROME } from "../kit/tokens";
 import { ClipId, FPS, RATE, SPANS, frameToNewTime, spanFrames } from "./clips";
@@ -122,6 +123,7 @@ export const VPresenter: React.FC<Props> = ({ id, keys, alpha: extra = 1, z = 2,
   const s = m("s");
   const ring = m("ring");
   const alpha = m("a") * extra;
+  useSpeakerBox({ x, y, w, h, r, shown: alpha }, markers); // the circle of the call to action is a second layer: only the main one reports
   return (
     <div style={{ position: "absolute", inset: 0, opacity: alpha, zIndex: z }}>
       {ring > 0.02 && (

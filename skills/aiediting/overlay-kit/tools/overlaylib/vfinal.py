@@ -2,10 +2,11 @@
 from __future__ import annotations
 
 import os
+import shutil
 from pathlib import Path
 from typing import Dict, List, Optional
 
-from . import remotion, vmeasure, vplan, vsound, vspans
+from . import facecheck, facejudge, remotion, vmeasure, vplan, vsound, vspans
 from .audiosync import _np
 from .common import ToolError, run, say, warn
 
@@ -52,6 +53,24 @@ def finish(work: Path, dest: Path, data: Dict, cid: str, lufs: float, hum_accept
     return True
 
 
+def face_gate(work: Path, data: Dict, ids: List[str], accepted: Optional[str]) -> None:
+    """Before the clips are rendered: the face whole in its band or circle after every joint and cut, as in vertical-check."""
+    from . import vcheck  # vcheck makes the bundle; imported here, as the face check imports it too
+
+    site = vcheck.bundle(work)
+    detector = facejudge.detector()  # (the detector, or None and why)
+    found: List[str] = []
+    unchecked: Optional[str] = None
+    try:
+        for cid in ids:
+            rows, why = facecheck.check_clip(work, site, data, cid, detector)
+            found += ["{}: {}".format(cid, row) for row in rows]
+            unchecked = unchecked or why
+    finally:
+        shutil.rmtree(str(site.parent), ignore_errors=True)
+    facecheck.gate(found, unchecked, accepted, "Клипы не выпущены")
+
+
 def run_final(args) -> int:
     dest = Path(args.dest).expanduser()
     if not dest.is_absolute():
@@ -60,8 +79,10 @@ def run_final(args) -> int:
     if args.hum_accepted is not None and not reason:
         raise ToolError("--hum-accepted требует основание словами: что вы услышали и решили (например «сплошная речь, прослушал, гула нет»).")
     _np()  # the measuring needs numpy: its absence is said before a long render, not after it
+    accepted = facecheck.accepted_reason(getattr(args, "face_accepted", None))
     work, data, ids = vplan.load_plan(args.work, args.ids)
     vplan.typecheck(work)
+    face_gate(work, data, ids, accepted)
     try:
         dest.mkdir(parents=True, exist_ok=True)
         passed: List[str] = []

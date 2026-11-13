@@ -491,7 +491,8 @@ class FinalTest(unittest.TestCase):
 
     def test_a_write_error_is_a_message_not_a_traceback(self):
         with mock.patch.object(vfinal, "_np"), mock.patch.object(vfinal.vplan, "load_plan", return_value=(Path("/w"), sample(), ["c1"])), \
-                mock.patch.object(vfinal.vplan, "typecheck"), mock.patch.object(vfinal, "finish", side_effect=OSError(28, "No space left")):
+                mock.patch.object(vfinal.vplan, "typecheck"), mock.patch.object(vfinal, "face_gate"), \
+                mock.patch.object(vfinal, "finish", side_effect=OSError(28, "No space left")):
             with self.assertRaises(ToolError) as caught:
                 vfinal.run_final(self.args(Path(tempfile.gettempdir()) / "vfinal-x"))
         self.assertIn("No space left", str(caught.exception))
@@ -598,7 +599,8 @@ class HumSummaryTest(FinalTest):
             return True
         out = io.StringIO()
         with mock.patch.object(vfinal, "_np"), mock.patch.object(vfinal.vplan, "load_plan", return_value=(Path("/w"), sample(), ["c1", "c2"])), \
-                mock.patch.object(vfinal.vplan, "typecheck"), mock.patch.object(vfinal, "finish", side_effect=fake_finish), contextlib.redirect_stdout(out):
+                mock.patch.object(vfinal.vplan, "typecheck"), mock.patch.object(vfinal, "face_gate"), \
+                mock.patch.object(vfinal, "finish", side_effect=fake_finish), contextlib.redirect_stdout(out):
             code = vfinal.run_final(self.args(Path(tempfile.mkdtemp(prefix="vfin-")), hum_accepted="listened, nonstop speech"))
         return code, out.getvalue()
 

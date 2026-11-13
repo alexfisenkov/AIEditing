@@ -3,8 +3,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from . import remotion, scaffold, scanning, sheets, verify
-from .common import ToolError, need, parse_secs, say, work_dir
+from . import facecheck, remotion, scaffold, scanning, sheets, verify
+from .common import ToolError, need, parse_secs, say, warn, work_dir
 from .media import duration_of
 
 
@@ -26,7 +26,12 @@ def cmd_draft(args) -> int:
     remotion.ready(work)
     remotion.typecheck(work)
     remotion.render(work, work / "out" / "draft.mp4", draft=True)
-    return 0
+    found, unchecked = facecheck.check_long(work)  # the draft is there either way; the command fails on a finding
+    if unchecked:  # an unchecked draft is not a checked one: it fails too, with its reason
+        warn("лицо в рамке не проверено: {}.".format(unchecked))
+    # a video with no face to follow would fail every draft with nothing to mend: it warns here, and only a release stops on it
+    blocking = unchecked and not unchecked.startswith(facecheck.NO_TRACK)
+    return 1 if found or blocking else 0
 
 
 def cmd_sheets(args) -> int:

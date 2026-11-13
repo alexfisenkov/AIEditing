@@ -3,4 +3,4 @@
 The version lives here and in `metadata.version` of SKILL.md; a test keeps them equal.
 """
 
-__version__ = "0.3.2"
+__version__ = "0.3.3"

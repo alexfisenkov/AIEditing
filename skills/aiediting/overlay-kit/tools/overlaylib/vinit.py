@@ -10,7 +10,7 @@ import shutil
 from pathlib import Path
 from typing import Dict, List
 
-from . import face, facecmd, vmap, vspans
+from . import face, facecmd, scaffold, vmap, vspans
 from .media import duration_of
 from .common import KIT, TEMPLATE, ToolError, say, warn, work_dir, write_atomic
 
@@ -52,12 +52,7 @@ def write_clips_index(work: Path) -> List[str]:
 
 def patch_kit(work: Path) -> List[str]:
     """A folder made before the vertical set lacks setFrameMap in kit/time.ts and MARK in kit/tokens.ts: add them, change nothing else."""
-    done = []
-    track_ts = work / "src" / "kit" / "faceTrack.ts"  # VPresenter reads the face through it; first, so that a refusal below leaves no half set
-    if not track_ts.is_file():
-        track_ts.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copyfile(str(TEMPLATE / "src" / "kit" / "faceTrack.ts"), str(track_ts))
-        done.append("src/kit/faceTrack.ts: добавлен")
+    done = scaffold.add_kit_modules(work)  # VPresenter imports them; first, so that a refusal below leaves no half set
     time_ts = work / "src" / "kit" / "time.ts"
     text = time_ts.read_text(encoding="utf-8") if time_ts.is_file() else ""
     if "setFrameMap" not in text:
@@ -79,7 +74,8 @@ def patch_kit(work: Path) -> List[str]:
 def install_helper(work: Path) -> None:
     dst = work / "tools-local"
     dst.mkdir(exist_ok=True)
-    shutil.copyfile(str(KIT / "tools" / HELPER), str(dst / HELPER))
+    for name in (HELPER, "face-frames.mjs"):  # the frame audit and the face check of vertical-check
+        shutil.copyfile(str(KIT / "tools" / name), str(dst / name))
 
 
 def verify_source(work: Path, data: Dict) -> None:

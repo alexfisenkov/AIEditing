@@ -19,22 +19,29 @@ AFTER = 0.2  # seconds after a cut at which the frame is looked at
 BACKUP = "raw/face-before-rebuild.json"
 
 
+FIX = {
+    "src/vertical/VPresenter.tsx": "overlay.py vertical-init <папка> --renew (он заменяет файлы набора в src/vertical, кроме сцен c<N>.tsx "
+                                   "и spans.json, и докладывает src/kit/faceTrack.ts и speakerBox.ts: свои правки файлов набора сначала сохраните)",
+    "src/kit/Presenter.tsx": "сохраните свой src/kit/Presenter.tsx, скопируйте template/src/kit/Presenter.tsx, faceTrack.ts и speakerBox.ts "
+                             "в src/kit/ и перенесите свои правки руками",
+}
+
+
+def _lacks(path: Path) -> List[str]:
+    text = path.read_text(encoding="utf-8", errors="replace")
+    return [what for marker, what in (("makeFace(", "сглаживает трек лица сам, сквозь склейки, и после склейки рамка отстаёт от лица"),
+                                       ("useSpeakerBox(", "не сообщает рамку спикера проверке лица в рамке")) if marker not in text]
+
+
 def stale_readers(work: Path) -> List[str]:
-    """Files of the folder that still smooth the track themselves, through every cut (written before kit/faceTrack.ts)."""
-    stale = []
-    for rel in READERS:
-        path = work / rel
-        if path.is_file() and "makeFace(" not in path.read_text(encoding="utf-8", errors="replace"):
-            stale.append(rel)
-    return stale
+    """Presenters of the folder written by an earlier kit: they smooth the track through every cut themselves, or they do not
+    report their window to the face check."""
+    return [rel for rel in READERS if (work / rel).is_file() and _lacks(work / rel)]
 
 
 def warn_stale(work: Path) -> None:
     for rel in stale_readers(work):
-        fix = ("overlay.py vertical-init <папка> --renew (он заменяет файлы набора в src/vertical, кроме сцен c<N>.tsx и spans.json: "
-               "свои правки в них сначала сохраните)" if "vertical" in rel else
-               "скопируйте template/src/kit/faceTrack.ts и template/src/kit/Presenter.tsx в src/kit/ (свои правки Presenter.tsx сначала сохраните)")
-        warn("{} прежнего образца: сглаживает трек лица сам, сквозь склейки, и после склейки рамка отстаёт от лица. Обновить: {}.".format(rel, fix))
+        warn("{} прежнего образца: {}. Обновить: {}.".format(rel, "; ".join(_lacks(work / rel)), FIX[rel]))
 
 
 def _source(work: Path, rows: Sequence, given: str) -> Path:
@@ -114,16 +121,21 @@ def joint_seconds(track: Sequence, rows: Sequence) -> List[float]:
     return found
 
 
-def cut_frames(track: Sequence, rows: Sequence) -> List[float]:
-    """Seconds of the file to look at: AFTER past every cut of the track that the file still holds, and past every joint
+def cut_seconds(track: Sequence, rows: Sequence) -> List[float]:
+    """Seconds of the file at which the picture changes: every cut of the track that the file still holds, and every joint
     of an edit by markers across which the face jumps."""
     seen = []
     for scene in face.cuts_of(track):
         if rows and not any(r[2] <= scene < r[3] for r in rows):
             continue  # the cut lies in seconds an edit by markers removed
-        seen.append(round(vmap.to_new(rows, scene) + AFTER, 2))
-    seen += [round(second + AFTER, 2) for second in joint_seconds(track, rows)]
+        seen.append(round(vmap.to_new(rows, scene), 4))
+    seen += [round(second, 4) for second in joint_seconds(track, rows)]
     return sorted(set(seen))
+
+
+def cut_frames(track: Sequence, rows: Sequence) -> List[float]:
+    """Seconds of the file to look at: AFTER past every change of the picture."""
+    return sorted({round(second + AFTER, 2) for second in cut_seconds(track, rows)})
 
 
 def run_face(args) -> int:
@@ -136,6 +148,8 @@ def run_face(args) -> int:
     track = face.load(work)
     if track == [face.CENTRE]:
         say("Трека лица нет: рамка спикера держит центр кадра. Построить: overlay.py face <папка> --rebuild")
+        if getattr(args, "check", False):
+            raise ToolError("Лицо в рамке не проверено: трека лица нет.")
         return 0
     cuts = face.cuts_of(track)
     say("Трек лица: {} отсчётов, до {:.1f} с; смен кадра и склеек со скачком лица: {}".format(len(track), track[-1][0], len(cuts)))
@@ -164,4 +178,12 @@ def run_face(args) -> int:
             out = folder / "{:.2f}.jpg".format(second)
             remotion.still(work, "{:.2f}".format(second), out)
             say(str(out))
+    if getattr(args, "check", False):
+        remotion.ready(work)
+        from . import facecheck  # facecheck reads the cuts from here
+
+        found, unchecked = facecheck.check_long(work)
+        if unchecked:
+            raise ToolError("Лицо в рамке не проверено: {}.".format(unchecked))
+        return 1 if found else 0
     return 0

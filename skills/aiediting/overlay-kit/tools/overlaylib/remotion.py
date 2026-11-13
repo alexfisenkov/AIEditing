@@ -15,6 +15,7 @@ def ready(work: Path) -> None:
     """Packages installed, indexes fresh. Every render command starts here."""
     if not (work / "node_modules" / "remotion").is_dir():
         raise ToolError("В {} не стоят пакеты. Выполните npm ci в этой папке (или prepare без --no-install).".format(work))
+    scaffold.add_kit_modules(work)  # a presenter copied from a newer template finds what it imports
     scaffold.write_index(work)
 
 

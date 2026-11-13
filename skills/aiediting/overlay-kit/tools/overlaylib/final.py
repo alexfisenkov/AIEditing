@@ -4,7 +4,7 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
-from . import audiosync, loudness, remotion, verify
+from . import audiosync, facecheck, loudness, remotion, verify
 from .common import ToolError, ffmpeg, say, warn, work_dir
 from .media import duration_of
 
@@ -41,10 +41,14 @@ def run_final(args) -> int:
     name = args.name if args.name.lower().endswith(".mp4") else args.name + ".mp4"
     if Path(name).name != name:
         raise ToolError("Имя файла должно быть именем, а не путём: {}".format(name))
+    accepted = facecheck.accepted_reason(getattr(args, "face_accepted", None))
     remotion.ready(work)
     audiosync._np()  # its absence is said before a long render, not after it
     remotion.typecheck(work)
     render = work / "out" / "render.mp4"
+    if args.reuse_render and render.is_file():
+        stale_render(work, render)  # the face check looks at the composition: a render older than it was not checked
+    face_gate(work, accepted)
     if args.reuse_render and render.is_file():
         say("Беру готовый рендер: " + str(render))
     else:
@@ -72,6 +76,27 @@ def run_final(args) -> int:
     os.replace(str(tmp), str(final))
     mark_report(release, name)
     return 0
+
+
+GENERATED = ("src/scenes/index.ts", "src/data/all-layouts.ts")  # rewritten by every command, they say nothing about the render
+
+
+def stale_render(work: Path, render: Path) -> None:
+    """--reuse-render with a render older than the scenes, layouts, kit or face track: it would go out unchecked."""
+    made = render.stat().st_mtime
+    newer = [p for p in sorted((work / "src").rglob("*")) if p.is_file() and p.suffix in (".ts", ".tsx", ".json")
+             and p.relative_to(work).as_posix() not in GENERATED and "vertical" not in p.relative_to(work / "src").parts
+             and p.stat().st_mtime > made]  # src/vertical is the clips' set: the long video's composition does not read it
+    if newer:
+        raise ToolError("out/render.mp4 старше правок ({}): он не тот, что сейчас в сценах. Сделайте final без --reuse-render."
+                        .format(", ".join(p.relative_to(work).as_posix() for p in newer[:3]) + (" и др." if len(newer) > 3 else "")))
+
+
+def face_gate(work: Path, accepted) -> None:
+    """Before the long render: a face cut by the speaker's frame right after a change of the picture, or a render that could
+    not be checked, stops the release unless the person accepted it with a reason."""
+    found, unchecked = facecheck.check_long(work)
+    facecheck.gate(found, unchecked, accepted, "Выпуск остановлен")
 
 
 def mark_report(release: Path, name: str) -> None:

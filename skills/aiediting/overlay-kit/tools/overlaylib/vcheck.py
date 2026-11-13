@@ -7,7 +7,7 @@ import tempfile
 from pathlib import Path
 from typing import List
 
-from . import remotion, vplan, vsheets, vspans
+from . import facecheck, facejudge, remotion, vplan, vsheets, vspans
 from .common import ToolError, run, say
 
 DEFAULT_STEP = 1 / 6  # seconds between audited frames
@@ -15,12 +15,13 @@ SHEET_EVERY = 0.5  # seconds between frames on a sheet
 SHOW = 60  # findings printed in full
 
 
-def bundle(work: Path) -> Path:
-    """A folder of its own for each run, so that two checks at the same time do not take each other's bundle away."""
-    root = work / "out" / "vertical"
+def bundle(work: Path, entry: str = "src/vertical/index.ts") -> Path:
+    """A folder of its own for each run, so that two checks at the same time do not take each other's bundle away.
+    `entry`: the vertical set, or src/index.ts for the long video (the face check)."""
+    root = work / "out" / ("vertical" if "vertical" in entry else "face-check")
     root.mkdir(parents=True, exist_ok=True)
     out = Path(tempfile.mkdtemp(prefix="bundle-", dir=str(root))) / "site"
-    run([remotion._npx(), "remotion", "bundle", "src/vertical/index.ts", "--out-dir=" + str(out), "--log=error"], "Сборка вертикали", cwd=work, capture=False)
+    run([remotion._npx(), "remotion", "bundle", entry, "--out-dir=" + str(out), "--log=error"], "Сборка " + entry, cwd=work, capture=False)
     return out
 
 
@@ -41,6 +42,16 @@ def audit_clip(work: Path, site: Path, cid: str, step: float, zone) -> List[str]
     return [r for r in (clip / "findings.txt").read_text(encoding="utf-8").splitlines() if r.strip()]
 
 
+def face_rows(work: Path, site: Path, data, cid: str, detector) -> List[str]:
+    """The findings of the face check of a clip, written into its findings.txt as well; an unchecked clip is a finding too."""
+    found, unchecked = facecheck.check_clip(work, site, data, cid, detector)
+    rows = found + (["лицо в рамке не проверено: {}".format(unchecked)] if unchecked else [])
+    if rows:
+        with (work / "out" / "vertical" / cid / "findings.txt").open("a", encoding="utf-8") as out:
+            out.write("".join(row + "\n" for row in rows))
+    return rows
+
+
 def run_check(args) -> int:
     if args.step <= 0 or args.step > 1:
         raise ToolError("--step: шаг проверки от 0 до 1 секунды, обычно 0.1667 (6 кадров в секунду).")
@@ -49,9 +60,11 @@ def run_check(args) -> int:
     vplan.typecheck(work)
     site = bundle(work)
     total = 0
+    detector = facejudge.detector()  # (the detector, or None and why)
     try:
         for cid in ids:
             rows = audit_clip(work, site, cid, args.step, zone)
+            rows += face_rows(work, site, data, cid, detector)  # the face whole in its band or circle after every joint and cut
             total += len(rows)
             say("{}: найдено {}, файл {}".format(cid, len(rows), work / "out" / "vertical" / cid / "findings.txt"))
             for row in rows[:SHOW]:

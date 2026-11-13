@@ -4,7 +4,7 @@ description: Workshop that builds your own video-editing skills. Interviews you 
 disable-model-invocation: true
 argument-hint: "[new|refine] format name or path to a source video"
 metadata:
-  version: "0.3.2"
+  version: "0.3.3"
 ---
 
 # AIEditing

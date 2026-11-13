@@ -70,6 +70,7 @@ def build_parser() -> argparse.ArgumentParser:
     sp = add("final", final.run_final, "финальный рендер, сдвиг AAC, громкость, атомарная запись, сверка", "work", "release", "name")
     sp.add_argument("--lufs", type=float, default=-14.0, help="целевая громкость (по умолчанию -14)")
     sp.add_argument("--reuse-render", action="store_true", help="не рендерить заново, если out/render.mp4 уже есть")
+    sp.add_argument("--face-accepted", metavar="ОСНОВАНИЕ", help="находки или «не проверено» проверки лица в рамке не останавливают выпуск, основание печатается (решение человека)")
     add("sync", commands.cmd_sync, "сверка: речь итога против исходника", "base", "final")
     add("index", commands.cmd_index, "пересобрать списки сцен и раскладок (делают сами frame/draft/final)", "work")
     sp = add("example", commands.cmd_example, "положить нейтральный образец из examples/ как сегмент A", "work")
@@ -78,6 +79,7 @@ def build_parser() -> argparse.ArgumentParser:
     sp.add_argument("--rebuild", action="store_true", help="построить трек заново; прежний остаётся в raw/face-before-rebuild.json")
     sp.add_argument("--video", help="с --rebuild в папке с картой времени: первый принятый ролик (в его секундах живут сцены)")
     sp.add_argument("--frames", action="store_true", help="отрисовать кадр через 0,2 с после каждой склейки трека: out/cuts/<секунда>.jpg")
+    sp.add_argument("--check", action="store_true", help="проверить детектором, что лицо целиком в рамке спикера через 0,2 и 1 с после каждой склейки; код 1 при находках")
 
     sp = add("vertical-init", vertical.run_init, "положить набор для вертикальных клипов (src/vertical) в рабочую папку", "work")
     sp.add_argument("--spans", help="свой spans.json (отрезки, скорость, призыв)")
@@ -89,6 +91,7 @@ def build_parser() -> argparse.ArgumentParser:
     sp.add_argument("ids", nargs="*", help="клипы (c1 c2 ...); без них все")
     sp.add_argument("--lufs", type=float, default=-14.0, help="целевая громкость (по умолчанию -14)")
     sp.add_argument("--hum-accepted", metavar="ОСНОВАНИЕ", help="находка про гул становится предупреждением, основание печатается в итоге (решение человека)")
+    sp.add_argument("--face-accepted", metavar="ОСНОВАНИЕ", help="находки или «не проверено» проверки лица в рамке не останавливают выпуск, основание печатается (решение человека)")
     sp = add("vertical-words", vertical.run_words, "вертикаль: слова клипа в секундах файла, сцены и ролика (для папки с картой времени)", "work")
     sp.add_argument("ids", nargs="*", help="клипы (c1 c2 ...); без них все")
     sp.add_argument("--words", help="файл слов «секунда слово» в секундах файла public/clips/source.mp4 (по умолчанию raw/words.txt)")
