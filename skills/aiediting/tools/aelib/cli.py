@@ -4,7 +4,7 @@ from __future__ import annotations
 import argparse
 import sys
 
-from . import cmd_background, cmd_design, cmd_media, cmd_profile, cmd_run, cmd_skills, doctor, setup, trial
+from . import cmd_background, cmd_design, cmd_library, cmd_media, cmd_profile, cmd_run, cmd_skills, doctor, setup, trial
 from .session import CliError
 
 RUNTIME_ERRORS = {"LookError", "RenderError", "MediaError", "AsrError"}
@@ -78,6 +78,7 @@ def parser() -> argparse.ArgumentParser:
          key_color={"default": "#00ff00"}, similarity={"type": float, "default": 0.12},
          blend={"type": float, "default": 0.08})
     _sub(sub, "image-cutout", _image_cutout, "source", "output")
+    _sub(sub, "library", cmd_library.cmd_library).add_argument("args", nargs=argparse.REMAINDER)
     return ap
 
 

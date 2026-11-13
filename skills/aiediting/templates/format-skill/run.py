@@ -8,7 +8,10 @@
                        [--out DIR] [--answers F]    exit 3: a decision is needed, see вопросы.json
                        [--screen FILE]              the screen recording when camera and screen are separate
                        [--no-questions]             the person asked for none, in this run or in the profile
-    python tools/run.py note <issue folder> "text"  a remark for the next refinement, into отчёт.md
+    python tools/run.py note <issue folder> "text" [--format [F]]  a remark: into отчёт.md and, with a library,
+                                                    into the person's rules (--format: this format's section)
+    python tools/run.py forbid "who or what"        never show this again: into the library's «чего нельзя»
+    python tools/run.py library <command> …         the person's library, as `ae.py library` (where, scan, sheet, find…)
     python tools/run.py hear <video> [--from S --to E]  what the format's recogniser hears, in seconds of that file
     python tools/run.py subtitles <issue folder> [--answers F]  the corrections of ответы.json again on the .srt and the words file, no render
 """
@@ -51,7 +54,7 @@ for _s in (sys.stdout, sys.stderr):
 
 from approvals import QUESTIONS, NeedsApproval, approver_for  # noqa: E402
 from issue import issue_folder  # noqa: E402
-from notes import add_note  # noqa: E402
+from notes import add_note, remember  # noqa: E402
 from runtime.profile import load_profile  # noqa: E402
 
 
@@ -107,6 +110,7 @@ def edit(profile, opt):
         print("Нет такого файла экрана: {}".format(screen))
         return 2
     out = Path(opt.out).resolve() if opt.out else issue_folder(profile, src, opt.topic)
+    library_news()
     approve = approver_for(profile, out, Path(opt.answers) if opt.answers else None, opt.no_questions)
     try:
         report = pipelines.run(src, profile, out, approve, **({"screen": screen} if screen else {}))
@@ -118,6 +122,22 @@ def edit(profile, opt):
     print((report or {}).get("handover") or "Готово: {}".format((report or {}).get("output") or out))
     print("Папка выпуска: {}".format(out))
     return 0
+
+
+def library_news():
+    """New files in the folders the library already knows: measured now, described by the agent later."""
+    try:
+        from runtime.library import find_library, inventory
+
+        lib = find_library()
+        if lib is None:
+            return
+        for kind in inventory.KINDS:
+            rows = inventory.scan(lib, kind, [])
+            if rows:
+                print("Библиотека: новых файлов «{}» — {}; опишите: run.py library sheet {}".format(kind, len(rows), kind))
+    except Exception as exc:  # the library never stops an edit
+        print("Библиотека не просмотрена: {}".format(exc))
 
 
 def subtitles(profile, opt):
@@ -178,6 +198,11 @@ def main(argv):
     n = sub.add_parser("note")
     n.add_argument("issue")
     n.add_argument("text")
+    n.add_argument("--format", nargs="?", const=True, help="this format's section of the rules, or the named one")
+    f = sub.add_parser("forbid")
+    f.add_argument("what")
+    lib = sub.add_parser("library")
+    lib.add_argument("args", nargs=argparse.REMAINDER)
     h = sub.add_parser("hear")
     h.add_argument("video")
     h.add_argument("--from", dest="start", type=float)
@@ -186,6 +211,14 @@ def main(argv):
     s.add_argument("issue")
     s.add_argument("--answers")
     opt = ap.parse_args(argv)
+    if opt.cmd == "library":
+        from runtime.library.cli import main as library
+
+        return library(list(opt.args))
+    if opt.cmd == "forbid":
+        from runtime.library.cli import main as library
+
+        return library(["forbid", opt.what])
     profile = load_profile(SKILL / "profile.json")
     if opt.cmd == "check":
         if opt.tools:
@@ -195,7 +228,8 @@ def main(argv):
     if opt.cmd == "setup":
         return toolkit(profile, argv)
     if opt.cmd == "note":
-        print(add_note(Path(opt.issue), opt.text, profile["skill_name"]))
+        fmt = profile["format"] if opt.format is True else opt.format
+        print(remember(Path(opt.issue), opt.text, profile["skill_name"], fmt))
         return 0
     if opt.cmd == "hear":
         return hear(profile, opt)

@@ -8,7 +8,8 @@ from typing import Dict, List, Optional
 from .paths import CATALOG_DIR
 
 # media imports render.overlay at its top, so render always goes along; look only when a step needs it.
-BASE_RUNTIME = ["asr", "media", "pipelines", "render"]
+# library: every format skill reads and adds to the person's library without the workshop.
+BASE_RUNTIME = ["asr", "library", "media", "pipelines", "render"]
 OPTIONAL_RUNTIME = ["look"]
 
 
