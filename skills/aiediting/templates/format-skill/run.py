@@ -15,7 +15,8 @@
     python tools/run.py library <command> …         the person's library, as `ae.py library` (where, scan, sheet, find…)
     python tools/run.py hear <video> [--from S --to E]  what the format's recogniser hears, in seconds of that file
     python tools/run.py subtitles <issue folder> [--answers F]  the corrections of ответы.json again on the .srt and the words file, no render
-    python tools/run.py covers <issue folder> --text "2–4 words" [--more]  six covers from обложки/кадры and a sheet;
+    python tools/run.py covers <issue folder> --text "2–4 words" [--more]  six covers from обложки/кадры (none there:
+                                                    the sharpest frames of the issue's video) and a sheet;
                                                     --more: six more, nothing overwritten
     python tools/run.py prep "<тема>" [--steps 8] [--out DIR]  подготовка.md before a shoot: the map of 7–12 steps, the camera, the checklist;
                                                     a map beside the source gives the chapters of the edit
@@ -105,6 +106,7 @@ def toolkit(profile, argv, check_only=False):
 
 def edit(profile, opt):
     from runtime import pipelines
+    from runtime.services.web import ServiceError
 
     src = Path(opt.video).expanduser().resolve()
     if not src.is_file():
@@ -135,6 +137,9 @@ def edit(profile, opt):
         print(str(e))
         print("Папка выпуска: {}".format(out))
         return 3
+    except ServiceError as e:  # the message says why and what to do, never the key; a traceback helps nobody here
+        print("Не сделано: {}".format(" ".join(str(e).split())))
+        return 1
     (out / QUESTIONS).unlink(missing_ok=True)  # answered: the folder holds the result, not the plan
     print((report or {}).get("handover") or "Готово: {}".format((report or {}).get("output") or out))
     print("Папка выпуска: {}".format(out))
@@ -256,9 +261,9 @@ def covers(profile, opt):
 
     issue = Path(opt.issue).expanduser().resolve()
     out = issue / "обложки"
-    frames = sorted((out / "кадры").glob("*.jpg"))
+    frames = sorted((out / "кадры").glob("*.jpg")) or _frames_of_video(issue, out / "кадры")
     if not frames:
-        print("Нет кадров для обложек в {}: сначала монтаж с шагом publish_pack".format(out / "кадры"))
+        print("Нет кадров для обложек в {} и нет ролика в {}: сначала монтаж с шагом publish_pack".format(out / "кадры", issue))
         return 2
     if not 2 <= len(opt.text.split()) <= 4:
         print("Внимание: на обложке читается 2–4 слова, а здесь {}".format(len(opt.text.split())))
@@ -278,6 +283,23 @@ def covers(profile, opt):
     print("Лист: {} (превью 320 px — в {})".format(sheet, out / "превью"))
     print("Сделать ещё шесть? python tools/run.py covers \"{}\" --text \"{}\" --more".format(issue, opt.text))
     return 0
+
+
+def _frames_of_video(issue, folder):
+    """No frames from the publishing pack: the sharpest frames of the issue's video (the largest one), spread over it."""
+    from runtime.media import MediaError, covers as cv, probe
+
+    videos = [p for p in issue.glob("*") if p.is_file() and p.suffix.lower() in (".mp4", ".mov", ".m4v", ".mkv", ".webm")]
+    if not videos:
+        return []
+    video = max(videos, key=lambda p: (p.stat().st_size, p.name))
+    try:
+        made = cv.grab(video, cv.more_moments(video, [], probe(video)["duration"]), folder)
+    except MediaError as e:
+        print("Кадры из ролика {} не взяты: {}".format(video.name, e))
+        return []
+    print("Кадров пакета публикации не было: взял {} из ролика {}".format(len(made), video.name))
+    return [p for p, _t in made]
 
 
 def hear(profile, opt):

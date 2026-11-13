@@ -3,7 +3,7 @@
 The pack holds YouTube chapters by YouTube's rules (the first at 0:00, three at least, in order, each 10 s or longer: a
 chapter that breaks them merges with its neighbour), places for three titles, the description and the tags — the agent
 writes those words by the method, the pipeline never does — and frames from the pauses of the speech, spread over the
-video, for `run.py covers`.
+video, for `run.py covers`; when the cut left fewer than six pauses, the sharpest frames of the video fill the rest.
 """
 from __future__ import annotations
 
@@ -11,6 +11,7 @@ import os
 from pathlib import Path
 from typing import Dict, List, Tuple
 
+from .chapters import out_at
 from .speed import rate_of
 from .timeline import to_out
 from .words import spoken
@@ -55,7 +56,7 @@ def _length(ctx) -> float:
 
 def _chapters(ctx) -> List[Tuple[float, str]]:
     rate = rate_of(ctx.p("speed", 1.0))
-    found = [(to_out(float(c["start"]), ctx.keep), str(c.get("title") or "")) for c in ctx.chapters or []]
+    found = [(out_at(c["start"], ctx.keep), str(c.get("title") or "")) for c in ctx.chapters or []]
     return [(t / rate, title) for t, title in found if t is not None]
 
 
@@ -85,22 +86,19 @@ def moments(ctx) -> List[float]:
     return picked
 
 
-def _grab(final: Path, moments_: List[float], folder: Path) -> List[Tuple[Path, float]]:
-    from ..media.ffmpeg import MediaError, run
+def _frames(ctx, final: Path, total: float) -> Tuple[List[Tuple[Path, float]], List[float]]:
+    """The frames for the covers and the moments of them that came from the video, not from a pause."""
+    from ..media import covers
 
-    folder.mkdir(parents=True, exist_ok=True)
-    for old in folder.glob("кадр-*.jpg"):
-        old.unlink()
-    out = []
-    for k, t in enumerate(moments_):
-        path = folder / "кадр-{:02d}.jpg".format(k + 1)
-        try:
-            run(["-ss", "{:.3f}".format(t), "-i", final, "-frames:v", "1", "-q:v", "2", path])
-        except MediaError:
-            continue
-        if path.is_file():
-            out.append((path, t))
-    return out
+    found = moments(ctx)
+    more = covers.more_moments(final, found, total) if len(found) < covers.FEW else []
+    return covers.grab(final, sorted(found + more), Path(ctx.outdir) / FRAMES), more
+
+
+def _whence(frames, more: List[float]) -> str:
+    extra = sum(1 for _p, t in frames if t in more)
+    said = "в паузах речи — {}".format(len(frames) - extra)
+    return said + ("; пауз мало, ещё {} — самые резкие кадры ролика, равномерно по длине".format(extra) if extra else "")
 
 
 def _chapter_lines(ctx, total: float) -> List[str]:
@@ -120,7 +118,7 @@ def _chapter_lines(ctx, total: float) -> List[str]:
 def write_pack(ctx, final: Path) -> Path:
     """`публикация.md` and `обложки/кадры/` in the issue folder; returns the file."""
     final, total = Path(final), _length(ctx)
-    frames = _grab(final, moments(ctx), Path(ctx.outdir) / FRAMES)
+    frames, more = _frames(ctx, final, total)
     lines = ["# Публикация: {}".format(final.stem), "",
              "Ролик: {}, длина {}. Это заготовка: ничего не загружено и не опубликовано. Слова пишет агент по "
              "методу публикации, выбирает человек.".format(final.name, clock(total, total)), "",
@@ -129,8 +127,9 @@ def write_pack(ctx, final: Path) -> Path:
     lines += ["", "## Описание", "", "[ОПИСАНИЕ — впиши: первые две строки — о чём ролик и что зритель получит]", ""]
     lines += _chapter_lines(ctx, total)
     lines += ["", "## Теги", "", "[ТЕГИ — впиши через запятую]", "", "## Обложка", "",
-              "Кадры-кандидаты в паузах речи ({}): выберите резкие, с открытыми глазами.".format(len(frames)), ""]
-    lines += ["- {} — {}.{}".format(p.name, clock(t, total), int(round(t * 10)) % 10) for p, t in frames]
+              "Кадры-кандидаты ({}): {}. Выберите резкие, с открытыми глазами.".format(len(frames), _whence(frames, more)), ""]
+    lines += ["- {} — {}.{}{}".format(p.name, clock(t, total), int(round(t * 10)) % 10, ", из ролика" if t in more else "")
+              for p, t in frames]
     lines += ["", "Шесть обложек и лист: `python tools/run.py covers \"{}\" --text \"2–4 слова\"`; ещё шесть — тем же "
               "с `--more`.".format(Path(ctx.outdir))]
     path = Path(ctx.outdir) / FILE

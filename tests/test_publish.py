@@ -127,3 +127,27 @@ class Pack(TempDirCase):
         text = publish.write_pack(ctx, self.video).read_text(encoding="utf-8")
         # 40 s of the source is 30 s of the cut, 24 s at 1.25; 90 s → 80 s → 64 s
         self.assertEqual(re.findall(r"^(\d+:\d\d) (.)$", text, re.M), [("0:00", "А"), ("0:24", "Б"), ("1:04", "В")])
+
+    def test_a_chapter_starting_inside_a_cut_moves_to_the_cut_and_three_stay_three(self):
+        chapters = [{"start": 0.0, "title": "А"}, {"start": 14.5, "title": "Б"}, {"start": 40.0, "title": "В"}]
+        ctx = Ctx(self.video.parent, self.words, chapters, [(0.0, 14.3), (15.8, 61.5)])
+        text = publish.write_pack(ctx, self.video).read_text(encoding="utf-8")
+        # 14.5 s was cut (14.3–15.8): the chapter starts where the video goes on, 14.3 s; 40 s of the source is 38.5 s
+        self.assertEqual(re.findall(r"^(\d+:\d\d) (.)$", text, re.M), [("0:00", "А"), ("0:14", "Б"), ("0:38", "В")])
+
+    def test_without_pauses_the_frames_come_from_the_video_spread_and_apart(self):
+        words, t = [], 0.0
+        while t + 0.3 <= 60.0:  # speech from the first second to the last: not one pause of 0.35 s
+            words.append({"text": "слово", "start": round(t, 2), "end": round(t + 0.3, 2)})
+            t += 0.32
+        ctx = Ctx(self.video.parent, words, [], [(0.0, 60.0)])
+        text = publish.write_pack(ctx, self.video).read_text(encoding="utf-8")
+        frames = sorted((self.video.parent / "обложки" / "кадры").glob("кадр-*.jpg"))
+        self.assertGreaterEqual(len(frames), 6)
+        listed = [int(m) * 60 + int(s) + int(d) / 10.0 for m, s, d in re.findall(r"кадр-\d\d\.jpg — (\d+):(\d\d)\.(\d)", text)]
+        self.assertEqual(len(listed), len(frames))
+        self.assertEqual(listed, sorted(listed))
+        self.assertTrue(all(b - a >= 2.0 for a, b in zip(listed, listed[1:])), listed)
+        self.assertLess(listed[0], 20.0)       # spread over the length, not bunched at one end
+        self.assertGreater(listed[-1], 40.0)
+        self.assertNotIn("(0)", text)

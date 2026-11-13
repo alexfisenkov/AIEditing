@@ -13,12 +13,14 @@ from pathlib import Path
 from typing import Dict, List, Optional
 
 from ..media import fcpxml
+from .chapters import out_at
 from .speed import rate_of
 from .timeline import to_out
 
 NOTE = "таймлиния.md"
 FOLDER = "таймлиния"
 VARIANTS = "музыка-варианты"
+VOICE = "Голос"  # the sound lane under the program of angles
 QUIET_CUTS = ("пауза", "звук без слов")  # not worth a marker: there are hundreds of them
 
 
@@ -37,12 +39,53 @@ def _seam(t: float, keep) -> float:
     return sum(min(b, t) - a for a, b in keep if a < t)
 
 
+def _program(ctx) -> bool:
+    """The step `angles` made the cut: the timeline lays its program, not the source in one piece."""
+    return ctx.has("angles") and bool(getattr(ctx, "angles", None))
+
+
 def _camera(ctx, keep) -> List[Dict]:
+    if _program(ctx):
+        return _angles(ctx, keep)
     clips, at = [], 0.0
     for a, b in keep:
         clips.append({"file": str(ctx.src), "start": at, "in": a, "dur": b - a})
         at += b - a
     return clips
+
+
+def _angles(ctx, keep) -> List[Dict]:
+    """Each kept piece split where the angle changes, from its camera with its offset and crop, its own sound off."""
+    from .angles import _crop_at
+
+    files = [Path(ctx.src)] + [Path(c) for c in ctx.cameras]
+    shift = [0.0] + [float(ctx.offsets.get(str(c), 0.0)) for c in ctx.cameras]
+    clips, passed = [], 0.0
+    for a, b in keep:
+        inner = [s["start"] for s in ctx.angles if passed + 0.002 < s["start"] < passed + b - a - 0.002]
+        edges = [passed] + inner + [passed + b - a]
+        for x, y in zip(edges, edges[1:]):
+            shot = next((s for s in ctx.angles if s["start"] - 1e-6 <= (x + y) / 2.0 <= s["end"] + 1e-6), ctx.angles[-1])
+            cam = int(shot["camera"]) if int(shot["camera"]) < len(files) else 0
+            clips.append({"file": str(files[cam]), "start": x, "in": max(0.0, a + x - passed - shift[cam]), "dur": y - x,
+                          "muted": True, "crop": _crop_at(shot, x, y)})
+        passed += b - a
+    return clips
+
+
+def _voice(ctx, keep) -> List[Dict]:
+    """The sound the finished video has under the program: the recorder (its clean voice, if made) or the main camera."""
+    from .voice import clean_of
+
+    if not _program(ctx):
+        return []
+    sound = getattr(ctx, "audio_src", None)
+    path, shift = (clean_of(ctx, sound), float(ctx.offsets.get(str(sound), 0.0))) if sound else (ctx.src, 0.0)
+    clips, at = [], 0.0
+    for a, b in keep:
+        clips.append({"file": str(path), "start": at, "in": max(0.0, a - shift), "dur": b - a})
+        at += b - a
+    return [{"name": VOICE, "role": "dialogue", "clips": clips}]
 
 
 def _inserts(ctx, keep) -> List[Dict]:
@@ -93,7 +136,7 @@ def _music(ctx, total: float) -> List[Dict]:
 def _markers(ctx, keep, scale: float) -> List[Dict]:
     out = []
     for c in ctx.chapters or []:
-        at = to_out(float(c["start"]), keep)
+        at = out_at(c["start"], keep)
         if at is not None and str(c.get("title") or "").strip():
             out.append({"t": at / scale, "text": str(c["title"]).strip(), "kind": "chapter"})
     for b in ctx.broll or []:
@@ -121,7 +164,7 @@ def write_timeline(ctx, final: Path, pictures: Optional[List[Dict]] = None) -> P
                                                                 "dur": info["duration"]}]}])
     else:
         total = sum(b - a for a, b in keep)
-        spec.update(duration=total, markers=_markers(ctx, keep, 1.0), audio=_music(ctx, total),
+        spec.update(duration=total, markers=_markers(ctx, keep, 1.0), audio=_voice(ctx, keep) + _music(ctx, total),
                     video=[{"name": "Камера", "clips": _camera(ctx, keep)},
                            {"name": "Вставки", "clips": _inserts(ctx, keep)},
                            {"name": "Плашки", "clips": _pictures(ctx, pictures)}])
@@ -131,10 +174,24 @@ def write_timeline(ctx, final: Path, pictures: Optional[List[Dict]] = None) -> P
     return path
 
 
+def _angle_lines(ctx, spec: Dict) -> List[str]:
+    names = ["главная камера {}".format(Path(ctx.src).name)] + [
+        "камера {} — {}".format(k + 2, Path(c).name) for k, c in enumerate(ctx.cameras)]
+    voice = next(lane for lane in spec["audio"] if lane["name"] == VOICE)
+    sound = Path(voice["clips"][0]["file"]).name if voice["clips"] else ""
+    whose = "отдельная запись звука" if getattr(ctx, "audio_src", None) else "звук главной камеры"
+    return ["Ракурсы по программе шага angles: {}; каждая со своим сдвигом по звуку. Кроп и наезд — трансформ клипа "
+            "(Inspector → Transform).".format("; ".join(names)),
+            "Основной звук — дорожка «{}»: {} ({}). Звук клипов «Камера» выключен.".format(VOICE, sound, whose)]
+
+
 def _extra(ctx, spec: Dict) -> List[str]:
     lines = []
-    if spec["video"][0]["name"] == "Камера":
+    if spec["video"][0]["name"] == "Камера" and _program(ctx):
+        lines += _angle_lines(ctx, spec)
+    elif spec["video"][0]["name"] == "Камера":
         lines.append("Голос — это звук клипов «Камера»: отдельной дорожки голоса нет.")
+    if spec["video"][0]["name"] == "Камера":
         rate = rate_of(ctx.p("speed", 1.0))
         if rate != 1.0:
             lines.append("Готовый ролик ускорен в {:g} раза, а на таймлинии время до ускорения. Чтобы совпало: выделите "

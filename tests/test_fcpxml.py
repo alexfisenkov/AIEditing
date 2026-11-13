@@ -130,6 +130,24 @@ class Write(TempDirCase):
                          Path(png).resolve())
         self.assertEqual((still.get("lane"), secs(still.get("duration"))), ("1", 3))
 
+    def test_a_crop_is_the_clips_transform_and_a_push_in_is_keyframed(self):
+        cam = str(self.tmp / "к.mp4")
+        video = [{"name": "Камера", "clips": [
+            {"file": cam, "start": 0.0, "in": 10.0, "dur": 4.0, "crop": {"zoom": 1.0, "to": 1.04, "y": 0.3}},
+            {"file": cam, "start": 4.0, "in": 14.0, "dur": 6.0, "crop": {"zoom": 1.2, "y": 0.3}, "muted": True},
+            {"file": cam, "start": 10.0, "in": 20.0, "dur": 2.0}]}]
+        root, _ = self.written(self.spec(video=video))
+        push, crop, wide = [c for c in root.find("library/event/project/sequence/spine") if c.tag == "asset-clip"]
+        self.assertIsNone(wide.find("adjust-transform"))
+        t = crop.find("adjust-transform")
+        # ×1.2, the window 0.3 of the room from the top: the picture moves down by 0.2 × 0.2 of the frame height
+        self.assertEqual((t.get("scale"), t.get("position")), ("1.2 1.2", "0 -4"))
+        self.assertEqual(list(crop)[0].tag, "adjust-transform")  # before connected clips, markers and volume
+        keys = {p.get("name"): [(secs(k.get("time")), k.get("value")) for k in p.iter("keyframe")]
+                for p in push.find("adjust-transform").findall("param")}
+        self.assertEqual(keys["scale"], [(10, "1 1"), (14, "1.04 1.04")])  # in the clip's own time
+        self.assertEqual(keys["position"], [(10, "0 0"), (14, "0 -0.8")])
+
     def test_a_spec_without_clips_or_with_a_wrong_rate_is_refused(self):
         with self.assertRaises(ValueError):
             fcpxml.write(self.spec(fps=0), self.tmp / "x.fcpxml")

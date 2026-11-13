@@ -69,6 +69,22 @@ class TwoCamerasAndARecorder(TempDirCase):
         self.assertLess(abs(colour_at(report["output"], (wide[0]["start"] + wide[0]["end"]) / 2) - 128), 8)
         self.assertAlmostEqual(pitch(report["output"], self.tmp), 1000, delta=60, msg="the sound is the recorder's")
 
+    def test_the_timeline_of_the_run_lays_both_cameras_and_the_recorder(self):
+        from runtime import pipelines
+        from test_fcpxml_timeline import lanes
+
+        prof = profile(["speech_spans", "cut_spans", "angles", "timeline"], asr_config(self.tmp, words()), gap=0.5, pad=0.12)
+        out = self.tmp / "выпуск"
+        report = pipelines.run(self.main, prof, out, Approver(), cameras=[self.side], audio=self.sound)
+        got, _marks = lanes(out / "камера A.fcpxml")
+        files = {f for *_, f in got["Камера"]}
+        self.assertEqual(files, {self.main.resolve(), self.side.resolve()})
+        self.assertEqual({f for *_, f in got["Голос"]}, {self.sound.resolve()})
+        side = [s for s in report["angles"]["plan"] if s["camera"] == 1][0]
+        clip = next(c for c in got["Камера"] if c[4] == self.side.resolve())
+        self.assertAlmostEqual(float(clip[0]), side["start"], delta=0.05)
+        self.assertIn("рекордер.wav", (out / "таймлиния.md").read_text(encoding="utf-8"))
+
     def test_one_camera_keeps_its_own_sound(self):
         report = self.run_it()
         self.assertTrue(all(s["camera"] == 0 for s in report["angles"]["plan"]))

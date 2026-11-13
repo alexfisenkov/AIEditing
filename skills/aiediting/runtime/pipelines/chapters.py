@@ -1,8 +1,9 @@
 """Chapters: proposed at phrase starts every few minutes, titled by the person (or their agent)."""
 from __future__ import annotations
 
-from typing import Dict, List
+from typing import Dict, List, Optional, Sequence
 
+from .timeline import Span, to_out
 from .words import phrases, quote, spoken
 
 EVERY = 180.0  # seconds between proposed chapter starts
@@ -14,6 +15,20 @@ def _settings(ctx) -> Dict:
     if raw is True:
         return {"plates": True, "timecodes": True}
     return dict(raw) if isinstance(raw, dict) else {}
+
+
+def kept_start(t: float, keep: Sequence[Span]) -> float:
+    """A chapter start that fell into a cut moves to the first kept moment after it (after all of them: the last kept one)."""
+    t = float(t)
+    if not keep or to_out(t, keep) is not None:
+        return t
+    after = [a for a, _b in keep if a > t]
+    return float(min(after)) if after else float(max(b for _a, b in keep))
+
+
+def out_at(t: float, keep: Sequence[Span]) -> Optional[float]:
+    """Where a chapter starting at source second `t` begins in the cut video (a start in a cut: right after the cut)."""
+    return to_out(kept_start(t, keep), keep) if keep else None
 
 
 def candidates(ctx, every: float) -> List[Dict]:
@@ -37,7 +52,9 @@ def plan_chapters(ctx) -> None:
                        {"items": items})
     if not ok:
         return
-    chosen = sorted(data.get("items", []), key=lambda c: float(c["start"]))
+    keep = getattr(ctx, "keep", None) or []
+    chosen = sorted((dict(c, start=kept_start(c["start"], keep)) for c in data.get("items", [])),
+                    key=lambda c: float(c["start"]))
     ctx.chapters = chosen
     if s.get("plates"):
         secs = float(s.get("seconds", ctx.design()["video"]["chapter"].get("seconds", 3.0)))

@@ -1,11 +1,12 @@
 """A timeline as FCPXML 1.10, the plain subset DaVinci Resolve imports («Файл → Импорт → Таймлиния»).
 
 spec = {"name", "fps", "width", "height", "duration", "video": [lane], "audio": [lane], "markers": [{"t", "text", "kind"}]};
-lane = {"name", "role"?, "clips": [{"file", "start", "in", "dur", "muted"?, "off"?, "db"?}]}, seconds everywhere.
+lane = {"name", "role"?, "clips": [{"file", "start", "in", "dur", "muted"?, "off"?, "db"?, "crop"?}]}, seconds everywhere.
 The first video lane is the main storyline (a hole in it is a gap); every other lane is connected to it: video lanes
 above (1, 2, …), audio lanes below (−1, −2, …). Every time is a whole frame of the sequence counted from zero, so a
 thousand short clips end where the timeline ends. `muted`: a video clip without its sound; `off`: on the timeline,
-switched off; `db`: its level. `write_note` writes the person's note on how to open it. Standard library only and no package imports: the graphics kit loads this file by path.
+switched off; `db`: its level; `crop`: {"zoom", "y", "to"?} of `media/cut.py` as the clip's transform (scale and
+position, a push-in keyframed). `write_note` writes the person's note on how to open it. Standard library only and no package imports: the graphics kit loads this file by path.
 """
 from __future__ import annotations
 
@@ -82,6 +83,30 @@ def _resources(spec: Dict, clock: _Clock, root) -> Dict[str, str]:
     return ids
 
 
+def _num(x: float) -> str:
+    return "{:g}".format(round(float(x), 4) + 0.0)
+
+
+def _look(zoom: float, y: float) -> Tuple[str, str]:
+    """Scale and position of a clip showing the window 1/zoom of the frame, `y` of the room left from the top (0.5:
+    the middle). Position is in hundredths of the frame height from the centre, up is plus, as FCPXML has it."""
+    return "{0} {0}".format(_num(zoom)), "0 {}".format(_num((zoom - 1.0) * (y - 0.5) * 100))
+
+
+def _transform(el, crop: Dict, times: Tuple[str, str]) -> None:
+    """`crop` as the clip's transform: {"zoom", "y"} still, {"zoom", "to", "y"} a push from zoom to `to` over the clip."""
+    y, z = float(crop.get("y", 0.5)), float(crop.get("zoom", 1.0))
+    scale, position = _look(z, y)
+    tr = ET.SubElement(el, "adjust-transform", position=position, anchor="0 0", scale=scale)
+    if crop.get("to") is None:
+        return
+    looks = [_look(z, y), _look(float(crop["to"]), y)]
+    for k, name in ((1, "position"), (0, "scale")):
+        frames = ET.SubElement(ET.SubElement(tr, "param", name=name), "keyframeAnimation")
+        for t, look in zip(times, looks):
+            ET.SubElement(frames, "keyframe", time=t, value=look[k])
+
+
 def _item(parent, c: Dict, lane_name: str, ids: Dict, clock: _Clock, lane: int, at: int, role: str):
     path = str(Path(c["file"]).expanduser().resolve())
     start, dur = clock.span(c["start"], c["dur"])
@@ -97,7 +122,12 @@ def _item(parent, c: Dict, lane_name: str, ids: Dict, clock: _Clock, lane: int, 
             attrs["srcEnable"] = "video"
         elif _kind(Path(path)) == "audio" or lane < 0:
             attrs["audioRole"] = role
+            if lane < 0 and _kind(Path(path)) == "video":
+                attrs["srcEnable"] = "audio"  # a camera's sound on a sound lane: its picture stays off the timeline
     el = ET.SubElement(parent, "video" if still else "asset-clip", **attrs)
+    if c.get("crop") and not still:
+        own = clock.n(c.get("in") or 0)
+        _transform(el, c["crop"], (_t(own, clock.frame), _t(own + dur, clock.frame)))
     if c.get("db") is not None and not still:
         ET.SubElement(el, "adjust-volume", amount="{:g}dB".format(float(c["db"])))
     return el

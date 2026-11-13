@@ -9,10 +9,10 @@ from __future__ import annotations
 import os
 import re
 from pathlib import Path
-from typing import Dict, List, Sequence
+from typing import Dict, List, Sequence, Tuple
 
 from ..render.design import load_design
-from ..render.errors import need
+from ..render.errors import RenderError, need
 
 W, H = 3840, 2160
 PREVIEW = (320, 180)
@@ -20,6 +20,7 @@ LAYOUTS = ("left", "top", "bottom")
 SIDE, TEXT_W, SHADE_TO = 0.06, 0.56, 0.64   # shares of the width: margin, widest text, where the side shade ends
 NAME = re.compile(r"^обложка-(\d+)\.jpg$")
 DEFAULT = {"font": "display", "weight": "Bold", "fg": "white", "shade": "night", "shade_alpha": 0.82, "size": 0.15}
+FEW, APART = 6, 2.0   # fewer frames from the pauses than this: more come from the video, this many seconds apart
 
 
 def _rgb(d: Dict, name: str, fallback: str):
@@ -156,3 +157,52 @@ def sharpness(path: Path) -> float:
 def order(frames: Sequence[Path]) -> List[Path]:
     """The sharpest frames first; the same frames always come in the same order, so `--more` goes on from there."""
     return sorted((Path(f) for f in frames), key=lambda f: (-round(sharpness(f), 3), f.name))
+
+
+def grab(video: Path, moments: Sequence[float], folder: Path) -> List[Tuple[Path, float]]:
+    """Frames of `video` at `moments` as `кадр-NN.jpg` in `folder` (the frames there before go): [(file, second)]."""
+    from .ffmpeg import MediaError, run
+
+    folder = Path(folder)
+    folder.mkdir(parents=True, exist_ok=True)
+    for old in folder.glob("кадр-*.jpg"):
+        old.unlink()
+    out = []
+    for t in moments:
+        path = folder / "кадр-{:02d}.jpg".format(len(out) + 1)
+        try:
+            run(["-ss", "{:.3f}".format(t), "-i", video, "-frames:v", "1", "-q:v", "2", path])
+        except MediaError:
+            continue
+        if path.is_file():
+            out.append((path, float(t)))
+    return out
+
+
+def _score(path: Path) -> float:
+    try:
+        return sharpness(path)
+    except RenderError:  # no Pillow: every frame is as good, the middle of the window wins
+        return 0.0
+
+
+def more_moments(video: Path, taken: Sequence[float], duration: float, windows: int = 12) -> List[float]:
+    """When the pauses of the speech gave fewer than FEW frames: in each window of the video without a taken moment,
+    the sharpest of a few frames, never closer than APART s to another moment."""
+    import tempfile
+
+    chosen, step = [float(t) for t in taken], float(duration) / windows
+    added: List[float] = []
+    with tempfile.TemporaryDirectory(prefix="aiediting-") as tmp:
+        for k in range(windows):
+            lo, hi = k * step, (k + 1) * step
+            if any(lo <= t < hi for t in chosen):
+                continue
+            tries = [lo + step * f for f in (0.5, 0.25, 0.75)]
+            tries = [t for t in tries if 0.05 <= t <= duration - 0.1 and all(abs(t - c) >= APART for c in chosen)]
+            got = grab(video, tries, Path(tmp) / str(k))
+            if got:
+                best = max(got, key=lambda g: _score(g[0]))[1]  # max keeps the first of equals: the middle
+                chosen.append(best)
+                added.append(round(best, 1))
+    return sorted(added)

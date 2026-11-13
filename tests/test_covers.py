@@ -7,7 +7,7 @@ import subprocess
 import sys
 import unittest
 
-from _support import SKILL, TempDirCase
+from _support import SKILL, TempDirCase, ffmpeg, needs_ffmpeg
 
 HAVE_PIL = importlib.util.find_spec("PIL") is not None
 needs_pil = unittest.skipUnless(HAVE_PIL, "Pillow не установлен: обложки рисуются только с ним")
@@ -127,6 +127,38 @@ class Command(TempDirCase):
         empty = subprocess.run([sys.executable, str(run_py), "covers", str(self.tmp / "нет"), "--text", "Слово"],
                                capture_output=True, text=True, encoding="utf-8", env=env)
         self.assertEqual(empty.returncode, 2, empty.stdout + empty.stderr)
+
+    @needs_ffmpeg
+    def test_a_video_without_pauses_still_gets_six_covers_and_a_sheet(self):
+        from runtime.pipelines import publish
+        from test_publish import Ctx
+
+        profile = {"format": "ютуб", "skill_name": "монтаж-ютуб", "language": "ru",
+                   "asr": {"provider": "command", "language": "ru", "model": None, "base_url": None,
+                           "api_key_env": None, "command": ["нет"]},
+                   "steps": ["speech_spans", "cut_spans", "publish_pack"], "params": {}, "approval": "plan",
+                   "design": "design/", "taste": [], "output_dir": "выпуски"}
+        folder = self.tmp / "work" / "монтаж-ютуб"
+        folder.mkdir(parents=True)
+        (folder / "profile.json").write_text(json.dumps(profile, ensure_ascii=False), encoding="utf-8")
+        built = subprocess.run([sys.executable, str(SKILL / "tools" / "ae.py"), "build-skill", str(folder / "profile.json"),
+                                str(self.tmp / "out")], capture_output=True, text=True, encoding="utf-8")
+        self.assertEqual(built.returncode, 0, built.stdout + built.stderr)
+        run_py = self.tmp / "out" / "монтаж-ютуб" / "tools" / "run.py"
+        words = [{"text": "слово", "start": round(k * 0.32, 2), "end": round(k * 0.32 + 0.3, 2)} for k in range(93)]
+        for name, pack in (("с пакетом", True), ("только ролик", False)):
+            issue = self.tmp / "выпуски" / name
+            issue.mkdir(parents=True)
+            video = issue / "ролик.mp4"
+            ffmpeg("-f", "lavfi", "-i", "testsrc=s=320x180:r=25:d=30", "-c:v", "libx264", "-preset", "ultrafast",
+                   "-pix_fmt", "yuv420p", str(video))
+            if pack:  # speech from the first second to the last: the cut left no pause for a frame
+                publish.write_pack(Ctx(issue, words, [], [(0.0, 30.0)]), video)
+            done = subprocess.run([sys.executable, str(run_py), "covers", str(issue), "--text", "Как это работает"],
+                                  capture_output=True, text=True, encoding="utf-8", env=dict(os.environ, AIEDITING_IN_VENV="1"))
+            self.assertEqual(done.returncode, 0, name + ": " + done.stdout + done.stderr)
+            self.assertEqual(len(list((issue / "обложки").glob("обложка-*.jpg"))), 6, name)
+            self.assertTrue((issue / "обложки" / "лист.jpg").is_file(), name)
 
     def test_a_format_without_a_design_of_its_own_still_makes_six_covers(self):
         profile = {"format": "влог", "skill_name": "монтаж-влог", "language": "ru",

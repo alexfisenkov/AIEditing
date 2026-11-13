@@ -118,6 +118,48 @@ class Layers(TempDirCase):
         self.assertEqual([got[n][0][3].get("enabled", "1") for n in names], ["1", "0", "0"])
         self.assertTrue(all(int(got[n][0][3].get("lane")) < 0 for n in names))
 
+    def test_two_cameras_and_a_recorder_lie_as_the_program_of_angles(self):
+        from runtime.pipelines.timeline_export import NOTE, write_timeline
+
+        side = make_av(self.tmp / "камера B.mp4", [(2.0, 4.0)], 21.0, size="320x180", rate=25)
+        sound = self.tmp / "рекордер.wav"
+        ffmpeg("-f", "lavfi", "-i", "sine=f=1000:sample_rate=48000:d=21", str(sound))
+        push, crop = {"zoom": 1.0, "to": 1.04, "y": 0.3}, {"zoom": 1.2, "y": 0.3}
+        ctx = self.ctx(steps=["timeline", "angles"], cameras=[side], audio_src=sound,
+                       offsets={str(side): 1.0, str(sound): -0.6},  # B started 1 s after the main camera, the recorder 0.6 s before
+                       angles=[{"start": 0.0, "end": 3.0, "camera": 0, "crop": push},
+                               {"start": 3.0, "end": 9.0, "camera": 1, "crop": None},
+                               {"start": 9.0, "end": 14.0, "camera": 0, "crop": crop}])
+        path = write_timeline(ctx, self.final)
+        got, marks = lanes(path)
+        cam = got["Камера"]
+        # kept 0–4 and 6–16 of the main camera: 0–3 main, 3–4 and 4–9 camera B (1 s earlier in its file), 9–14 main
+        self.assertEqual([(a, s, d, f) for a, s, d, _, f in cam],
+                         [(0, 0, 3, self.src.resolve()), (3, 2, 1, side.resolve()), (4, 5, 5, side.resolve()),
+                          (9, 11, 5, self.src.resolve())])
+        self.assertTrue(all(el.get("srcEnable") == "video" for *_, el, _f in cam), "the cameras' own sound is off")
+        looks = [el.find("adjust-transform") for *_, el, _f in cam]
+        self.assertEqual([t is not None for t in looks], [True, False, False, True])
+        self.assertEqual(looks[3].get("scale"), "1.2 1.2")
+        self.assertEqual(len(list(looks[0].iter("keyframe"))), 4)  # the push-in: scale and position, start and end
+        voice = got["Голос"]
+        self.assertEqual([(a, s, d, f) for a, s, d, _, f in voice], [(0, Fraction(3, 5), 4, sound.resolve()),
+                                                                      (4, Fraction(33, 5), 10, sound.resolve())])
+        self.assertTrue(all(int(el.get("lane")) < 0 for *_, el, _f in voice))
+        self.assertEqual(marks["Море"], 5)
+        note = (self.out / NOTE).read_text(encoding="utf-8")
+        self.assertIn("«Голос»", note)
+        self.assertIn("рекордер.wav", note)
+        self.assertNotIn("Голос — это звук клипов «Камера»", note)
+        self.assertIn("камера B.mp4", note)
+
+    def test_the_method_names_the_timeline_where_the_code_puts_it(self):
+        from _support import SKILL
+
+        method = (SKILL / "templates" / "format-skill" / "method" / "timeline.md").read_text(encoding="utf-8")
+        self.assertNotIn("таймлиния/<name>.fcpxml", method)
+        self.assertIn("<name>.fcpxml", method)  # next to the video, as write_timeline and overlay.py timeline write it
+
     def test_picture_mode_is_the_finished_video_in_one_clip(self):
         from runtime.pipelines.timeline_export import write_timeline
 
