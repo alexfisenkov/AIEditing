@@ -1,6 +1,7 @@
 """`ae.py voice-try`: a minute of the recording through the three presets, side by side on the dashboard, and a
 trial request that says whether the key works. No network: the service is played by a stand-in."""
 import io
+import json
 import os
 import sys
 from contextlib import redirect_stdout
@@ -34,10 +35,40 @@ class Base(TempDirCase):
         return buf.getvalue()
 
 
+def with_steps(work, steps):
+    folder = work / "монтаж-урок"
+    folder.mkdir(parents=True, exist_ok=True)
+    (folder / "profile.json").write_text(json.dumps({"skill_name": "монтаж-урок", "steps": steps}), encoding="utf-8")
+
+
 @needs_ffmpeg
 class VoiceTry(Base):
+    def test_without_voice_clean_in_the_steps_nothing_is_paid(self):
+        src = make_av(self.tmp / "запись.mp4", [(0.0, 9.0)], 9.0)
+        fake = FakeAuphonic()
+        for steps in (None, ["cut_spans"]):
+            if steps is not None:
+                with_steps(self.work, steps)
+            with mock.patch.object(auphonic, "process", fake):
+                out = self.ae("voice-try", "монтаж-урок", src, "--duration", "5", code=1)
+            self.assertIn("voice_clean", out)
+            self.assertEqual(fake.calls, [])
+
+    def test_a_repeat_of_the_same_piece_takes_the_ready_files(self):
+        src = make_av(self.tmp / "запись.mp4", [(0.0, 9.0)], 9.0)
+        with_steps(self.work, ["cut_spans", "voice_clean"])
+        fake = FakeAuphonic()
+        with mock.patch.object(auphonic, "process", fake):
+            self.ae("voice-try", "монтаж-урок", src, "--start", "2", "--duration", "5")
+            again = self.ae("voice-try", "монтаж-урок", src, "--start", "2", "--duration", "5")
+            self.assertEqual(len(fake.calls), len(voice.PRESETS))
+            self.assertIn("0 мин", again)
+            self.ae("voice-try", "монтаж-урок", src, "--start", "3", "--duration", "5")
+        self.assertEqual(len(fake.calls), 2 * len(voice.PRESETS))  # another piece is another request
+
     def test_three_presets_and_the_original_stand_side_by_side(self):
         src = make_av(self.tmp / "запись.mp4", [(0.0, 9.0)], 9.0)
+        with_steps(self.work, ["voice_clean"])
         fake = FakeAuphonic()
         with mock.patch.object(auphonic, "process", fake):
             text = self.ae("voice-try", "монтаж-урок", src, "--start", "2", "--duration", "5")

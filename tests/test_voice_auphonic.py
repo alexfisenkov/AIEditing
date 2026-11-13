@@ -16,8 +16,9 @@ RESULT = b"RIFF....WAVEfmt cleaned voice"
 class AuphonicApi:
     """Plays the simple API, the production status (busy once, then `final`), the download and the account."""
 
-    def __init__(self, status=200, final=3, error=""):
+    def __init__(self, status=200, final=3, error="", redirect_to=None):
         self.status, self.final, self.error, self.requests, self.polls = status, final, error, [], 0
+        self.redirect_to = redirect_to  # the download answers 302 to this address
         api = self
 
         class Handler(BaseHTTPRequestHandler):
@@ -48,6 +49,11 @@ class AuphonicApi:
                              {"format": "wav", "ending": "wav", "download_url": api.url + "/api/download/x/out.wav"}]
                     self._json({"data": {"uuid": "abc123", "status": status, "status_string": "Error" if status == 2 else "Done",
                                          "error_message": api.error, "output_files": files if status == 3 else []}})
+                elif self.path.startswith("/api/download/") and api.redirect_to:
+                    self.send_response(302)
+                    self.send_header("Location", api.redirect_to)
+                    self.send_header("Content-Length", "0")
+                    self.end_headers()
                 elif self.path.startswith("/api/download/"):
                     self._reply(200, RESULT if self.path.endswith(".wav") else b"mp3", "audio/wav")
                 elif self.path == "/api/user.json":
@@ -144,6 +150,48 @@ class Process(Case):
                 self.run_with(api, lambda: auphonic.process(self.audio, "x", self.tmp / "out.wav"))
         self.assertIn("Audio file too short", str(caught.exception))
         self.assertFalse((self.tmp / "out.wav").exists())
+
+
+class Elsewhere:
+    """Another host: records what reaches it and serves the result."""
+
+    def __init__(self):
+        self.requests = []
+        api = self
+
+        class Handler(BaseHTTPRequestHandler):
+            def do_GET(self):
+                api.requests.append({"path": self.path, "headers": dict(self.headers)})
+                self.send_response(200)
+                self.send_header("Content-Length", str(len(RESULT)))
+                self.end_headers()
+                self.wfile.write(RESULT)
+
+            def log_message(self, *args):
+                pass
+
+        self.server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
+        self.url = "http://localhost:{}".format(self.server.server_address[1])  # another host name than 127.0.0.1
+        self.thread = threading.Thread(target=self.server.serve_forever, daemon=True)
+
+    def __enter__(self):
+        self.thread.start()
+        return self
+
+    def __exit__(self, *exc):
+        self.server.shutdown()
+        self.server.server_close()
+
+
+class Redirect(Case):
+    def test_a_redirect_to_another_host_never_carries_the_key(self):
+        with Elsewhere() as other, AuphonicApi(redirect_to=None) as api:
+            api.redirect_to = other.url + "/files/out.wav"
+            out = self.run_with(api, lambda: auphonic.process(self.audio, "x", self.tmp / "out.wav"))
+        self.assertEqual(out.read_bytes(), RESULT)
+        self.assertEqual(len(other.requests), 1)
+        self.assertNotIn("Authorization", other.requests[0]["headers"])
+        self.assertFalse(any(SECRET in str(v) for v in other.requests[0]["headers"].values()))
 
 
 class CheckKey(Case):

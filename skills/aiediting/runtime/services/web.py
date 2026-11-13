@@ -6,7 +6,7 @@ import json
 import os
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
-from urllib import error, request
+from urllib import error, parse, request
 
 from ..asr.http import _body
 
@@ -18,9 +18,28 @@ class ServiceError(RuntimeError):
     """A service cannot do what was asked now; the message says why and what to do, without the key."""
 
 
+def _host(url: str) -> str:
+    return (parse.urlsplit(url).hostname or "").lower()
+
+
+class _KeyStaysHome(request.HTTPRedirectHandler):
+    """urllib carries every header over a redirect; the key must not leave the host it was sent to."""
+
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        new = super().redirect_request(req, fp, code, msg, headers, newurl)
+        if new is not None and _host(newurl) != _host(req.full_url):
+            for name in [k for k in list(new.headers) + list(new.unredirected_hdrs) if k.lower() in SECRET_HEADERS]:
+                new.remove_header(name)
+        return new
+
+
+SECRET_HEADERS = {"authorization", "x-api-key", "xi-api-key", "cookie"}
+_OPENER = request.build_opener(_KeyStaysHome)
+
+
 def _open(req: request.Request, what: str, secret: str):
     try:
-        return request.urlopen(req, timeout=TIMEOUT)
+        return _OPENER.open(req, timeout=TIMEOUT)
     except error.HTTPError as exc:
         with exc:
             detail = exc.read()[:300].decode("utf-8", "replace")
