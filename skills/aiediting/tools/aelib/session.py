@@ -32,10 +32,15 @@ def load() -> dict:
 def commit(data: dict) -> str:
     w = work()
     st.save(w, data)
-    page = st.write_snapshot(w, data)
-    if data.get("finishedAt") or not serving():
-        return page
-    return st.serve(w)
+    return show(w, data, st.write_snapshot(w, data))
+
+
+def show(w: Path, data: dict, page: str = "дашборд обновлён") -> str:
+    """Where the dashboard is now: its address, or — with no server — the path of the page itself."""
+    why = "мастерская закрыта" if data.get("finishedAt") else None if serving() else "AIEDITING_NO_SERVE"
+    if why is None:
+        return st.serve(w)
+    return "{}, без сервера ({}) — открывается файлом: {}".format(page, why, Path(w).resolve() / "dashboard.html")
 
 
 def event(change: Callable[[dict], Optional[str]]) -> str:

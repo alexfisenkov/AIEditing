@@ -33,11 +33,25 @@ It creates `.aiediting-work/` in the current folder, copies the dashboard, raise
 127.0.0.1 and prints the address. Renders are large and a synced folder (iCloud, Dropbox) slows them down
 and copies them everywhere; there, set `AIEDITING_WORK=<folder outside it>` on this and every later `ae.py`
 call, because a shell may go back to its first folder between calls. Check where it printed. Open it **once,
-yourself**, before the first question:
+yourself**, before the first question, by the full address `init` printed (`http://127.0.0.1:PORT/dashboard.html`), never as a
+file: without the server a video cannot seek, and in the Claude app's built-in browser a file is a dead snapshot. **Your own
+built-in browser first**, if your agent has one; the person's browser only when it
+has none:
 
-- Claude Code: `preview_start({url: "http://localhost:PORT"})`, then navigate to `/dashboard.html`.
-- No pane: `open` / `start` / `xdg-open` on `.aiediting-work/dashboard.html`.
-- Say the address in the chat too. Over SSH or in CI no server is raised — give the file path.
+| Agent | How to open the address |
+|---|---|
+| Claude desktop app (Code) | `mcp__Claude_Browser__preview_start({url: "<the address>"})`: the page opens beside the chat |
+| Codex app | its built-in browser: open the address in a browser tab (`@Browser`); Cmd+Shift+B shows the tabs beside the chat |
+| Cursor | the Browser pane: its `browser_navigate` tool with the address |
+| OpenClaw | the `browser` tool, action `open`, with the address. If its config has a `browser.ssrfPolicy` block, the local host must be allowed there (`allowedHostnames`), or the page is refused: say so |
+| Claude Code in a terminal, VS Code or JetBrains; Codex CLI or IDE; Gemini CLI; anything else | no built-in browser: `open` (macOS), `start` (Windows), `xdg-open` (Linux) on the address |
+
+- Say «дашборд открыт» only after you have opened it yourself and the call succeeded. Otherwise give the address and say that
+  it is to be opened in a browser. Say the address in the chat in either case.
+- `init` printed a file path, not an address: no server was raised, and the line says why. «Сеть закрыта песочницей агента»:
+  tell the person that the agent's sandbox keeps the local network closed and how to allow it (the line names the Codex setting),
+  then rerun a bare `ae.py`. Meanwhile, or over SSH and in CI, open that file in the person's browser (`open` / `start` /
+  `xdg-open`), never in the built-in browser of the Claude app: there a file stays a dead snapshot.
 - «Дашборд пропал» → a bare `python "<skillDir>/tools/ae.py"` raises it again on the same port.
 
 A line `Новая версия: …` in what `init` printed: say it to the person in one phrase, now, as it is (which version came out, which

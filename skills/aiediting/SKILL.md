@@ -4,7 +4,7 @@ description: Workshop that builds your own video-editing skills (монтаж-*)
 disable-model-invocation: true
 argument-hint: "[new|refine] format name or path to a source video"
 metadata:
-  version: "0.4.2"
+  version: "0.4.3"
 ---
 
 # AIEditing
@@ -37,7 +37,7 @@ the rest of the session.
 
 | Stage id | Read | Produces |
 |---|---|---|
-| `start` | `phases/start.md` | the dashboard open; the environment checked; the person met in one message (kept by `ae.py intro`) and a personal plan; «новый» or «доработка» chosen |
+| `start` | `phases/start.md` | the dashboard open by its address, in your built-in browser first; the environment checked; the person met in one message (kept by `ae.py intro`) and a personal plan; «новый» or «доработка» chosen |
 | `formats` | `phases/formats.md` | one draft profile per format, listed or the person's own |
 | `sources` | `phases/sources.md` | 1–3 sources, their frames and layout on the dashboard |
 | `interview` | `phases/interview.md` + `prompts/question-round.md` | the profile answered, round by round; the paths of the format offered |

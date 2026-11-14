@@ -23,10 +23,7 @@ class Workshop(TempDirCase):
         super().setUp()
         self.env = {k: v for k, v in os.environ.items() if k not in ("CI", "SSH_CONNECTION", "AIEDITING_NO_SERVE")}
         self.env["AIEDITING_WORK"] = str(self.tmp / "мастерская")
-
-    def tearDown(self):
-        self.ae("stop-server")
-        super().tearDown()
+        self.addCleanup(self.ae, "stop-server")   # a cleanup, not tearDown: it runs even when a setUp fails
 
     def ae(self, *args):
         return subprocess.run([sys.executable, str(AE), *args], capture_output=True, text=True,
@@ -38,10 +35,10 @@ class Dashboard(Workshop):
         with urllib.request.urlopen(url, timeout=5) as r:
             return r.status, r.read().decode("utf-8")
 
-    def test_init_serves_page_and_state_on_localhost(self):
+    def test_init_serves_page_and_state_on_127_0_0_1(self):
         proc = self.ae("init", "--title", "Проба сервера")
         self.assertEqual(proc.returncode, 0, proc.stdout + proc.stderr)
-        port = re.search(r"http://localhost:(\d+)/dashboard\.html", proc.stdout)
+        port = re.search(r"http://127\.0\.0\.1:(\d+)/dashboard\.html", proc.stdout)
         self.assertIsNotNone(port, proc.stdout)
         base = "http://127.0.0.1:{}/".format(port.group(1))
         status, page = self.get(base + "dashboard.html")
@@ -51,7 +48,8 @@ class Dashboard(Workshop):
         status, state = self.get(base + "state.js")
         self.assertTrue(state.startswith("window.STATE ="))
         again = self.ae("stage", "formats")            # the next call finds the same server
-        self.assertIn(base.replace("127.0.0.1", "localhost"), again.stdout)
+        self.assertIn(base, again.stdout)
+        self.assertNotIn("localhost", proc.stdout + again.stdout)   # a ::1 server of somebody else may own that name
 
 
 class Seeking(Workshop):
@@ -61,7 +59,7 @@ class Seeking(Workshop):
         super().setUp()
         proc = self.ae("init", "--title", "Перемотка")
         self.assertEqual(proc.returncode, 0, proc.stdout + proc.stderr)
-        self.base = "http://127.0.0.1:{}/".format(re.search(r"localhost:(\d+)/", proc.stdout).group(1))
+        self.base = "http://127.0.0.1:{}/".format(re.search(r"127\.0\.0\.1:(\d+)/", proc.stdout).group(1))
         self.work = self.tmp / "мастерская"
         folder = self.work / "монтаж урок" / "out"
         folder.mkdir(parents=True)
@@ -179,12 +177,56 @@ class OldServer(Workshop):
         (work / "кусок.bin").write_bytes(CLIP)
         out = self.ae("stage", "formats").stdout
         old.wait(timeout=5)                                            # stopped, not reused
-        new = re.search(r"localhost:(\d+)/", out).group(1)
+        new = re.search(r"127\.0\.0\.1:(\d+)/", out).group(1)
         self.assertEqual(int(new), port, "the previous port first: an open tab revives by itself")
         req = urllib.request.Request("http://127.0.0.1:{}/{}".format(new, urllib.request.quote("кусок.bin")),
                                      headers={"Range": "bytes=10-19"})
         with urllib.request.urlopen(req, timeout=5) as r:
             self.assertEqual((r.status, r.read()), (206, CLIP[10:20]))
+
+
+class WithoutServer(Workshop):
+    """Where no server is raised, the agent still gets the path of the page, never a bare «обновлён»."""
+
+    def page(self):
+        return str((self.tmp / "мастерская").resolve() / "dashboard.html")
+
+    def test_no_serve_prints_the_file(self):
+        self.env["AIEDITING_NO_SERVE"] = "1"
+        proc = self.ae("init", "--title", "Без сервера")
+        self.assertEqual(proc.returncode, 0, proc.stdout + proc.stderr)
+        self.assertIn(self.page(), proc.stdout)
+        self.assertNotIn("http://", proc.stdout)
+
+    def test_a_finished_workshop_prints_the_file(self):
+        self.assertEqual(self.ae("init", "--title", "Закрытая").returncode, 0)
+        quiet = dict(self.env, AIEDITING_NO_SERVE="1")          # no delayed stop-server left behind the test
+        subprocess.run([sys.executable, str(AE), "finish", "--result", "готово"], capture_output=True,
+                       env=quiet, cwd=str(self.tmp), timeout=60)
+        proc = self.ae()
+        self.assertEqual(proc.returncode, 0, proc.stdout + proc.stderr)
+        self.assertIn(self.page(), proc.stdout)
+
+
+class ServerGone(Workshop):
+    def test_init_in_a_live_workshop_raises_the_dead_server(self):
+        first = self.ae("init", "--title", "После перезагрузки")
+        port = re.search(r"127\.0\.0\.1:(\d+)/", first.stdout).group(1)
+        pid = int((self.tmp / "мастерская" / "serve.pid").read_text(encoding="utf-8").split()[1])
+        os.kill(pid, 15)                                                # a reboot took the server, not serve.pid
+        for _ in range(40):
+            try:
+                urllib.request.urlopen("http://127.0.0.1:{}/dashboard.html".format(port), timeout=1).close()
+                time.sleep(0.05)
+            except OSError:
+                break
+        again = self.ae("init", "--title", "После перезагрузки")
+        self.assertEqual(again.returncode, 1, again.stdout)             # still a refusal: resume, not a new one
+        self.assertIn("уже идёт мастерская", again.stdout)
+        url = "http://127.0.0.1:{}/dashboard.html".format(port)
+        self.assertIn(url, again.stdout)                                # the same port: an open tab revives
+        with urllib.request.urlopen(url, timeout=5) as r:
+            self.assertEqual(r.status, 200)
 
 
 class WhoseServer(unittest.TestCase):

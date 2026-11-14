@@ -26,7 +26,7 @@ edit"). After that, in any folder, you just say "edit this like a lesson".
 
 <p align="center"><sub>Stages · design variants · a trial edit, on demo data — <a href="assets/aiediting-dashboard.png">open the full dashboard</a></sub></p>
 
-**And you can always see what's going on.** The dashboard opens beside the chat by itself and runs on your own computer: the current stage and what it is waiting for, frames of your footage, design variants side by side, trial clips with your verdicts, the skills already built. Two themes, Russian and English.
+**And you can always see what's going on.** The dashboard opens by itself, beside the chat or in your browser, and runs on your own computer: the current stage and what it is waiting for, frames of your footage, design variants side by side, trial clips with your verdicts, the skills already built. Two themes, Russian and English.
 
 ---
 
@@ -118,8 +118,9 @@ If the agent does not find the command, restart it: skills are picked up at star
 «смонтируй как урок», in every agent; by name it is `/монтаж-урок` in Claude Code and Cursor, `$монтаж-урок` in Codex, and
 `/skill монтаж-урок` in OpenClaw, which makes commands of Latin names only.
 
-1. Type your agent's command from the table. A dashboard opens beside the chat (or in your browser):
-   stages, your answers, frames of your footage, design variants side by side, trial clips.
+1. Type your agent's command from the table. A dashboard opens beside the chat, in the agent's built-in browser (the
+   Claude desktop app, the Codex app, Cursor, OpenClaw), or in your own browser where the agent has none: stages, your
+   answers, frames of your footage, design variants side by side, trial clips.
 2. Choose: **a new format skill** or **refine** one you already have.
 3. New: pick formats from the list and add your own through commas («урок, вертикаль, подкаст»). Give
    1–3 source videos. Answer the questions in rounds of 3–4 — each with a recommended option and an
@@ -128,6 +129,12 @@ If the agent does not find the command, restart it: skills are picked up at star
    remove and where — the workshop reworks it until you say «да».
 5. The skill `монтаж-<your word>` is built and installed globally. In a new session, anywhere:
    «смонтируй ~/Videos/lesson.mp4» or «смонтируй как урок».
+
+**If the dashboard did not open.** Its address is `http://127.0.0.1:<port>/dashboard.html`; the agent says it in the chat,
+and you can open it in any browser. If the agent says the network is closed by its sandbox, the workshop cannot raise its
+local server there: in Codex allow the network for the workspace (`sandbox_workspace_write.network_access = true` in
+`~/.codex/config.toml`) and ask the agent to raise the dashboard again; until then it opens as a file in your browser: it still updates, but a video cannot seek without the server.
+The dashboard is gone after a restart: ask the agent to raise it, it comes back on the same address.
 
 The list offers seven formats, under these words; anything else you name becomes your own format:
 

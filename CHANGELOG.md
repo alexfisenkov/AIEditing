@@ -1,5 +1,26 @@
 # What's new in AIEditing
 
+## 0.4.3 — 2026-11-15
+
+For a person whose dashboard already opened nothing changes: the same port, the same page.
+
+Fixed:
+- The dashboard opens in the agent's own built-in browser where it has one (the Claude desktop app, the Codex app, Cursor,
+  OpenClaw), and in your browser only where it has none, always by its address and not as a file: in the Claude app's built-in browser a file is a page that never refreshes.
+  The agent says the dashboard is open only after it has opened it; otherwise it gives the address.
+- The address is `http://127.0.0.1:<port>/dashboard.html` instead of `localhost`: where another local server listens on
+  the same port, `localhost` could lead to it and show «404».
+- Where an agent's sandbox keeps the local network closed (Codex with the default `workspace-write`), the workshop says so,
+  names the setting that allows it (`sandbox_workspace_write.network_access = true`) and gives the path of the page, instead of
+  «порт не нашёлся».
+- Where the sandbox hides the list of processes, every call no longer raises one more server on a new port: the workshop
+  recognises its own server by what it serves, keeps it and can stop it.
+- `init` in a workshop that is already going, after a restart took its server away, raises the server again on the same
+  address and says it together with the advice to continue.
+- Without a server (`AIEDITING_NO_SERVE`, a finished workshop) the path of the page is printed, not just «дашборд обновлён».
+
+Known limits where the sandbox hides the list of processes: a second server raised by two `init` at the same moment stays until a restart, and an old server of an earlier version, which cannot seek in a video, is not replaced by itself.
+
 ## 0.4.2 — 2026-11-14
 
 Fixed:

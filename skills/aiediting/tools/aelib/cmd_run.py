@@ -21,8 +21,9 @@ def init(opt) -> str:
     w = session.work()
     old = st.read(w)
     if old and not old.get("finishedAt") and not opt.fresh:
+        # the server may be gone (a reboot): raise it again, so the refusal still leads to the dashboard
         raise CliError("Здесь уже идёт мастерская ({}) — продолжите её (phases/resume.md) "
-                       "или начните заново с --fresh".format(old.get("title")))
+                       "или начните заново с --fresh. Дашборд: {}".format(old.get("title"), session.show(w, old)))
     st.install_page(w)
     (w / ".gitignore").write_text("*\n", encoding="utf-8")  # frames of a screen and drafts: never into a project's git
     data = st.fresh(opt.mode, opt.title or ("Новый скилл монтажа" if opt.mode == "new" else "Доработка"),
