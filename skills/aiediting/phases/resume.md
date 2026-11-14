@@ -9,7 +9,8 @@ on from where `решения.md` stops; step 3 is the only line the person gets
    `log`), then the draft `profile.json` of the format in work — the one in the active stage's work, or
    the last in `formats` without an installed skill — then the file of the active stage's phase.
 2. **Raise the dashboard**: a bare `python "<skillDir>/tools/ae.py"` brings the server back on its old
-   port; re-point the pane (`phases/start.md`, §2) and say the address.
+   port; re-point the pane (`phases/start.md`, §2) and say the address. A line `Новая версия: …` in what it printed → say it
+   in one phrase, as `phases/start.md`, §2 says. What the person told at the start is in `ae.py intro`: not asked again.
 3. **Tell the person in one line where things stand**: «Продолжаю: урок — интервью, тема «субтитры»;
    вертикаль ещё впереди».
 4. **A `waiting` left in `state.js`** is the question the last session asked. Still open → ask it again;

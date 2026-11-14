@@ -18,7 +18,8 @@ person in `{{language}}` (the profile language); this file stays in English.
 
 The person says «смонтируй как {{format}}», «{{name}} <путь>» — or gives a path to a video and names this
 format. A bare «смонтируй <путь>» names no format: where this is the only `монтаж-*` skill it means this one; with
-several, ask which format first. One video per run.
+several, ask which format first. One video per run. OpenClaw makes commands of Latin names only, so there this skill
+is called `/skill {{name}} <путь>`; in Codex `${{name}}`; in Gemini CLI by its name in words.
 
 ## How
 
@@ -34,6 +35,8 @@ several, ask which format first. One video per run.
    `правила.md` (`run.py library rules --format "{{format}}"` prints the general rules and this format's) and `чего-нельзя.md`
    in that folder. **Their rule beats this format's setting**, and a person or a thing on that list is never shown. No library:
    nothing to read, go on.
+   A line «Мастерская обновилась до …» or «Вышла AIEditing …» printed by `check` or `edit`: say it to the person in one phrase,
+   as it is, and go on editing; nothing is updated or rebuilt from here.
 2. {{video_first}}`python "<skillDir>/tools/run.py" edit "<video>" --topic "<тема одним-двумя словами>"`. Camera and screen
    recorded as two files → the camera is `<video>`, and add `--screen "<screen file>"`. A format with «Graphics»
    or «Re-edit» goes on by that section; step 4 comes after it.

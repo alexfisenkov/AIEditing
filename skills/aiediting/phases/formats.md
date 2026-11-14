@@ -18,6 +18,13 @@ welcome, through commas:
 
 `ae.py ask question --note "какие форматы"` before it goes out.
 
+**The intro already answered it** (`ae.py intro`, `videos`) → not the open question again. Name the formats of the list that fit
+their words, and their own words for the rest, in one line to confirm; the whole list only if they ask for it:
+
+```
+Вы говорили, что делаете уроки и Reels: значит, форматы «урок» и «вертикаль». Так и начнём, или добавить свои?
+```
+
 Beside this list the person can always hear the wider answer: AIEditing is a base of ways to edit, not a set menu. A format
 named here is a start they can narrow to their niche, their task and their own design system. For example, a nail technician's
 «нарезка» under the word `маникюр`: clips of 30 s because that is what their clients watch, hands and the result in the frame

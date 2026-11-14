@@ -45,5 +45,6 @@
 
 - Библиотека человека: указатель `~/.aiediting/library.json` (перекрывается `AIEDITING_LIBRARY`); раскладка и поля описи — `runtime/library/paths.py`, `inventory.py`.
 - Рабочая папка мастерской (кадры, пробы, дашборд) — `.aiediting-work/` в текущей папке или `AIEDITING_WORK`, см. `tools/aelib/paths.py`.
-- Приватное окружение и модели — `~/.aiediting/` (`venv`, `models`, `remotion`).
+- Приватное окружение и модели — `~/.aiediting/` (`venv`, `models`, `remotion`); там же `update-check.json` — ответ GitHub о последней версии, не старше суток (`runtime/updates.py`, выключается `AIEDITING_NO_UPDATE_CHECK=1`).
+- Ответы знакомства — в `state.js` рабочей папки мастерской (`ae.py intro`, `tools/aelib/intro.py`), переживают `init --fresh` в той же папке; в репозиторий не попадают.
 - Рабочие папки графики — `~/.local/share/overlay-kit/`: рендер из облачной папки зависает.

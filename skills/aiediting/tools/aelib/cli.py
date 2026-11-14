@@ -4,7 +4,7 @@ from __future__ import annotations
 import argparse
 import sys
 
-from . import cmd_background, cmd_design, cmd_library, cmd_media, cmd_profile, cmd_run, cmd_skills, cmd_voice, doctor, setup, trial
+from . import cmd_background, cmd_design, cmd_library, cmd_media, cmd_profile, cmd_run, cmd_skills, cmd_voice, doctor, intro, setup, trial
 from .session import CliError
 
 RUNTIME_ERRORS = {"LookError", "RenderError", "MediaError", "AsrError"}
@@ -80,6 +80,7 @@ def parser() -> argparse.ArgumentParser:
          blend={"type": float, "default": 0.08})
     _sub(sub, "image-cutout", _image_cutout, "source", "output")
     _sub(sub, "library", cmd_library.cmd_library).add_argument("args", nargs=argparse.REMAINDER)
+    _sub(sub, "intro", intro.cmd_intro).add_argument("args", nargs=argparse.REMAINDER)
     _sub(sub, "voice-try", cmd_voice.cmd_voice_try, "skill", start={"type": float, "default": 0.0},
          duration={"type": float, "default": 60.0}, check={"action": "store_true"}).add_argument("video", nargs="?")
     return ap

@@ -1,0 +1,4 @@
+# Codex: the workshop starts only when the person calls it ($aiediting or /skills), never by the model's own choice.
+# Claude Code and OpenClaw read the same wish from `disable-model-invocation: true` in SKILL.md.
+policy:
+  allow_implicit_invocation: false

@@ -9,7 +9,7 @@ import state as st
 from state.server import _detached
 
 from . import session
-from .paths import TOOLS_DIR
+from .paths import SKILL_DIR, TOOLS_DIR
 from .session import CliError
 
 STOP_DELAY = 12
@@ -28,9 +28,22 @@ def init(opt) -> str:
     data = st.fresh(opt.mode, opt.title or ("Новый скилл монтажа" if opt.mode == "new" else "Доработка"),
                     __version__)
     data["noQuestions"] = bool(opt.no_questions)
+    if old and old.get("intro"):  # what the person told about themselves is not asked again in this folder
+        data["intro"] = old["intro"]
     st.log(data, "init", mode=opt.mode)
     line = session.commit(data)
-    return "Мастерская: {}\nДашборд: {}".format(w, line)
+    return "\n".join(["Мастерская: {}".format(w), "Дашборд: {}".format(line)] + _news(__version__))
+
+
+def _news(version: str):
+    """A newer AIEditing on GitHub: one line for the person, at most once a day; silence without the network."""
+    try:
+        from runtime.updates import workshop_note
+
+        note = workshop_note(version, SKILL_DIR)
+    except Exception:  # the check never stops the workshop
+        note = None
+    return ["Новая версия: " + note] if note else []
 
 
 def no_questions(opt) -> str:
@@ -79,6 +92,8 @@ def stop_server(opt) -> str:
 
 
 def sync(opt) -> str:
+    from runtime import __version__
+
     data = session.load()
     st.install_page(session.work())      # a workshop begun on an older version gets today's page
-    return session.commit(data)
+    return "\n".join([session.commit(data)] + _news(__version__))

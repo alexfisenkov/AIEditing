@@ -15,7 +15,9 @@ A refusal names the problem → fix the draft, build again. A format with paths 
 `phases/trial.md`, «A format with paths», rather than setting `variant` to get past it.
 
 Before the build, what the person chose of the new (`phases/interview.md`, «Everything new is by choice, and what is chosen is proved»)
-is proved by a fact. A step still unproved is out of `steps` and in the last message as «осталось сделать: …».
+is proved by a fact. A step still unproved is out of `steps` and in the last message as «осталось сделать: …». `ae.py profile check`
+and `build-skill` name what the disk does not back yet, under «Не доказано фактом»: each such line is proved or its step taken out,
+and the skill is built again.
 
 ## 2. Tools — verify and repair
 

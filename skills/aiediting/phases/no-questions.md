@@ -68,13 +68,13 @@ The library, inserts, the timeline, the voice, music, sound design, the publishi
 
 | Capability | Used when | Otherwise |
 |---|---|---|
-| Inserts from their life (`broll`, `params.broll=true`) | `ae.py library where` answers and `ae.py library status` shows described files | no step. With a free stock key already in place (`ae.py library stock "<query>"` answers) `stock` is true; no key, no stock. Under `auto` the proposals stand and are in the report; the re-shoot list is written |
+| Inserts from their life (`broll`, `params.broll=true`) | `ae.py library where` answers and `ae.py library status` shows described files. With a free stock key already in place too (`ae.py library stock "<query>"` answers) `stock` is true; no key, no stock. Under `auto` the proposals stand and are in the report; the re-shoot list is written | no step and no stock: stock lives in the library |
 | Timeline (`timeline`) | their message names a program to edit in, or an installed skill of theirs already has it | no step: the finished video only |
 | Voice (`voice_clean`) | an installed skill of theirs has it, or they named the service; a key that merely lies on the disk does not choose it | no step; Auphonic is a paid request |
 | Music (`music`) | their message or the library's `музыка/` names a folder with tracks, or an installed skill of theirs has a service | no step: nothing is inserted, nothing invented |
 | Sound design (`params.sfx`) | graphics or plates are in the format, and a sound folder is theirs or the kit's roles are asked for | none |
 | Publishing pack (`publish_pack`) | they asked for a title, a description, chapters or covers | no step |
-| Cameras (`angles`) | they gave more than one camera file, or a separate sound | one camera as before |
+| Cameras (`angles`) | they gave more than one camera file, or a separate sound; on one camera, only when they asked for changes of crop and a push-in | one camera as before: no step |
 | Gentle cleaning (`params.cleanup=gentle`) | they said so, or the installed skill has it | the format's own way |
 
 Their rules (`правила.md`, `чего-нельзя.md` of the library) are read before anything is chosen, and the person's word beats

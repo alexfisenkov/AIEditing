@@ -10,17 +10,28 @@
     python ae.py profile set|taste|check|open <skill> …             edit the draft profile in the workshop folder
                                                                     (taste --replace PART: instead of that line)
     python ae.py frames <video> [--n 6]  ·  layout <source-id>      frames and layout on the dashboard
-    python ae.py design-example <skill>  ·  samples <skill> [--frame F]
+    python ae.py design-example <skill>  ·  samples <skill> [--frame F] [--element E]  ·  choose <skill> <element> <n>
     python ae.py variant <skill> [<id>] [--own WORD] [--keep]       the paths of a format: list them, choose one
     python ae.py trial <skill> <video> [--start S --duration D] [--answers F] [--variant ID]   --variant: a short probe of that path
     python ae.py show <skill> <video> [--variant ID]                a clip made by the kit, on the dashboard
     python ae.py hear <skill> <video>                               what the draft's recogniser hears in a finished clip
+    python ae.py verdict <skill> yes|no [--note N]                  the person's word on the trial clip
     python ae.py kit <skill> own|renew                              a kit changed after its build: keep it as the format's own, or renew
     python ae.py build-skill <profile.json> <dest> [--replace]
     python ae.py install-skill <built folder>  ·  list-skills [--json]
     python ae.py backup-skill <name>  ·  restore-skill <name> [--backup ID]
     python ae.py doctor [--steps a,b] [--asr P] [--install ID] [--yes]
-    python ae.py finish --result R  ·  python ae.py                  (bare: re-raise the server)
+    python ae.py setup [--check] [--steps a,b] [--asr P]            install / check the local toolkit (of these steps only)
+    python ae.py capabilities [--json]                              the tools and FFmpeg filters on this machine
+    python ae.py intro [set <key>=<answer> … | apply [<skill>]]     what the person told at the start: kept, laid into the draft
+                                                                    and the library; keys: computer videos camera program blog
+                                                                    materials services liked disliked forbid
+    python ae.py library <command> …                                the person's library: where, set, status, scan, sheet, describe,
+                                                                    find, rule, rules, forbid, stock
+    python ae.py voice-try <skill> [<video>] [--start S --duration D] [--check]   Auphonic presets on a minute of theirs; --check: the key
+    python ae.py background <video> <out> --mode remove|solid|image|video|blur|chromakey [--value V]   a person apart from the background
+    python ae.py image-cutout <image> <out.png>                      a still without its background
+    python ae.py finish --result R  ·  stop-server  ·  python ae.py  (bare: re-raise the server)
 """
 import os
 import subprocess

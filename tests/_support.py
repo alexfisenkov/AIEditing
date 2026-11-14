@@ -1,4 +1,5 @@
 """Shared test helpers: repository paths and synthetic media made with ffmpeg."""
+import os
 import shutil
 import subprocess
 import sys
@@ -11,6 +12,8 @@ SKILL = ROOT / "skills" / "aiediting"
 FIXTURES = Path(__file__).resolve().parent / "fixtures"
 if str(SKILL) not in sys.path:
     sys.path.insert(0, str(SKILL))
+# No test asks GitHub for a newer version; tests of that check turn it back on with a fake answer (test_updates.py).
+os.environ.setdefault("AIEDITING_NO_UPDATE_CHECK", "1")
 
 HAVE_FFMPEG = bool(shutil.which("ffmpeg") and shutil.which("ffprobe"))
 needs_ffmpeg = unittest.skipUnless(HAVE_FFMPEG, "ffmpeg/ffprobe not in PATH")

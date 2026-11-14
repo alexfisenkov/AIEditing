@@ -39,6 +39,7 @@ KIT_APPROVAL = {
 }
 LATER_WORDS = {"Graphics": ", besides the working folder «Graphics» names",
                "Re-edit": ", besides the working folder «Re-edit» names, which may be the long video's own"}
+SHORTS = {"vertical", "bands", "teaser", "reedit", "export_platforms"}
 RECORDING = {"takes": "«takes»: the best takes, pauses out", "trim": "«trim»: the recording whole, only its edges go"}
 ASR = {"whispercpp": "none — local whisper.cpp", "scribe": "ElevenLabs Scribe",
        "openai_compat": "the OpenAI-compatible address in profile.json", "command": "whatever your own command does"}
@@ -46,8 +47,9 @@ ASR = {"whispercpp": "none — local whisper.cpp", "scribe": "ElevenLabs Scribe"
 
 def _description(profile: dict) -> str:
     word = profile["format"]
-    text = ("Edits a video as «{w}» by a profile tuned with its owner, and puts the result into an issue "
-            "folder. Use when the user says «смонтируй как {w}» or «{n}». A bare «смонтируй <путь>» names no "
+    # What it does and when to call it come first: with many skills installed an agent may keep only the start of a description.
+    text = ("Edits a video in the format «{w}»: use when the user says «смонтируй как {w}» or «{n}». Puts the result into "
+            "an issue folder, by a profile tuned with its owner. A bare «смонтируй <путь>» names no "
             "format: with several монтаж-* skills installed, ask which format first, do not assume this one. Never "
             "publishes, voices or generates.").format(w=word, n=profile["skill_name"])
     if "reedit" in profile.get("steps", ()):
@@ -67,6 +69,8 @@ def _for_steps(text: str, profile: dict) -> str:
         steps.add("prep")
     if not {"blur_regions", "reedit"} & steps:  # not a step: `reedit` keeps secrets out in its own way, and says so
         steps.add("no_blur")
+    if SHORTS & steps:  # not a step: the pace of Reels, Shorts and TikTok, for formats that make vertical or short clips
+        steps.add("shorts")
 
     def keep(found):
         wanted = (found.group(2) in steps) == (found.group(1) == "if")

@@ -5,6 +5,11 @@ graphics. Everything is chosen by eye, on frames of the person's own video.
 
 ## Start: their style or the example
 
+The videos they like and dislike were sent at the start (`ae.py intro`: `liked`, `disliked`; they are taste lines of the draft too).
+They are the first reference, so they are not asked for again: a file on their disk → `ae.py frames "<path>" --n 3` and look; a link
+→ what they said about it. Name in a line what you take from the liked ones (the font, the colours, the size of plates, the pace)
+and what you avoid from the others, and build the variants below on it. None was sent → as below.
+
 One question (`ae.py ask choice --note "стиль: свой или пример"`):
 
 ```

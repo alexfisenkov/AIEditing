@@ -54,7 +54,21 @@ including a missing catalog row or a legacy `not_built` marker, calls for invest
 local tool, install checked requirements in an isolated environment and validate actual output. Add a
 repeatable capability to the catalog, runtime and tests. Only a concrete failed route is a blocker.
 
-Something new they want (the themes of `phases/interview.md` that this skill lacks) is offered the same way, by choice, and proved by a fact before the build; the skill keeps working as it was where they chose nothing.
+**What is new since the skill was built is offered as a list to pick from**, once, after their remarks: the themes of
+`phases/interview.md`, «Which themes this format asks», that fit this format and that its profile lacks (the library and inserts, the
+timeline, the voice, music, sounds, the publishing pack, cameras, gentle cleaning, preparation), one line each with what it gives and
+what it takes. The answers of the intro (`ae.py intro`) cut the list: what they have not and do not want is not on it. Numbers back,
+or «ничего»:
+
+```
+С тех пор как собран монтаж-урок, появилось новое. Что-нибудь добавить? Номера через запятую или «ничего».
+1. Таймлиния для DaVinci рядом с роликом: видно монтаж по слоям.
+2. Пакет публикации: три названия, описание с главами, теги, кадры для обложек.
+3. Мягкая чистка речи: режем бережнее, у самого тихого места перед словом.
+```
+
+What they pick goes the same way as a new theme, by choice, and is proved by a fact before the build; the skill keeps working as it
+was where they chose nothing.
 
 Design changes → `phases/design.md` for the elements they named. Need a source to show on → ask for one
 (`phases/sources.md`, `ae.py frames`).

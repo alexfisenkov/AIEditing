@@ -1,10 +1,10 @@
 ---
 name: aiediting
-description: Workshop that builds your own video-editing skills. Interviews you about a format (stream, lesson, vertical or your own), looks at frames of your footage, offers the ways that format can go and shows each on your video, assembles a design system with you, edits a trial clip until you say yes, and installs a self-contained format skill that edits every next video the same way. Or, if you say «без вопросов», takes one message and a recording and returns the finished video and the installed skill. Also refines any editing skill you already have, built here or not. Starts only on /aiediting.
+description: Workshop that builds your own video-editing skills (монтаж-*) and refines the ones you have; starts only when called by name, /aiediting or $aiediting. Interviews you about a format (stream, lesson, vertical or your own), looks at frames of your footage, offers the ways that format can go and shows each on your video, assembles a design system with you, edits a trial clip until you say yes, and installs a self-contained format skill that edits every next video the same way. Or, if you say «без вопросов», takes one message and a recording and returns the finished video and the installed skill. Also refines any editing skill you already have, built here or not. Called by name only, each agent its own way — /aiediting in Claude Code, Cursor and OpenClaw (or /skill aiediting there), $aiediting in Codex, «запусти AIEditing» in Gemini CLI.
 disable-model-invocation: true
 argument-hint: "[new|refine] format name or path to a source video"
 metadata:
-  version: "0.4.0"
+  version: "0.4.1"
 ---
 
 # AIEditing
@@ -37,7 +37,7 @@ the rest of the session.
 
 | Stage id | Read | Produces |
 |---|---|---|
-| `start` | `phases/start.md` | the dashboard open; the person met in one message and a personal plan; «новый» or «доработка» chosen |
+| `start` | `phases/start.md` | the dashboard open; the environment checked; the person met in one message (kept by `ae.py intro`) and a personal plan; «новый» or «доработка» chosen |
 | `formats` | `phases/formats.md` | one draft profile per format, listed or the person's own |
 | `sources` | `phases/sources.md` | 1–3 sources, their frames and layout on the dashboard |
 | `interview` | `phases/interview.md` + `prompts/question-round.md` | the profile answered, round by round; the paths of the format offered |
@@ -79,8 +79,9 @@ in another one. One word per stage, on the dashboard and in the chat: Старт
 Every event is one call: `python "<skillDir>/tools/ae.py" <command>` — `init`, `no-questions`, `stage`, `ask`,
 `answered`, `formats`, `profile`, `variant`, `frames`, `layout`, `design-example`, `samples`, `choose`, `trial`, `show`, `hear`, `kit`,
 `verdict`, `build-skill`, `install-skill`, `list-skills`, `backup-skill`, `restore-skill`, `doctor`, `setup`, `capabilities`, `background`, `image-cutout`,
-`library`, `voice-try`, `finish`. The command list with arguments is at the top of `tools/ae.py`. `phases/start.md` says how to
-find `<skillDir>`. You never edit `state.js` or the dashboard by hand. Where there is no `python`, as on
+`library`, `intro`, `voice-try`, `finish`. The command list with arguments is at the top of `tools/ae.py`. `<skillDir>` is the folder
+of this file: Claude Code fills it in here, `${CLAUDE_SKILL_DIR}`, and OpenClaw here, `{baseDir}` (a placeholder left as it is was not
+filled by your agent); Codex lists the path of this file with the skill; otherwise `phases/start.md`, §1. You never edit `state.js` or the dashboard by hand. Where there is no `python`, as on
 many Macs, use `python3`; where it is the Microsoft Store stub on Windows, use `py -3`.
 
 ## Rules that never lose
@@ -122,7 +123,7 @@ many Macs, use `python3`; where it is the Microsoft Store stub on Windows, use `
 
 ```
 .aiediting-work/                 in the folder where the workshop was started
-├── state.js  dashboard.html  index.html  serve.pid  serve.log
+├── state.js  dashboard.html  index.html  serve.pid  serve.log   (state.js keeps the intro too: `ae.py intro`)
 ├── frames of the person's sources: `ae.py frames` prints their paths
 └── монтаж-<слово>/
     ├── profile.json             the draft profile — data only, no keys
@@ -137,6 +138,16 @@ overlay-kit/                     in this skill: the method and tools of the `gra
 
 ## Updating AIEditing
 
-Never mid-session. «Обнови AIEditing» → `npx skills update aiediting -g`, then a new session. Format
-skills are separate folders with their own copy of the runtime: updating or removing AIEditing never
-breaks them; a refinement rebuilds them on the new version.
+**The workshop checks for a new version itself.** At its start (`ae.py init`, and the bare call that raises a workshop again) it
+compares its version with the latest release of AIEditing on GitHub, at most once a day, in a few seconds, silently without the
+network; `AIEDITING_NO_UPDATE_CHECK=1` turns it off. A newer one → `init` prints one line, `Новая версия: …`: which version came
+out, which one is here, the exact way to update this copy (`npx skills update aiediting -g` for a copy of `npx skills`, `git pull` for
+a clone, otherwise a reinstall) and that a new session is needed after it. Say it to the person in one phrase at the start; without
+questions, as a line of the last message. **Update only on their word, never in the middle of a session:** «обнови AIEditing» → the
+command of that line, then a new session.
+
+Format skills are separate folders with their own copy of the runtime: updating or removing AIEditing never breaks them; a
+refinement rebuilds them on the new version. A format skill built on 0.4.1 or later says so itself at `run.py check` and
+`run.py edit`: «Мастерская обновилась до X — запустите AIEditing (/aiediting в Claude Code, $aiediting в Codex) и выберите доработку
+монтаж-<слово>». The workshop is called by name only, so that is the way back here, not a phrase to the format skill. It goes on
+editing and installs nothing.

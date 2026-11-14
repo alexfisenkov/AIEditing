@@ -34,12 +34,12 @@ edit"). After that, in any folder, you just say "edit this like a lesson".
 
 ### If you'd rather not open a terminal
 
-Open your AI agent — Claude Code, Cursor, Codex — and paste this:
+Open your AI agent — Claude Code, Cursor, Codex, Gemini CLI, OpenClaw — and paste this:
 
 ```
 Install the AIEditing skill for me. Run in the terminal:
 
-npx skills add alexfisenkov/AIEditing --skill aiediting -g -y -a <put yourself here: claude-code, cursor, codex>
+npx skills add alexfisenkov/AIEditing --skill aiediting -g -y -a <put yourself here: claude-code, cursor, codex, gemini-cli, openclaw>
 
 Find the installed aiediting folder (the one containing tools/ae.py). Then run:
 python3 "<installed aiediting folder>/tools/ae.py" setup
@@ -76,7 +76,7 @@ python3 "<skillDir>/tools/ae.py" setup --check
 | Flag | What it does |
 |------|--------------|
 | `--skill aiediting` | Installs only AIEditing |
-| `-a claude-code` | Installs for Claude Code |
+| `-a claude-code` | Installs for Claude Code; `-a codex`, `-a cursor`, `-a gemini-cli`, `-a openclaw` for the others |
 | `-g` | Globally — the workshop and every format skill it builds work in any folder |
 | `-y` | Don't ask questions |
 
@@ -111,8 +111,12 @@ The workshop starts with a command in your agent's chat. The command depends on 
 | Claude Code | `/aiediting` |
 | Cursor | `/aiediting` — type `/` in the agent chat and pick aiediting from the list |
 | Codex (CLI or IDE extension) | `$aiediting` — or run `/skills` and pick aiediting from the list |
+| Gemini CLI | no command of its own: write «запусти AIEditing» and allow the skill when it asks |
+| OpenClaw | `/aiediting`, or `/skill aiediting` |
 
-If the agent does not find the command, restart it: skills are picked up at startup.
+If the agent does not find the command, restart it: skills are picked up at startup. A format skill is called by its words,
+«смонтируй как урок», in every agent; by name it is `/монтаж-урок` in Claude Code and Cursor, `$монтаж-урок` in Codex, and
+`/skill монтаж-урок` in OpenClaw, which makes commands of Latin names only.
 
 1. Type your agent's command from the table. A dashboard opens beside the chat (or in your browser):
    stages, your answers, frames of your footage, design variants side by side, trial clips.
@@ -197,7 +201,7 @@ The workshop now begins by getting to know you, in one message: your computer an
 Everything below is **your choice**. A thing you do not have, or do not want, is not set up, not inserted and not made up; a thing you choose is carried to the end with you, step by step, and proved by a fact (a key that answers, a folder that holds tracks) before the skill is built.
 
 - **A library of your own.** One folder on your disk, chosen by you, found by every `монтаж-*` of yours (`ae.py library`, `run.py library`). It holds files about you (who you are, your life by years, people, places, your blog), a list of your gallery, Instagram export and camera footage with one line per file, your personal rules and the list of what never to show. The files are not copied and nothing leaves your computer. The first video never waits for it, and the list is made in small pieces.
-- **Inserts from your life** (`broll`): under the literal meaning of a phrase, your own shot first, then a free stock video by your own key, then a graphic. You approve each line in the plan, or in a mode without questions they stand and are in the report. A list of what to re-shoot (`досъёмка.md`) comes with the video. When you say «этого не бери», it is written into the list of what never to show.
+- **Inserts from your life** (`broll`), with a library connected, free stock included (its files are kept in the library): under the literal meaning of a phrase, your own shot first, then a free stock video by your own key, then a graphic. You approve each line in the plan, or in a mode without questions they stand and are in the report. A list of what to re-shoot (`досъёмка.md`) comes with the video. When you say «этого не бери», it is written into the list of what never to show.
 - **A timeline for an editing program** (`timeline`): a DaVinci Resolve file beside the video and a note. No program, and no wish for one: the finished video comes, and you give remarks by the timecode.
 - **A cleaner voice** (Auphonic, your own account and key), **music** (your own folder, or a service you already have, such as Epidemic Sound; with nothing at all, nothing is inserted) and **sounds on the peak of the motion of graphics**. Your own folder of sounds goes before the kit's; connect it with `overlay.py sfxcat <your folder>` and give it as `--sfx`.
 - **A publishing pack** (`publish_pack`): three title variants, a YouTube description with the chapters by YouTube's rules, tags, six covers on request (`run.py covers`). Nothing is uploaded or published.
@@ -322,6 +326,13 @@ without `key_file` — `.env` in the working folder, then `~/.aiediting/.env`
 npx skills update aiediting -g      # or just tell your agent: «обнови AIEditing»
 npx skills remove aiediting -g
 ```
+
+**The workshop tells you when a new version is out.** At its start it compares its version with the latest release on GitHub,
+at most once a day and for a few seconds at most, and stays silent without the network. A newer one → one line in the chat: which version came out, which one
+you have, and the exact way to update your copy (`npx skills update aiediting -g`; `git pull` for a clone). It updates only when
+you say so, never in the middle of a session. To turn the check off, set `AIEDITING_NO_UPDATE_CHECK=1`. A format skill built
+on 0.4.1 or later says the same when its workshop is newer than the one it was built on: start AIEditing by its command
+(the table in «How to use it») and choose a refinement of that `монтаж-<слово>` to rebuild it on the new version.
 
 Start a new session after updating. Format skills built by AIEditing are separate folders with their
 own copy of the editing runtime: updating or removing AIEditing does not touch them. A refinement

@@ -6,7 +6,7 @@ from pathlib import Path
 
 import state as st
 
-from . import backups, handmade, session
+from . import backups, handmade, profiles, proofs, session
 from .build import BuildError, build_skill
 from .install import InstallError, install_skill, is_format_skill, list_skills, restore_skill
 from .session import CliError
@@ -29,7 +29,8 @@ def cmd_build(opt) -> str:
     except BuildError as e:
         raise CliError(str(e))
     _mark(folder.name, built=str(folder))
-    return "Собран: {}".format(folder)
+    source = Path(opt.profile).resolve()
+    return "Собран: {}{}".format(folder, proofs.said(proofs.unproved(profiles.read(source), source.parent)))
 
 
 def cmd_install(opt) -> str:

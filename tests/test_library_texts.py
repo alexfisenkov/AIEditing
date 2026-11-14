@@ -29,7 +29,10 @@ def rows():
 class Meeting(unittest.TestCase):
     def test_the_start_meets_the_person_in_one_message_and_explains_the_library(self):
         text = read("phases", "start.md")
-        self.assertLess(text.index("## 3. Get to know the person"), text.index("## 4. The first question: create or refine"))
+        # the environment is checked before the plan, and the plan's first step is the choice of new or refine
+        self.assertLess(text.index("## 3. Check the environment"), text.index("## 4. Get to know the person"))
+        self.assertLess(text.index("## 4. Get to know the person"), text.index("## 5. The first question: create or refine"))
+        self.assertIn("ae.py intro set", text)
         for mark in ("one message", "personal plan", "ae.py library set", "Auphonic", "DaVinci", "«Нет» or silence", "never invented",
                      "Never ask twice", "может, ещё сделать побольше"):
             self.assertIn(mark, " ".join(text.split()), mark)

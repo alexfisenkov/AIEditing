@@ -12,8 +12,10 @@ python "<skillDir>/tools/ae.py" trial <skill> "<source>" --start <S> --duration 
 
 Pick a piece of 1–2 minutes that has what the format does (pauses for a lesson, a secret on screen for
 a stream, a strong phrase for a vertical); a vertical may take the whole source. Camera and screen are
-two files (separate tracks) → add `--screen "<screen file>"`: it is cut to the same piece. The result is in
-`.aiediting-work/<skill>/trials/NN/out/` and on the dashboard.
+two files (separate tracks) → add `--screen "<screen file>"`: it is cut to the same piece. Several cameras or a sound recorded
+apart (`angles`) → the main camera is `<source>`, and add `--camera "<file>"` for each other camera and `--audio "<recorder>"`: they
+are cut to the same seconds and lined up by sound, and `отчёт.md` of the trial names «Сдвиг по звуку …» for each, which is the
+proof `phases/interview.md` asks for. The result is in `.aiediting-work/<skill>/trials/NN/out/` and on the dashboard.
 
 A format that makes several files from one source (`нарезка`) runs on the whole source, without `--start`: the clips are
 picked from all of it. The dashboard shows the first file; every one is in `out/`, and all of them are what is shown.
@@ -98,9 +100,16 @@ built without their choice, and `ae.py trial` without `--variant` refuses until 
 ## «Так нравится?»
 
 When the clip is ready the dashboard already asks; say it in the chat too, with one line of what was
-done (how much was cut, what was blurred, the drift). Then:
+done (how much was cut, what was blurred, the drift), and, where they sent videos they like (`ae.py intro`), one line on how close
+the pace and the look are to those. Then:
 
-- **«Да»** → `ae.py verdict <skill> yes` → `phases/build.md`.
+- **«Да»** → `ae.py verdict <skill> yes`. Two things wait for this «да», before `phases/build.md`:
+  - the intro was put off because the call named a format and a source (`phases/start.md`, §4) → ask it now, once, then
+    `ae.py intro set <key>="<answer>" …` and `ae.py intro apply <skill>`: the answers go into this draft and, with a library,
+    into its files;
+  - a library is connected and nothing in it is described yet → begin the description now, one first sheet, by the theme «Own
+    footage and the library» of `phases/interview.md` (`ae.py library scan`, `sheet`, `describe`). With inserts chosen it is
+    their proof; without them it is offered and may wait.
 - **«Нет»** → `ae.py verdict <skill> no --note "<their words>"` and ask, in one message:
 
 ```

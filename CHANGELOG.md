@@ -1,5 +1,25 @@
 # What's new in AIEditing
 
+## 0.4.1 — 2026-11-14
+
+For a person who sets nothing new the workshop and the format skills work as in 0.4.0.
+
+Added:
+- The workshop tells you when a new version is out. At its start it compares its version with the latest release on GitHub, at most once a day and in a few seconds, and stays silent without the network. A newer one is one line: which version came out, which one you have, the exact way to update your copy (`npx skills update aiediting -g`, or `git pull` for a clone) and that a new session is needed. It updates only on your word, never in the middle of a session. `AIEDITING_NO_UPDATE_CHECK=1` turns it off.
+- A format skill built on this version says the same at `run.py check` and `run.py edit` when the workshop on the computer, or the latest release, is newer than the one it was built on: start AIEditing by its command (/aiediting in Claude Code, $aiediting in Codex) and choose a refinement of that skill to rebuild it. The edit goes on, nothing is installed.
+- What you tell at the start is kept (`ae.py intro`) and used to the end: the formats are proposed from your answer, your topic and the videos you like and dislike go into the format's taste by themselves, and with a library your blog, your equipment and what must never be shown go into its files. Formats, the interview and the design no longer ask what you already said.
+- `ae.py profile check` and `build-skill` warn of a choice the disk does not back: inserts without a library or with nothing described, a music folder that is not there or holds no track, a voice whose key is not in its variable, cameras no trial has lined up, a sound folder that is not there.
+- Refining a skill offers what is new since it was built as a short list to pick from.
+- Codex no longer starts the workshop by itself (`agents/openai.yaml`); the installation and the calls of Gemini CLI and OpenClaw are described, and so is `/skill монтаж-<слово>` in OpenClaw, which makes commands of Latin names only.
+
+Fixed:
+- The environment is checked before the personal plan, and the plan's first step is the choice of a new skill or a refinement.
+- The tool is looked for in the folder of the skill your agent loaded, then in this project, then in the global folders of every agent; two copies of different versions are named.
+- The description of your files in the library begins after the «да» to the first trial, in one place; stock videos are said to need a library, as they always did.
+- The pace of Reels and Shorts goes only into formats that make vertical or short clips, not into a lesson or a stream.
+- A trial with several cameras is run with all of them; one camera is one rule everywhere; DaVinci is offered once, in the interview.
+- What a format skill does and when to call it come first in its description, so an agent with many skills still sees it.
+
 ## 0.4.0 — 2026-11-13
 
 A refinement, not a remake: the formats, phases and profiles that exist work as they did. Everything new is a choice of the person; what they do not have or do not want is not set up, not inserted and not made up.

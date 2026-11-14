@@ -128,6 +128,7 @@ def edit(profile, opt):
     if audio:
         extra["audio"] = audio
     out = Path(opt.out).resolve() if opt.out else issue_folder(profile, src, opt.topic)
+    workshop_news(profile)
     library_news()
     map_news(src, out)
     approve = approver_for(profile, out, Path(opt.answers) if opt.answers else None, opt.no_questions)
@@ -144,6 +145,20 @@ def edit(profile, opt):
     print((report or {}).get("handover") or "Готово: {}".format((report or {}).get("output") or out))
     print("Папка выпуска: {}".format(out))
     return 0
+
+
+def workshop_news(profile):
+    """The workshop this skill was built on is older than the one installed or released: one line, the edit goes on."""
+    try:
+        import json
+        from runtime.updates import format_note
+
+        built = json.loads((SKILL / "pins.json").read_text(encoding="utf-8")).get("aiediting")
+        note = format_note(built, profile["skill_name"])
+    except Exception:  # an older runtime, no pins, no network: never a reason to stop
+        note = None
+    if note:
+        print(note)
 
 
 def library_news():
@@ -370,6 +385,7 @@ def main(argv):
         if opt.tools:
             return toolkit(profile, argv, check_only=True)
         print("{}: профиль в порядке, шаги: {}".format(profile["skill_name"], ", ".join(profile["steps"])))
+        workshop_news(profile)
         return 0
     if opt.cmd == "setup":
         return toolkit(profile, argv)

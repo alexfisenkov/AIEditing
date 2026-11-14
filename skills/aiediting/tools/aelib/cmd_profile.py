@@ -6,7 +6,7 @@ from pathlib import Path
 
 import state as st
 
-from . import coherence, formats, handmade, profiles, session, variants
+from . import coherence, formats, handmade, intro, profiles, proofs, session, variants
 from .assemble import KIT_MARK, OWN
 from .install import find_installed
 from .paths import DESIGN_DIR, PRESETS_DIR
@@ -32,6 +32,7 @@ def cmd_formats(opt) -> str:
         raise CliError("В каталоге нет формата «{}»: --like берёт формат из списка".format(opt.like))
     lines = []
     for fmt in chosen:
+        laid = []
         if like:  # the person's word, narrowed from a format of the catalog: its start and its paths
             fmt = dict(fmt, preset=like["preset"], **({"variants": like["variants"]} if like.get("variants") else {}))
         fmt = dict(fmt, preset=opt.preset or fmt["preset"])
@@ -44,9 +45,11 @@ def cmd_formats(opt) -> str:
                 profile["like"] = like["word"]
             named = variants.named_by_preset(fmt, opt.preset)
             profiles.write(dict(profile, variant=named) if named else profile, path)
+            laid = intro.to_new_draft(fmt["skill"])
         session.touch(lambda d, f=fmt, p=path: _remember(d, f, p))
         lines.append("{} — {}{}: {}".format(fmt["skill"], fmt["title"], " (свой)" if fmt["custom"] else "", path))
         lines += ["  путь {}: {} — {}".format(r["id"], r["title"], r["hint"]) for r in fmt.get("variants", [])]
+        lines += ["  из знакомства — " + line for line in laid]
     return "\n".join(lines)
 
 
@@ -111,7 +114,8 @@ def cmd_profile(opt) -> str:
     errors = check_profile(profile) + coherence.problems(profile)
     if opt.action != "check":
         profiles.write(profile, path)
-    return "{}: {}".format(path, "в порядке" if not errors else "есть замечания:\n- " + "\n- ".join(errors))
+    return "{}: {}{}".format(path, "в порядке" if not errors else "есть замечания:\n- " + "\n- ".join(errors),
+                             proofs.said(proofs.unproved(profile, path.parent)))
 
 
 def _open(skill: str, fresh: bool) -> str:
