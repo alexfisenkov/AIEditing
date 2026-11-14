@@ -146,13 +146,17 @@ def latest(now: Optional[float] = None) -> Optional[dict]:
 
 
 def _locked(lock: Path) -> bool:
-    """Does the lock file of `npx skills` name this skill? Its global one is `~/.agents/.skill-lock.json`, a project's `skills-lock.json`."""
+    """Does the lock file of `npx skills` name this skill as one it can update? Its global one is `~/.agents/.skill-lock.json`, a
+    project's `skills-lock.json`. A copy added from a local folder (`sourceType: local`) is not updated by `npx skills update`."""
     try:
         data = json.loads(lock.read_text(encoding="utf-8"))
     except (OSError, ValueError):
         return False
     skills = data.get("skills") if isinstance(data, dict) else None
-    return (NAME in skills) if isinstance(skills, (dict, list)) else False
+    if isinstance(skills, dict):
+        entry = skills.get(NAME)
+        return entry is not None and not (isinstance(entry, dict) and entry.get("sourceType") == "local")
+    return (NAME in skills) if isinstance(skills, list) else False
 
 
 def _global_locks() -> List[Path]:

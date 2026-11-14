@@ -1,5 +1,11 @@
 # What's new in AIEditing
 
+## 0.4.2 — 2026-11-14
+
+Fixed:
+- A copy added by `npx skills` from a local folder is not updated by `npx skills update`: the line about a new version now
+  advises reinstalling it from GitHub (`npx skills add alexfisenkov/AIEditing --skill aiediting -g`), after which updates work.
+
 ## 0.4.1 — 2026-11-14
 
 For a person who sets nothing new the workshop and the format skills work as in 0.4.0.

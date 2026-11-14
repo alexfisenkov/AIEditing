@@ -64,6 +64,10 @@ class Base(TempDirCase):
         patcher = mock.patch.dict(os.environ, env)
         patcher.start()
         self.addCleanup(patcher.stop)
+        # The workshop is also looked for in the current folder's project skills; the repository has its own there.
+        here = os.getcwd()
+        os.chdir(self.tmp)
+        self.addCleanup(os.chdir, here)
 
     def github(self, **kw):
         fake = FakeGitHub(**kw)
@@ -178,6 +182,17 @@ class HowToUpdate(Base):
         unlocked.mkdir(parents=True)
         (self.home / ".agents" / ".skill-lock.json").write_text('{"skills": {"aispa": {}}}', encoding="utf-8")
         self.assertIn("npx skills add", updates.how_to_update(unlocked))
+
+    def test_a_copy_added_from_a_local_folder_is_reinstalled_from_github(self):
+        # `npx skills update` skips a copy whose source is a local folder: «cannot be checked automatically».
+        folder = self.home / ".agents" / "skills" / "aiediting"
+        folder.mkdir(parents=True)
+        lock = self.home / ".agents" / ".skill-lock.json"
+        lock.write_text(json.dumps({"version": 3, "skills": {"aiediting": {"source": "/x/AIEditing", "sourceType": "local"}}}),
+                        encoding="utf-8")
+        advice = updates.how_to_update(folder)
+        self.assertNotIn("npx skills update", advice)
+        self.assertIn("npx skills add alexfisenkov/AIEditing", advice)
 
     def test_a_project_copy_updates_without_g(self):
         project = self.tmp / "project"
